@@ -1,5 +1,6 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "../../hooks/use-toast.js";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,6 +28,11 @@ const formSchema = z.object({
 });
 
 const SignUpForm = () => {
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,8 +42,36 @@ const SignUpForm = () => {
     },
   });
 
-  function onSubmit(values) {
-    console.log(values);
+  async function onSubmit(values) {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      const data = await res.json();
+
+      if (data.success === false) {
+        setLoading(false);
+        toast({ title: "Sign up Failed! Please try again." });
+        return setErrorMessage(data.message);
+      }
+
+      setLoading(false);
+
+      if (res.ok) {
+        toast({ title: "Sign up Succcessful!" });
+        navigate("/sign-in");
+      }
+    } catch (error) {
+      setErrorMessage(error);
+      setLoading(false);
+      toast({ title: "Something went wrong!" });
+    }
   }
 
   return (
@@ -53,7 +86,7 @@ const SignUpForm = () => {
             <span className="text-red-600">SKNCOE</span>
             <span className="text-blue-900">NSS</span>
           </Link>
-          <h2 className="text-[24px] md:text-[30px] font-bold leading-[140%]tracking-tighter pt-5 sm:pt-12">
+          <h2 className="text-[24px] md:text-[30px] font-bold leading-[140%] tracking-tighter pt-5 sm:pt-12">
             Create a new Account
           </h2>
           <p className="text-slate-500 text-[14px] font-medium leading-[140%] md:text-[16px] md:font-normal mt-2">
@@ -114,16 +147,28 @@ const SignUpForm = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="bg-blue-500 w-full">
-                Submit
+              <Button
+                type="submit"
+                className="bg-blue-500 w-full"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : (
+                  <span>Sign Up</span>
+                )}
               </Button>
             </form>
           </Form>
 
           <div className="flex gap-2 text-sm mt-5">
             <span>Already have an account?</span>
-            <Link to={"/sign-in"} className="text-blue-500"> Sign In</Link>
+            <Link to={"/sign-in"} className="text-blue-500">
+              {" "}
+              Sign In
+            </Link>
           </div>
+          {errorMessage && <p className="mt-5 text-red-500">{errorMessage}</p>}
         </div>
       </div>
     </div>

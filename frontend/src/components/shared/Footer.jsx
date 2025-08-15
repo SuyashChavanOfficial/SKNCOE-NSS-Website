@@ -58,9 +58,10 @@ const Footer = () => {
         <p>Follow us on:</p>
         <div className="flex justify-center space-x-4 mt-3">
             <a href="#" className="hover:text-white">Facebook</a>
-            <a href="#" className="hover:text-white">Instagram</a>
-            <a href="#" className="hover:text-white">Youtube</a>
-            <a href="#" className="hover:text-white">LinkedIn</a>
+            <a href="https://instagram.com/skncoe_nss?igshid=MzRlODBiNWFlZA==" className="hover:text-white">Instagram</a>
+            <a href="https://youtube.com/@NSSSKNCOE" className="hover:text-white">Youtube</a>
+            <a href="https://www.linkedin.com/in/nss-skncoe" className="hover:text-white">LinkedIn</a>
+            <a href="https://twitter.com/skncoe_nss" className="hover:text-white">X</a>
         </div>
 
         <p className="mt-4">&copy; {new Date().getFullYear()} SKNCOE NSS. All Rights Reserved.</p>

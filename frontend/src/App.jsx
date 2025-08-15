@@ -8,24 +8,25 @@ import Dashboard from "./pages/Dashboard";
 import NewsArticles from "./pages/NewsArticles";
 import Header from "./components/shared/Header";
 import { Toaster } from "./components/ui/toaster";
+import Footer from "./components/shared/Footer";
 
 const App = () => {
   return (
     <BrowserRouter>
+      <Header />
 
-    <Header />
+      <Routes>
+        <Route path="/sign-in" element={<SignInForm />}></Route>
+        <Route path="/sign-up" element={<SignUpForm />}></Route>
 
-    <Routes>
-      <Route path="/sign-in" element={<SignInForm />}></Route>
-      <Route path="/sign-up" element={<SignUpForm />}></Route>
-      
-      <Route path="/" element={<Home />}></Route>
-      <Route path="/about" element={<About />}></Route>
-      <Route path="/dashboard" element={<Dashboard />}></Route>
-      <Route path="/news" element={<NewsArticles />}></Route>
-    </Routes>
+        <Route path="/" element={<Home />}></Route>
+        <Route path="/about" element={<About />}></Route>
+        <Route path="/dashboard" element={<Dashboard />}></Route>
+        <Route path="/news" element={<NewsArticles />}></Route>
+      </Routes>
 
-    <Toaster />
+      <Footer />
+      <Toaster />
     </BrowserRouter>
   );
 };

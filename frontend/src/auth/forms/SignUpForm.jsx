@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import GoogleAuth from "@/components/shared/GoogleAuth.jsx";
 
 const formSchema = z.object({
   username: z
@@ -158,6 +159,7 @@ const SignUpForm = () => {
                   <span>Sign Up</span>
                 )}
               </Button>
+              <GoogleAuth />
             </form>
           </Form>
 

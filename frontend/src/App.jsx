@@ -9,6 +9,7 @@ import NewsArticles from "./pages/NewsArticles";
 import Header from "./components/shared/Header";
 import { Toaster } from "./components/ui/toaster";
 import Footer from "./components/shared/Footer";
+import PrivateRoute from "./components/shared/PrivateRoute";
 
 const App = () => {
   return (
@@ -21,7 +22,10 @@ const App = () => {
 
         <Route path="/" element={<Home />}></Route>
         <Route path="/about" element={<About />}></Route>
-        <Route path="/dashboard" element={<Dashboard />}></Route>
+
+        <Route element={<PrivateRoute/>}>
+          <Route path="/dashboard" element={<Dashboard />}></Route>
+        </Route>
         <Route path="/news" element={<NewsArticles />}></Route>
       </Routes>
 

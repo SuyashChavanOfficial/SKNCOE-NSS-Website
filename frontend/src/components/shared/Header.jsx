@@ -2,11 +2,21 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import { Button } from "../ui/button";
+import { useSelector } from "react-redux";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
+  const { currentUser } = useSelector((state) => state.user);
   return (
     <nav className="shadow-lg sticky">
-      <div className="flex justify-between items-center max-w-6xl lg-max-w-7xl p-4">
+      <div className="flex justify-between items-center max-w-6xl lg:max-w-7xl p-4">
         <Link to={"/"}>
           <h1 className="font-bold text-xl sm:text-2xl flex-wrap">
             <span className="text-red-600">SKNCOE</span>
@@ -36,10 +46,41 @@ const Header = () => {
             <Link to={"/news"}>News Articles</Link>
           </li>
         </ul>
-        
-        <Link to={"/sign-in"}>
-            <Button > Sign In</Button>
-        </Link>
+
+        {currentUser ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <img
+                  src={currentUser.profilePicture}
+                  alt="user profile picture"
+                  className="w-10 h-10 rounded-full"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-60">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuItem className="block font-semibold text-sm">
+                <div className="flex flex-col gap-1">
+                  <span>@{currentUser.username}</span>
+                  <span>{currentUser.email}</span>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="font-semibold mt-1">
+                <Link to="/dashboard?tab=profile">Profile</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="font-semibold mt-1">
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Link to={"/sign-in"}>
+            <Button> Sign In</Button>
+          </Link>
+        )}
       </div>
     </nav>
   );

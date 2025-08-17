@@ -25,7 +25,7 @@ const GoogleAuth = () => {
         body: JSON.stringify({
           name: firebaseResponse.user.displayName,
           email: firebaseResponse.user.email,
-          profilePicture: firebaseResponse.user.photoURL,
+          profilePhotoUrl: firebaseResponse.user.photoURL,
         }),
       });
 

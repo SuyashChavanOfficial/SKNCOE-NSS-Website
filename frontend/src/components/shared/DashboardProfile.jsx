@@ -1,20 +1,86 @@
 import React, { useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import {
+  updateFailure,
+  updateStart,
+  updateSuccess,
+} from "@/redux/user/userSlice";
+import { getFileUrl, uploadFile } from "@/lib/appwrite/uploadImage";
+import { useToast } from "@/hooks/use-toast";
 
 const DashboardProfile = () => {
   const { currentUser } = useSelector((state) => state.user);
+
+  const profilePicRef = useRef();
+  const dispatch = useDispatch();
+  const { toast } = useToast();
+
   const [imageFile, setImageFile] = useState(null);
   const [imageFileUrl, setImageFileUrl] = useState(null);
-  const profilePicRef = useRef();
+  const [formData, setFormData] = useState({});
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
 
     if (file) {
       setImageFile(file);
-      setImageFileUrl(URL.createObjectURL(file))
+      setImageFileUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const uploadImage = async () => {
+    if (!imageFile) return currentUser.profilePicture;
+
+    try {
+      const uploadedFile = await uploadFile(imageFile);
+      const profilePictureUrl = await getFileUrl(uploadedFile.$id);
+
+      return profilePictureUrl;
+    } catch (error) {
+      toast({ title: "User Update Failure. Please try again!" });
+      console.log("Image upload failed: ", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      dispatch(updateStart());
+
+      // wait until image is uploaded
+      const profilePicture = await uploadImage();
+      const updateProfile = {
+        ...formData,
+        profilePicture,
+      };
+
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateProfile),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast({ title: "User Update Failure. Please try again!" });
+        dispatch(updateFailure(data.message));
+      } else {
+        toast({ title: "User Updated Successfully." });
+        dispatch(updateSuccess(data));
+      }
+    } catch (error) {
+      toast({ title: "User Update Failure. Please try again!" });
+      dispatch(updateFailure(error.message));
     }
   };
 
@@ -23,7 +89,7 @@ const DashboardProfile = () => {
       <h1 className="my-7  text-center font-semibold text-3xl">
         Update your Profile
       </h1>
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <input
           type="file"
           accept="image/*"
@@ -45,6 +111,7 @@ const DashboardProfile = () => {
           placeholder="username"
           defaultValue={currentUser.username}
           className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+          onChange={handleChange}
         />
         <Input
           type="email"
@@ -52,13 +119,14 @@ const DashboardProfile = () => {
           placeholder="email"
           defaultValue={currentUser.email}
           className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-          disabled
+          onChange={handleChange}
         />
         <Input
           type="password"
           id="password"
           placeholder="password"
           className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+          onChange={handleChange}
         />
 
         <Button type="submit" className="h-12 bg-green-600">

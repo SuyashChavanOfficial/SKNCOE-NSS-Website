@@ -1,12 +1,12 @@
 // Upload file
 
-import { ImageGravity } from "appwrite";
+import { ID, ImageGravity } from "appwrite";
 import { appwriteConfig, storage } from "./config";
 
 export async function uploadFile(file) {
   try {
     const uploadedFile = await storage.createFile(
-      appwriteConfig.storageID,
+      appwriteConfig.storageId,
       ID.unique(),
       file
     );
@@ -18,18 +18,18 @@ export async function uploadFile(file) {
 }
 
 // GET FILE URL
-export async function getFilePreview(fileID) {
+export async function getFileUrl(fileID) {
   try {
-    const fileUrl = storage.getFilePreview(
-      appwriteConfig.storageID,
-      fileID,
-      2000,
-      2000,
-      ImageGravity.Top,
-      100
+    const fileUrl = storage.getFileView(
+      appwriteConfig.storageId,
+      fileID
+      // 2000,
+      // 2000,
+      // ImageGravity.Top,
+      // 100
     );
 
-    if(!fileURL) throw Error
+    if(!fileUrl) throw Error
 
     return fileUrl
   } catch (error) {}

@@ -6,6 +6,7 @@ import {
   deleteUserFailure,
   deleteUserStart,
   deleteUserSuccess,
+  signOutSuccess,
   updateFailure,
   updateStart,
   updateSuccess,
@@ -23,6 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
 } from "../ui/alert-dialog";
+import { es } from "zod/v4/locales";
 
 const DashboardProfile = () => {
   const { currentUser, error } = useSelector((state) => state.user);
@@ -119,6 +121,24 @@ const DashboardProfile = () => {
     }
   };
 
+  const handleSignout = async () => {
+    try {
+      const res = await fetch("/api/user/signout", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.log(data.message);
+      } else {
+        dispatch(signOutSuccess());
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7  text-center font-semibold text-3xl">
@@ -197,7 +217,11 @@ const DashboardProfile = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Button variant="ghost" className="cursor-pointer">
+        <Button
+          variant="ghost"
+          className="cursor-pointer"
+          onClick={handleSignout}
+        >
           Sign Out
         </Button>
       </div>

@@ -1,12 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaSignOutAlt, FaUser } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { FaPenSquare, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import { signOutSuccess } from "@/redux/user/userSlice";
 
 const DashboardSidebar = () => {
-
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
 
   const handleSignout = async () => {
     try {
@@ -35,7 +35,7 @@ const DashboardSidebar = () => {
 
       {/* Navigation Links */}
       <nav className="flex-1 p-4">
-        <ul className="space-y-4">
+        <ul className="space-y-2">
           <li>
             <Link
               to={"/dashboard?tab=profile"}
@@ -45,10 +45,24 @@ const DashboardSidebar = () => {
               <span>Profile</span>
             </Link>
           </li>
+          {currentUser && currentUser.isAdmin && (
+            <li>
+              <Link
+                to={"/create-post"}
+                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              >
+                <FaPenSquare className="mr-3" />
+                <span>Create News</span>
+              </Link>
+            </li>
+          )}
         </ul>
 
         <div className="p-4 border-t border-gray-700">
-          <button className="flex items-center w-full p-2 hover:bg-slate-300 rounded" onClick={handleSignout}>
+          <button
+            className="flex items-center w-full p-2 hover:bg-slate-300 rounded"
+            onClick={handleSignout}
+          >
             <FaSignOutAlt className="mr-3" />
             <span> Logout</span>
           </button>

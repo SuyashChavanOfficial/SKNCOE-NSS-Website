@@ -10,6 +10,8 @@ import Header from "./components/shared/Header";
 import { Toaster } from "./components/ui/toaster";
 import Footer from "./components/shared/Footer";
 import PrivateRoute from "./components/shared/PrivateRoute";
+import CreatePost from "./pages/CreateNews";
+import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
 
 const App = () => {
   return (
@@ -23,10 +25,13 @@ const App = () => {
         <Route path="/" element={<Home />}></Route>
         <Route path="/about" element={<About />}></Route>
 
-        <Route element={<PrivateRoute/>}>
+        <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />}></Route>
         </Route>
         <Route path="/news" element={<NewsArticles />}></Route>
+        <Route element={<AdminPrivateRoute />}>
+          <Route path="/create-post" element={<CreatePost />} />
+        </Route>
       </Routes>
 
       <Footer />

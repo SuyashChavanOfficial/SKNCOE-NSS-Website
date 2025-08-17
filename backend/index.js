@@ -1,7 +1,10 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+
 import authRoutes from "./routes/auth.route.js";
+import userRoutes from "./routes/user.route.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 const app = express();
@@ -21,7 +24,11 @@ mongoose
 // Enable JSON request body parsing
 app.use(express.json());
 
+// To get cookies
+app.use(cookieParser());
+
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 // To handle errors
 app.use((err, req, res, next) => {

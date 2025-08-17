@@ -11,7 +11,7 @@ const BottomNavbar = () => {
       </Link>
       <Link to={"/dashboard?tab=profile"} className="flex flex-col items-center text-slate-800">
         <FaSignOutAlt size={20} />
-        <span className="text-xs">Logout</span>
+        <span className="text-xs">Sign Out</span>
       </Link>
     </div>
   );

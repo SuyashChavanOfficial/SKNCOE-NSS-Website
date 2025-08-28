@@ -50,7 +50,7 @@ const DashboardPosts = () => {
                 <TableHead className="w-[200px]">Date Updated</TableHead>
                 <TableHead>Post Image</TableHead>
                 <TableHead>Post Title</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Author</TableHead>
                 <TableHead>Delete</TableHead>
                 <TableHead>Edit</TableHead>
               </TableRow>
@@ -81,7 +81,7 @@ const DashboardPosts = () => {
 
                   {/* For Category  */}
                   <TableCell>
-                    <Link to={`/post/${post.slug}`}>{post.category}</Link>
+                    <Link to={`/post/${post.slug}`}>{post.userId.username}</Link>
                   </TableCell>
 
                   <TableCell>

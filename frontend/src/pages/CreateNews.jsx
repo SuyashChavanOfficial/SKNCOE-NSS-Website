@@ -49,7 +49,7 @@ const CreateNews = () => {
         <Editor
           theme="snow"
           placeholder="Write News here..."
-          className="h-72 mb-12"
+          className=""
           required
         />
 

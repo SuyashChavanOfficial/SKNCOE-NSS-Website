@@ -12,6 +12,8 @@ const Editor = ({ value, onChange, placeholder = "Start typing..." }) => {
       uploader: {
         insertImageAsBase64URI: true,
       },
+      height: "auto",
+      minHeight: "400px",
       buttons: [
         "bold",
         "italic",
@@ -37,6 +39,7 @@ const Editor = ({ value, onChange, placeholder = "Start typing..." }) => {
       tabIndex={1}
       onBlur={(newContent) => onChange(newContent)} 
       onChange={() => {}} 
+      className="h-20"
     />
   );
 };

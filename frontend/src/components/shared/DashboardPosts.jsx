@@ -15,7 +15,7 @@ const DashboardPosts = () => {
   const { currentUser } = useSelector((state) => state.user);
 
   const [userPosts, setUserPosts] = useState([]);
-  console.log(userPosts);
+  const [showMore, setShowMore] = useState(true);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -25,6 +25,10 @@ const DashboardPosts = () => {
 
         if (res.ok) {
           setUserPosts(data.posts);
+
+          if (data.posts.length < 9) {
+            setShowMore(false);
+          }
         }
       } catch (error) {
         console.log(error);
@@ -34,7 +38,27 @@ const DashboardPosts = () => {
     if (currentUser.isAdmin) {
       fetchPost();
     }
-  }, [currentUser._id]);
+  }, [currentUser]);
+
+  const handleShowMore = async () => {
+    const startIndex = userPosts.length;
+
+    try {
+      const res = await fetch(`/api/post/getposts?startIndex=${startIndex}`);
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUserPosts((prev) => [...prev, ...data.posts]);
+
+        if (data.posts.length < 9) {
+          setShowMore(false);
+        }
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-3">
@@ -55,8 +79,8 @@ const DashboardPosts = () => {
                 <TableHead>Edit</TableHead>
               </TableRow>
             </TableHeader>
-            {userPosts.map((post) => (
-              <TableBody className="divide-y">
+            <TableBody className="divide-y">
+              {userPosts.map((post) => (
                 <TableRow key={post._id}>
                   {/* for updated date  */}
                   <TableCell>
@@ -81,7 +105,9 @@ const DashboardPosts = () => {
 
                   {/* For Category  */}
                   <TableCell>
-                    <Link to={`/post/${post.slug}`}>{post.userId.username}</Link>
+                    <Link to={`/post/${post.slug}`}>
+                      {post.userId.username}
+                    </Link>
                   </TableCell>
 
                   <TableCell>
@@ -99,9 +125,17 @@ const DashboardPosts = () => {
                     </Link>
                   </TableCell>
                 </TableRow>
-              </TableBody>
-            ))}
+              ))}
+            </TableBody>
           </Table>
+          {showMore && (
+            <button
+              onClick={handleShowMore}
+              className="w-full text-blue-700 self-center text-sm py-7"
+            >
+              Show More
+            </button>
+          )}
         </>
       ) : (
         <p>You have no post yet</p>

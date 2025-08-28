@@ -13,14 +13,17 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getFileUrl, uploadFile } from "@/lib/appwrite/uploadImage";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CreateNews = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
   const [file, setFile] = useState(null);
   const [formData, setFormData] = useState({});
   const [imageUploadError, setImageUploadError] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
-
-  const { toast } = useToast();
+  const [createPostError, setCreatePostError] = useState(null);
 
   const handleImageUpload = async () => {
     try {
@@ -51,13 +54,44 @@ const CreateNews = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("/api/post/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast({ title: "Something went wrong! Please try again" });
+        setCreatePostError(data.message);
+        return;
+      }
+
+      if (res.ok) {
+        toast({ title: "Congratulations! News Published Successfully." });
+        setCreatePostError(null);
+        navigate(`/post/${data.slug}`);
+      }
+    } catch (error) {
+      toast({ title: "Something went wrong! Please try again" });
+      setCreatePostError("Something went wrong! Please try again");
+    }
+  };
+
   return (
     <div className="p-3 max-w-3xl mx-auto min-h-screen">
       <h1 className="text-center text-3xl my-7 font-semibold text-slate-700">
         Create a News Article
       </h1>
 
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4 sm:flex-row justify-between">
           <Input
             className="w-full sm:w-3/4  h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -65,8 +99,16 @@ const CreateNews = () => {
             placeholder="Title"
             required
             id="title"
+            onChange={(e) => {
+              setFormData({ ...formData, title: e.target.value });
+            }}
           />
-          <Select>
+
+          <Select
+            onValueChange={(value) =>
+              setFormData({ ...formData, category: value })
+            }
+          >
             <SelectTrigger className="w-full sm:w-1/4 h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0">
               <SelectValue placeholder="Select a Category" />
             </SelectTrigger>
@@ -108,10 +150,12 @@ const CreateNews = () => {
         )}
 
         <Editor
-          theme="snow"
+          value={formData.content || ""}
           placeholder="Write News here..."
-          className=""
           required
+          onChange={(value) => {
+            setFormData({ ...formData, content: value });
+          }}
         />
 
         <Button
@@ -120,6 +164,8 @@ const CreateNews = () => {
         >
           Publish News
         </Button>
+
+        {createPostError && <p className="text-red-600 mt-5">{createPostError}</p>}
       </form>
     </div>
   );

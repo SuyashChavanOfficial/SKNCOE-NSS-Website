@@ -8,10 +8,7 @@ const Editor = ({ value, onChange, placeholder = "Start typing..." }) => {
     () => ({
       readonly: false,
       placeholder,
-      toolbarButtonSize: "small",
-      uploader: {
-        insertImageAsBase64URI: true,
-      },
+      toolbarButtonSize: "medium",
       height: "auto",
       minHeight: "400px",
       buttons: [
@@ -37,9 +34,8 @@ const Editor = ({ value, onChange, placeholder = "Start typing..." }) => {
       value={value}
       config={config}
       tabIndex={1}
-      onBlur={(newContent) => onChange(newContent)} 
-      onChange={() => {}} 
-      className="h-20"
+      onBlur={(newContent) => onChange(newContent)}
+      onChange={() => {}}
     />
   );
 };

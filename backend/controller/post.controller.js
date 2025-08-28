@@ -32,6 +32,15 @@ export const create = async (req, res, next) => {
 
 export const getPosts = async (req, res, next) => {
   try {
+    if (req.query.postId) {
+      const post = await Post.findById(req.query.postId).populate(
+        "userId",
+        "username"
+      );
+      if (!post) return next(errorHandler(404, "Post not found"));
+      return res.status(200).json({ post });
+    }
+
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
 
@@ -78,14 +87,43 @@ export const getPosts = async (req, res, next) => {
 
 export const deletepost = async (req, res, next) => {
   if (!req.user.isAdmin || req.user.id !== req.params.userId) {
-    return next(errorHandler(403, "You are not authorized to delete this News"));
+    return next(
+      errorHandler(403, "You are not authorized to delete this News")
+    );
   }
 
   try {
-    await Post.findByIdAndDelete(req.params.postId)
+    await Post.findByIdAndDelete(req.params.postId);
 
-    res.status(200).json("Post has been Deleted Successfully!")
+    res.status(200).json("Post has been Deleted Successfully!");
   } catch (error) {
-    next(error)
+    next(error);
+  }
+};
+
+export const updatepost = async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(
+      errorHandler(403, "You are not authorized to update this News")
+    );
+  }
+
+  try {
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.postId,
+      {
+        $set: {
+          title: req.body.title,
+          content: req.body.content,
+          category: req.body.category,
+          image: req.body.image,
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    next(error);
   }
 };

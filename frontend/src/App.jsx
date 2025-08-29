@@ -14,11 +14,13 @@ import CreateNews from "./pages/CreateNews";
 import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
 import EditNews from "./pages/EditNews";
 import NewsDetails from "./pages/NewsDetails";
+import ScrollToTop from "./components/shared/ScrollToTop";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Header />
+      <ScrollToTop />
 
       <Routes>
         <Route path="/sign-in" element={<SignInForm />}></Route>

@@ -67,3 +67,30 @@
   }
 }
 
+/* NEWS CONTENT CSS  */
+
+.news-content p {
+  margin-bottom: 0.5rem;
+}
+
+.news-content h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  margin: 1rem 0;
+}
+
+.news-content h2 {
+  font-size: 1.3rem;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  margin: 1.5rem 0;
+}
+
+.news-content a {
+  color: rgb(6, 6, 210);
+  text-decoration: none;
+}
+
+.news-content a:hover {
+  text-decoration: underline;
+}

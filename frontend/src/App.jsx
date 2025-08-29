@@ -13,6 +13,7 @@ import PrivateRoute from "./components/shared/PrivateRoute";
 import CreateNews from "./pages/CreateNews";
 import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
 import EditNews from "./pages/EditNews";
+import NewsDetails from "./pages/NewsDetails";
 
 const App = () => {
   return (
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />}></Route>
         </Route>
         <Route path="/news" element={<NewsArticles />}></Route>
+        <Route path="/post/:postSlug" element={<NewsDetails />}></Route>
         <Route element={<AdminPrivateRoute />}>
           <Route path="/create-post" element={<CreateNews />} />
           <Route path="/update-post/:postId" element={<EditNews />} />

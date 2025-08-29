@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaPenSquare, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { FaPenSquare, FaSignOutAlt, FaUser, FaUsers } from "react-icons/fa";
 import { IoDocuments } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutSuccess } from "@/redux/user/userSlice";
@@ -67,6 +67,18 @@ const DashboardSidebar = () => {
               >
                 <IoDocuments className="mr-3" />
                 <span>Your Articles</span>
+              </Link>
+            </li>
+          )}
+          
+          {currentUser && currentUser.isAdmin && (
+            <li>
+              <Link
+                to={"/dashboard?tab=users"}
+                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              >
+                <FaUsers className="mr-3" />
+                <span>All Users</span>
               </Link>
             </li>
           )}

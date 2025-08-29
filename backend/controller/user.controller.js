@@ -102,7 +102,7 @@ export const getUsers = async (req, res, next) => {
     const getUsersWithoutPassword = users.map((user) => {
       const { password: pass, ...rest } = user._doc;
 
-      return user;
+      return rest;
     });
 
     const totalUsers = await User.countDocuments();

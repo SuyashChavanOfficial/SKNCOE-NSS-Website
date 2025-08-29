@@ -54,10 +54,10 @@ const DashboardUsers = () => {
   }, [currentUser._id]);
 
   const handleShowMore = async () => {
-    const startIndex = userPosts.length;
+    const startIndex = users.length;
 
     try {
-      const res = await fetch(`/api/users/getusers?startIndex=${startIndex}`);
+      const res = await fetch(`/api/user/getusers?startIndex=${startIndex}`);
 
       const data = await res.json();
 

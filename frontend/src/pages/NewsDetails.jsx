@@ -1,4 +1,5 @@
 import Advertise from "@/components/Advertise";
+import CommentSection from "@/components/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import React, { useEffect, useState } from "react";
@@ -94,6 +95,8 @@ const NewsDetails = () => {
       <div className="max-w-4xl mx-auto w-full">
         <Advertise />
       </div>
+
+      <CommentSection postId={post._id} />
     </main>
   );
 };

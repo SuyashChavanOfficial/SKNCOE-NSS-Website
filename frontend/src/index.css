@@ -69,6 +69,14 @@
 
 /* NEWS CONTENT CSS  */
 
+.news-title {
+  font-family: "Martel", serif;
+  line-height: 2.7rem;
+}
+.news-content {
+  font-family: "Noto Serif Devanagari", serif;
+}
+
 .news-content p {
   margin-bottom: 0.5rem;
 }
@@ -94,3 +102,4 @@
 .news-content a:hover {
   text-decoration: underline;
 }
+

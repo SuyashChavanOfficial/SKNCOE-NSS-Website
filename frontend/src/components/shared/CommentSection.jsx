@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
-import Comment from "./Comment";
+import Comment from "../shared/Comment";
+import { Textarea } from "../ui/textarea";
 
 const CommentSection = ({ postId }) => {
   const { currentUser } = useSelector((state) => state.user);

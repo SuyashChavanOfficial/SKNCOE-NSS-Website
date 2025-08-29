@@ -1,5 +1,6 @@
-import Advertise from "@/components/Advertise";
-import CommentSection from "@/components/CommentSection";
+
+import Advertise from "@/components/shared/Advertise";
+import CommentSection from "@/components/shared/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import React, { useEffect, useState } from "react";
@@ -56,7 +57,7 @@ const NewsDetails = () => {
   }
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      <h1 className="text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">
+      <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">
         {post && post.title}
       </h1>
       <Link

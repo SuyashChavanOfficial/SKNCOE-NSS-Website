@@ -23,7 +23,6 @@ import {
 import { FaCheck } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
 
-
 const DashboardUsers = () => {
   const { currentUser } = useSelector((state) => state.user);
 
@@ -74,7 +73,23 @@ const DashboardUsers = () => {
     }
   };
 
-  const handleDeleteUser = async () => {};
+  const handleDeleteUser = async () => {
+    try {
+      const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
+      } else {
+        console.log(data.message);
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-3">
@@ -144,8 +159,8 @@ const DashboardUsers = () => {
                           </AlertDialogTitle>
                           <AlertDialogDescription>
                             This action cannot be undone. This will permanently
-                            delete the user account and remove their data from our
-                            servers.
+                            delete the user account and remove their data from
+                            our servers.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

@@ -1,4 +1,5 @@
 import BottomNavbar from "@/components/shared/BottomNavbar";
+import DashboardComments from "@/components/shared/DashboardComments";
 import DashboardPosts from "@/components/shared/DashboardPosts";
 import DashboardProfile from "@/components/shared/DashboardProfile";
 import DashboardSidebar from "@/components/shared/DashboardSidebar";
@@ -36,6 +37,9 @@ const Dashboard = () => {
         
         {/* Users */}
         {tab === "users" && <DashboardUsers />}
+        
+        {/* Comments */}
+        {tab === "comments" && <DashboardComments />}
       </div>
     </div>
   );

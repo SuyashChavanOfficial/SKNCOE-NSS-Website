@@ -131,9 +131,9 @@ const DashboardComments = () => {
                     {comment.postId ? (
                       <Link
                         to={`/post/${comment.postId.slug}#comment-${comment._id}`}
-                        className="text-blue-600 hover:underline"
+                        className="w-50"
                       >
-                        {comment.content.slice(0, 30)}...
+                        <p>{comment.content.slice(0, 30)}...</p>
                       </Link>
                     ) : (
                       "Deleted Post"
@@ -144,7 +144,7 @@ const DashboardComments = () => {
                   <TableCell>{comment.numberOfLikes}</TableCell>
 
                   {/* For Title of the post  */}
-                  <TableCell>
+                  <TableCell className="w-50">
                     {comment.postId ? (
                       <Link to={`/post/${comment.postId.slug}`} className="">
                         {comment.postId.title}

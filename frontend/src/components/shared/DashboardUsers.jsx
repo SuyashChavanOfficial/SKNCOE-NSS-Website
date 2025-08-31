@@ -51,7 +51,7 @@ const DashboardUsers = () => {
     if (currentUser.isAdmin) {
       fetchUsers();
     }
-  }, [currentUser._id]);
+  }, [currentUser?.isAdmin]);
 
   const handleShowMore = async () => {
     const startIndex = users.length;

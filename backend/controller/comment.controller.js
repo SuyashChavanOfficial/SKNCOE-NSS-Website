@@ -127,10 +127,10 @@ export const getComments = async (req, res, next) => {
   try {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
-    const sortDirection = req.query.sort === "desc" ? -1 : 1;
+    const sortDirection = req.query.sort === "asc" ? 1 : -1;
 
     const comments = await Comment.find()
-      .populate("postId", "title")
+      .populate("postId", "title slug")
       .populate("userId", "username")
       .sort({ createdAt: sortDirection })
       .skip(startIndex)
@@ -157,5 +157,27 @@ export const getComments = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const getCommentsInPeriod = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: "startDate and endDate are required" });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const total = await Comment.countDocuments({
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    res.status(200).json({ total });
+  } catch (error) {
+    console.error("getCommentsInPeriod error:", error);
+    res.status(500).json({ message: error.message });
   }
 };

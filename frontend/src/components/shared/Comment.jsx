@@ -68,7 +68,10 @@ const Comment = ({ comment, onLike, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="flex p-4 border-b border-slate-300 text-sm gap-2">
+    <div
+      className="flex p-4 border-b border-slate-300 text-sm gap-2"
+      id={`comment-${comment._id}`}
+    >
       <div className="flex-shrink-0 mr-0">
         <img
           src={user.profilePicture}

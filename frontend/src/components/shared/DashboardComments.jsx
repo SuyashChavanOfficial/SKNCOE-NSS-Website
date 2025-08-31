@@ -22,6 +22,7 @@ import {
 } from "../ui/alert-dialog";
 import { FaCheck } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
+import { Link } from "react-router-dom";
 
 const DashboardComments = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -51,13 +52,15 @@ const DashboardComments = () => {
     if (currentUser.isAdmin) {
       fetchComments();
     }
-  }, [currentUser._id,  currentUser.isAdmin]);
+  }, [currentUser?.isAdmin]);
 
   const handleShowMore = async () => {
     const startIndex = comments.length;
 
     try {
-      const res = await fetch(`/api/comment/getComments?startIndex=${startIndex}`);
+      const res = await fetch(
+        `/api/comment/getComments?startIndex=${startIndex}`
+      );
 
       const data = await res.json();
 
@@ -75,14 +78,19 @@ const DashboardComments = () => {
 
   const handleDeleteComment = async () => {
     try {
-      const res = await fetch(`/api/comment/deleteComment/${commentIdToDelete}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/comment/deleteComment/${commentIdToDelete}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await res.json();
 
       if (res.ok) {
-        setComments((prev) => prev.filter((comment) => comment._id !== commentIdToDelete));
+        setComments((prev) =>
+          prev.filter((comment) => comment._id !== commentIdToDelete)
+        );
       } else {
         console.log(data.message);
       }
@@ -96,7 +104,9 @@ const DashboardComments = () => {
       {currentUser.isAdmin && comments.length > 0 ? (
         <>
           <Table>
-            <TableCaption>A list of recent comments on your articles.</TableCaption>
+            <TableCaption>
+              A list of recent comments on your articles.
+            </TableCaption>
 
             <TableHeader>
               <TableRow>
@@ -118,17 +128,36 @@ const DashboardComments = () => {
 
                   {/* for comment content  */}
                   <TableCell>
-                   {comment.content}
+                    {comment.postId ? (
+                      <Link
+                        to={`/post/${comment.postId.slug}#comment-${comment._id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {comment.content.slice(0, 30)}...
+                      </Link>
+                    ) : (
+                      "Deleted Post"
+                    )}
                   </TableCell>
 
                   {/* For Number of Likes  */}
                   <TableCell>{comment.numberOfLikes}</TableCell>
 
                   {/* For Title of the post  */}
-                  <TableCell>{comment.postId?.title || "Deleted Post"}</TableCell>
-                  
+                  <TableCell>
+                    {comment.postId ? (
+                      <Link to={`/post/${comment.postId.slug}`} className="">
+                        {comment.postId.title}
+                      </Link>
+                    ) : (
+                      "Deleted Post"
+                    )}
+                  </TableCell>
+
                   {/* For Username of the author  */}
-                  <TableCell>{comment.userId?.username || "Unknown User"}</TableCell>
+                  <TableCell>
+                    {comment.userId?.username || "Unknown User"}
+                  </TableCell>
 
                   <TableCell>
                     <AlertDialog>
@@ -150,8 +179,8 @@ const DashboardComments = () => {
                           </AlertDialogTitle>
                           <AlertDialogDescription>
                             This action cannot be undone. This will permanently
-                            delete the comment of the user and remove their data from
-                            our servers.
+                            delete the comment of the user and remove their data
+                            from our servers.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

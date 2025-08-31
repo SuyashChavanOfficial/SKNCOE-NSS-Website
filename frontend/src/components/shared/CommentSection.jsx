@@ -48,11 +48,11 @@ const CommentSection = ({ postId }) => {
     }
   };
 
+  // ✅ 1st useEffect → fetch comments
   useEffect(() => {
     const getComments = async () => {
       try {
         const res = await fetch(`/api/comment/getPostComments/${postId}`);
-
         if (res.ok) {
           const data = await res.json();
           setAllComments(data);
@@ -61,9 +61,18 @@ const CommentSection = ({ postId }) => {
         console.log(error);
       }
     };
-
     getComments();
   }, [postId]);
+
+  // ✅ 2nd useEffect → scroll to comment if hash is present
+  useEffect(() => {
+    if (window.location.hash) {
+      const element = document.querySelector(window.location.hash);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [allComments]);
 
   const handleLike = async (commentId) => {
     try {

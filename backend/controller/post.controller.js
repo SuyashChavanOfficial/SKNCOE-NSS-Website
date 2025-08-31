@@ -43,16 +43,13 @@ export const getPosts = async (req, res, next) => {
 
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
-
     const sortDirection = req.query.order === "asc" ? 1 : -1;
 
     const posts = await Post.find({
       ...(req.query.category && { category: req.query.category }),
-
       ...(req.query.slug && { slug: req.query.slug }),
-
       ...(req.query.postId && { _id: req.query.postId }),
-
+      ...(req.query.excludeId && { _id: { $ne: req.query.excludeId } }), // 🚨 exclude current post
       ...(req.query.searchTerm && {
         $or: [
           { title: { $regex: req.query.searchTerm, $options: "i" } },
@@ -68,7 +65,6 @@ export const getPosts = async (req, res, next) => {
     const totalPosts = await Post.countDocuments();
 
     const now = new Date();
-
     const oneMonthAgo = new Date(
       now.getFullYear(),
       now.getMonth() - 1,
@@ -125,5 +121,29 @@ export const updatepost = async (req, res, next) => {
     res.status(200).json(updatedPost);
   } catch (error) {
     next(error);
+  }
+};
+
+export const getPostsInPeriod = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json({ message: "startDate and endDate are required" });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const total = await Post.countDocuments({
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    res.status(200).json({ total });
+  } catch (error) {
+    console.error("getPostsInPeriod error:", error);
+    res.status(500).json({ message: error.message });
   }
 };

@@ -51,7 +51,7 @@ const DashboardPosts = () => {
     if (currentUser.isAdmin) {
       fetchPost();
     }
-  }, [currentUser]);
+  }, [currentUser?.isAdmin]);
 
   const handleShowMore = async () => {
     const startIndex = userPosts.length;

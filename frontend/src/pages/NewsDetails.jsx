@@ -12,7 +12,7 @@ const NewsDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [post, setPost] = useState(null);
-  const [recentArticles, setRecentArticles] = useState(null);
+  const [recentArticles, setRecentArticles] = useState([]);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -20,7 +20,6 @@ const NewsDetails = () => {
         setLoading(true);
 
         const res = await fetch(`/api/post/getposts?slug=${postSlug}`);
-
         const data = await res.json();
 
         if (!res.ok) {
@@ -29,11 +28,9 @@ const NewsDetails = () => {
           return;
         }
 
-        if (res.ok) {
-          setPost(data.posts[0]);
-          setError(false);
-          setLoading(false);
-        }
+        setPost(data.posts[0]);
+        setError(false);
+        setLoading(false);
       } catch (error) {
         setError(true);
         setLoading(false);
@@ -43,22 +40,27 @@ const NewsDetails = () => {
     fetchPost();
   }, [postSlug]);
 
+  // ✅ fetch recent posts but exclude current post
   useEffect(() => {
-    try {
-      const fetchRecentPosts = async () => {
-        const res = await fetch(`/api/post/getposts?limit=3`);
+    const fetchRecentPosts = async () => {
+      if (!post?._id) return; // wait until post is loaded
+
+      try {
+        const res = await fetch(
+          `/api/post/getposts?limit=3&excludeId=${post._id}`
+        );
         const data = await res.json();
 
         if (res.ok) {
           setRecentArticles(data.posts);
         }
-      };
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
 
-      fetchRecentPosts();
-    } catch (error) {
-      console.log(error.message);
-    }
-  }, []);
+    fetchRecentPosts();
+  }, [post]);
 
   if (loading) {
     return (
@@ -73,6 +75,7 @@ const NewsDetails = () => {
       </div>
     );
   }
+  
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
       <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">

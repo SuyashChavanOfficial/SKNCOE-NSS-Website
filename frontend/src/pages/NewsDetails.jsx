@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const NewsDetails = () => {
   const { postSlug } = useParams();
 
@@ -19,7 +20,7 @@ const NewsDetails = () => {
       try {
         setLoading(true);
 
-        const res = await fetch(`/api/post/getposts?slug=${postSlug}`);
+        const res = await fetch(`${API_URL}/api/post/getposts?slug=${postSlug}`);
         const data = await res.json();
 
         if (!res.ok) {
@@ -47,7 +48,7 @@ const NewsDetails = () => {
 
       try {
         const res = await fetch(
-          `/api/post/getposts?limit=3&excludeId=${post._id}`
+          `${API_URL}/api/post/getposts?limit=3&excludeId=${post._id}`
         );
         const data = await res.json();
 

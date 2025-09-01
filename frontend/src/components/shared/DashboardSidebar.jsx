@@ -12,13 +12,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { signOutSuccess } from "@/redux/user/userSlice";
 import { MdDashboardCustomize } from "react-icons/md";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardSidebar = () => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
 
   const handleSignout = async () => {
     try {
-      const res = await fetch("/api/user/signout", {
+      const res = await fetch(`${API_URL}/api/user/signout`, {
         method: "POST",
       });
 

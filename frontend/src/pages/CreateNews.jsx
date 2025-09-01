@@ -15,6 +15,7 @@ import { getFileUrl, uploadFile } from "@/lib/appwrite/uploadImage";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const CreateNews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -58,8 +59,9 @@ const CreateNews = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/post/create", {
+      const res = await fetch(`${API_URL}/api/post/create`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

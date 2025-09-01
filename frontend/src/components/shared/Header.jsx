@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOutSuccess } from "@/redux/user/userSlice";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const Header = () => {
   const { currentUser } = useSelector((state) => state.user);
 
@@ -34,7 +35,7 @@ const Header = () => {
 
   const handleSignout = async () => {
     try {
-      const res = await fetch("/api/user/signout", {
+      const res = await fetch(`${API_URL}/api/user/signout`, {
         method: "POST",
       });
 

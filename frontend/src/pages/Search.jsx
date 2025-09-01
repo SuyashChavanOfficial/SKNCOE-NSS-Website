@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import PostCard from "@/components/shared/PostCard";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const Search = () => {
   const [sidebarData, setSidebarData] = useState({
     searchTerm: "",
@@ -50,7 +51,7 @@ const Search = () => {
 
       const searchQuery = urlParams.toString();
 
-      const res = await fetch(`/api/post/getposts?${searchQuery}`);
+      const res = await fetch(`${API_URL}/api/post/getposts?${searchQuery}`);
 
       if (!res.ok) {
         setLoading(false);
@@ -96,7 +97,7 @@ const Search = () => {
 
     const searchQuery = urlParams.toString();
 
-    const res = await fetch(`/api/post/getposts?${searchQuery}`);
+    const res = await fetch(`${API_URL}/api/post/getposts?${searchQuery}`);
 
     if (!res.ok) {
       return;

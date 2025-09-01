@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import Comment from "../shared/Comment";
 import { Textarea } from "../ui/textarea";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const CommentSection = ({ postId }) => {
   const { currentUser } = useSelector((state) => state.user);
 
@@ -24,8 +25,9 @@ const CommentSection = ({ postId }) => {
     }
 
     try {
-      const res = await fetch(`/api/comment/create`, {
+      const res = await fetch(`${API_URL}/api/comment/create`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: comment,
@@ -52,7 +54,9 @@ const CommentSection = ({ postId }) => {
   useEffect(() => {
     const getComments = async () => {
       try {
-        const res = await fetch(`/api/comment/getPostComments/${postId}`);
+        const res = await fetch(
+          `${API_URL}/api/comment/getPostComments/${postId}`
+        );
         if (res.ok) {
           const data = await res.json();
           setAllComments(data);
@@ -81,9 +85,13 @@ const CommentSection = ({ postId }) => {
         return;
       }
 
-      const res = await fetch(`/api/comment/likeComment/${commentId}`, {
-        method: "PUT",
-      });
+      const res = await fetch(
+        `${API_URL}/api/comment/likeComment/${commentId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+        }
+      );
 
       if (res.ok) {
         const data = await res.json();
@@ -111,9 +119,13 @@ const CommentSection = ({ postId }) => {
         return;
       }
 
-      const res = await fetch(`/api/comment/deleteComment/${commentId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${API_URL}/api/comment/deleteComment/${commentId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
       if (res.ok) {
         const data = await res.json();

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "../ui/table";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const MainDashboard = () => {
   const [users, setUsers] = useState([]);
   const [comments, setComments] = useState([]);
@@ -80,26 +81,36 @@ const MainDashboard = () => {
         recentPostsRes,
       ] = await Promise.all([
         fetch(
-          `/api/user/getUsersInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`
+          `${API_URL}/api/user/getUsersInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
+          { credentials: "include" }
         ),
         fetch(
-          `/api/user/getUsersInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`
+          `${API_URL}/api/user/getUsersInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
+          { credentials: "include" }
         ),
         fetch(
-          `/api/post/getPostsInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`
+          `${API_URL}/api/post/getPostsInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
+          { credentials: "include" }
         ),
         fetch(
-          `/api/post/getPostsInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`
+          `${API_URL}/api/post/getPostsInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
+          { credentials: "include" }
         ),
         fetch(
-          `/api/comment/getCommentsInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`
+          `${API_URL}/api/comment/getCommentsInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
+          { credentials: "include" }
         ),
         fetch(
-          `/api/comment/getCommentsInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`
+          `${API_URL}/api/comment/getCommentsInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
+          { credentials: "include" }
         ),
-        fetch(`/api/user/getusers?limit=5&sort=desc`),
-        fetch(`/api/comment/getcomments?limit=5&sort=desc`),
-        fetch(`/api/post/getposts?limit=5&sort=desc`),
+        fetch(`${API_URL}/api/user/getusers?limit=5&sort=desc`, {
+          credentials: "include",
+        }),
+        fetch(`${API_URL}/api/comment/getComments?limit=5&sort=desc`, {
+          credentials: "include",
+        }),
+        fetch(`${API_URL}/api/post/getposts?limit=5&sort=desc`),
       ]);
 
       const [
@@ -287,7 +298,9 @@ const MainDashboard = () => {
                         className="w-10 h-10 object-cover bg-gray-200 rounded-full"
                       />
                     </TableCell>
-                    <TableCell className="w-80 line-clamp-2">{post.title}</TableCell>
+                    <TableCell className="w-80 line-clamp-2">
+                      {post.title}
+                    </TableCell>
                     <TableCell className="w-5">{post.category}</TableCell>
                   </TableRow>
                 </TableBody>

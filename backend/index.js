@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,11 @@ mongoose
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}))
 
 // Enable JSON request body parsing
 app.use(express.json());

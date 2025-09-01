@@ -5,11 +5,12 @@ import { ArrowRight } from "lucide-react";
 import Advertise from "@/components/shared/Advertise";
 import PostCard from "@/components/shared/PostCard";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const Home = () => {
   const [posts, setPosts] = useState([]);
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await fetch(`/api/post/getPosts?limit=6`);
+      const res = await fetch(`${API_URL}/api/post/getPosts?limit=6`);
       const data = await res.json();
 
       if (res.ok) {

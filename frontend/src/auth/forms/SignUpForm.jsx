@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import GoogleAuth from "@/components/shared/GoogleAuth.jsx";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const formSchema = z.object({
   username: z
     .string()
@@ -48,7 +49,7 @@ const SignUpForm = () => {
       setLoading(true);
       setErrorMessage(null);
 
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

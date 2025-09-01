@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
 } from "../ui/alert-dialog";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardProfile = () => {
   const { currentUser, error, loading} = useSelector((state) => state.user);
 
@@ -76,8 +77,9 @@ const DashboardProfile = () => {
         profilePicture,
       };
 
-      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+      const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -103,8 +105,9 @@ const DashboardProfile = () => {
     try {
       dispatch(deleteUserStart());
 
-      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+      const res = await fetch(`${API_URL}/api/user/delete/${currentUser._id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -122,7 +125,7 @@ const DashboardProfile = () => {
 
   const handleSignout = async () => {
     try {
-      const res = await fetch("/api/user/signout", {
+      const res = await fetch(`${API_URL}/api/user/signout`, {
         method: "POST",
       });
 

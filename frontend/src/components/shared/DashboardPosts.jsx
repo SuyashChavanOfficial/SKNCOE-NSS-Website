@@ -21,8 +21,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { Button } from "../ui/button";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardPosts = () => {
   const { currentUser } = useSelector((state) => state.user);
 
@@ -33,7 +33,7 @@ const DashboardPosts = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await fetch(`/api/post/getposts`);
+        const res = await fetch(`${API_URL}/api/post/getposts`);
         const data = await res.json();
 
         if (res.ok) {
@@ -57,7 +57,9 @@ const DashboardPosts = () => {
     const startIndex = userPosts.length;
 
     try {
-      const res = await fetch(`/api/post/getposts?startIndex=${startIndex}`);
+      const res = await fetch(
+        `${API_URL}/api/post/getposts?startIndex=${startIndex}`
+      );
 
       const data = await res.json();
 
@@ -76,8 +78,8 @@ const DashboardPosts = () => {
   const handleDeletePost = async () => {
     try {
       const res = await fetch(
-        `/api/post/deletepost/${postIdToDelete}/${currentUser._id}`,
-        { method: "DELETE" }
+        `${API_URL}/api/post/deletepost/${postIdToDelete}/${currentUser._id}`,
+        { method: "DELETE", credentials: "include" }
       );
 
       const data = await res.json();

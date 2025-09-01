@@ -20,10 +20,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { FaCheck } from "react-icons/fa";
-import { ImCross } from "react-icons/im";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardComments = () => {
   const { currentUser } = useSelector((state) => state.user);
 
@@ -34,7 +33,9 @@ const DashboardComments = () => {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await fetch(`/api/comment/getComments`);
+        const res = await fetch(`${API_URL}/api/comment/getComments`, {
+          credentials: "include",
+        });
         const data = await res.json();
 
         if (res.ok) {
@@ -59,7 +60,10 @@ const DashboardComments = () => {
 
     try {
       const res = await fetch(
-        `/api/comment/getComments?startIndex=${startIndex}`
+        `${API_URL}/api/comment/getComments?startIndex=${startIndex}`,
+        {
+          credentials: "include",
+        }
       );
 
       const data = await res.json();
@@ -79,9 +83,10 @@ const DashboardComments = () => {
   const handleDeleteComment = async () => {
     try {
       const res = await fetch(
-        `/api/comment/deleteComment/${commentIdToDelete}`,
+        `${API_URL}/api/comment/deleteComment/${commentIdToDelete}`,
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
 

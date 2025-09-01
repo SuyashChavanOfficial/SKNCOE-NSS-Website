@@ -23,6 +23,7 @@ import {
 } from "@/redux/user/userSlice.js";
 import GoogleAuth from "@/components/shared/GoogleAuth.jsx";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid Email Address" }),
   password: z
@@ -48,8 +49,9 @@ const SignInForm = () => {
     try {
       dispatch(signInStart());
 
-      const res = await fetch("/api/auth/signin", {
+      const res = await fetch(`${API_URL}/api/auth/signin`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });

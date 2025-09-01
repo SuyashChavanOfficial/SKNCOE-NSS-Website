@@ -5,13 +5,14 @@ import { IoDocuments } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const BottomNavbar = () => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
 
   const handleSignout = async () => {
     try {
-      const res = await fetch("/api/user/signout", {
+      const res = await fetch(`${API_URL}/api/user/signout`, {
         method: "POST",
       });
 

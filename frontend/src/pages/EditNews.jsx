@@ -16,6 +16,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const EditNews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const EditNews = () => {
   useEffect(() => {
     try {
       const fetchPost = async () => {
-        const res = await fetch(`/api/post/getposts?postId=${postId}`);
+        const res = await fetch(`${API_URL}/api/post/getposts?postId=${postId}`);
 
         const data = await res.json();
 
@@ -91,9 +92,10 @@ const EditNews = () => {
 
     try {
       const res = await fetch(
-        `/api/post/updatepost/${formData._id}/${currentUser._id}`,
+        `${API_URL}/api/post/updatepost/${formData._id}/${currentUser._id}`,
         {
           method: "PUT",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },

@@ -23,6 +23,7 @@ import {
 import { FaCheck } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardUsers = () => {
   const { currentUser } = useSelector((state) => state.user);
 
@@ -33,7 +34,9 @@ const DashboardUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`/api/user/getusers`);
+        const res = await fetch(`${API_URL}/api/user/getusers`, {
+          credentials: "include",
+        });
         const data = await res.json();
 
         if (res.ok) {
@@ -57,7 +60,12 @@ const DashboardUsers = () => {
     const startIndex = users.length;
 
     try {
-      const res = await fetch(`/api/user/getusers?startIndex=${startIndex}`);
+      const res = await fetch(
+        `${API_URL}/api/user/getusers?startIndex=${startIndex}`,
+        {
+          credentials: "include",
+        }
+      );
 
       const data = await res.json();
 
@@ -75,8 +83,9 @@ const DashboardUsers = () => {
 
   const handleDeleteUser = async () => {
     try {
-      const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
+      const res = await fetch(`${API_URL}/api/user/delete/${userIdToDelete}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       const data = await res.json();

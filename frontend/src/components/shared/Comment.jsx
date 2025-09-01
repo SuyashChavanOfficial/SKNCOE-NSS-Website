@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
 } from "../ui/alert-dialog";
 
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const Comment = ({ comment, onLike, onEdit, onDelete }) => {
   const [user, setUser] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +26,9 @@ const Comment = ({ comment, onLike, onEdit, onDelete }) => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const res = await fetch(`/api/user/${comment.userId}`);
+        const res = await fetch(`${API_URL}/api/user/${comment.userId}`, {
+          credentials: 'include',
+        });
 
         const data = await res.json();
 
@@ -47,8 +50,9 @@ const Comment = ({ comment, onLike, onEdit, onDelete }) => {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/comment/editComment/${comment._id}`, {
+      const res = await fetch(`${API_URL}/api/comment/editComment/${comment._id}`, {
         method: "PUT",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

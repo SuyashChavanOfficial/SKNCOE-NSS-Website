@@ -15,8 +15,32 @@ import EditNews from "./pages/EditNews";
 import NewsDetails from "./pages/NewsDetails";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import Search from "./pages/Search";
+import { useDispatch } from "react-redux";
+import { signInSuccess } from "./redux/user/userSlice";
+
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
 const App = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/current`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (res.ok) {
+          dispatch(signInSuccess(data.user));
+        }
+      } catch (err) {
+        console.log("No user logged in");
+      }
+    };
+
+    fetchCurrentUser();
+  }, [dispatch]);
+
   return (
     <BrowserRouter>
       <Header />

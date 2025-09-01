@@ -64,8 +64,8 @@ const SignInForm = () => {
       }
 
       if (res.ok) {
-        dispatch(signInSuccess(data));
-        toast({ title: "Sign in Succcessful!" });
+        dispatch(signInSuccess(data.user));
+        toast({ title: "Sign in Successful!" });
         navigate("/");
       }
     } catch (error) {

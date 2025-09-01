@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import NewsArticles from "./NewsArticles";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Advertise from "@/components/shared/Advertise";
@@ -84,7 +83,7 @@ const Home = () => {
         {posts && posts.length > 0 && (
           <div className="flex flex-col gap-6 md:items-center">
             <h2 className="text-2xl font-bold text-slate-700">Recent News</h2>
-            <div className="flex flex-wrap gap-6 md:gap-10 md:justify-center">
+            <div className="flex flex-wrap gap-6 md:gap-10 md:justify-around">
               {posts.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}

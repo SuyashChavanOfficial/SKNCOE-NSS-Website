@@ -195,7 +195,7 @@ const Search = () => {
 
         <Separator className="bg-slate-300" />
 
-        <div className="p-7 flex flex-wrap gap-4">
+        <div className="p-7 flex flex-wrap gap-4 justify-around">
           {!loading && posts.length === 0 && (
             <>
               <p className="text-xl text-gray-500">No Posts Found!</p>

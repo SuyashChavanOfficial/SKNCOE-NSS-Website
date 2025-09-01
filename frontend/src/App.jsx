@@ -5,7 +5,6 @@ import SignUpForm from "./auth/forms/SignUpForm";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
-import NewsArticles from "./pages/NewsArticles";
 import Header from "./components/shared/Header";
 import { Toaster } from "./components/ui/toaster";
 import Footer from "./components/shared/Footer";
@@ -34,7 +33,7 @@ const App = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />}></Route>
         </Route>
-        <Route path="/news" element={<NewsArticles />}></Route>
+        <Route path="/news" element={<Search />}></Route>
         <Route path="/post/:postSlug" element={<NewsDetails />}></Route>
         <Route element={<AdminPrivateRoute />}>
           <Route path="/create-post" element={<CreateNews />} />

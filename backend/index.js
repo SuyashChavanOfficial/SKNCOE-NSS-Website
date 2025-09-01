@@ -24,15 +24,9 @@ mongoose
     console.error("MongoDB connection error:", err);
   });
 
-const allowedOrigins = [
-  process.env.NODE_ENV === "production"
-    ? process.env.FRONTEND_URL_PROD
-    : process.env.FRONTEND_URL_DEV,
-];
-
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: process.env.FRONTEND_URL_PROD,
     credentials: true,
   })
 );

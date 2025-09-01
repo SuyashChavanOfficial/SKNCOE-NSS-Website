@@ -24,10 +24,18 @@ mongoose
     console.error("MongoDB connection error:", err);
   });
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}))
+const allowedOrigins = [
+  process.env.NODE_ENV === "production"
+    ? process.env.FRONTEND_URL_PROD
+    : process.env.FRONTEND_URL_DEV,
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 // Enable JSON request body parsing
 app.use(express.json());

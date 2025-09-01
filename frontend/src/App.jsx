@@ -15,6 +15,7 @@ import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
 import EditNews from "./pages/EditNews";
 import NewsDetails from "./pages/NewsDetails";
 import ScrollToTop from "./components/shared/ScrollToTop";
+import Search from "./pages/Search";
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
 
         <Route path="/" element={<Home />}></Route>
         <Route path="/about" element={<About />}></Route>
+        <Route path="/search" element={<Search />}></Route>
 
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />}></Route>

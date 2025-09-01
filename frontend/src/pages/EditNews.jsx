@@ -1,4 +1,4 @@
-import Editor from "@/components/Editor";
+import Editor from "@/components/shared/Editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

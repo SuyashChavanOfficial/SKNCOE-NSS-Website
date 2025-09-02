@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../../hooks/use-toast.js";
-
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -39,50 +38,37 @@ const SignInForm = () => {
   const { loading, error: errorMessage } = useSelector((state) => state.user);
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   async function onSubmit(values) {
-  try {
-    dispatch(signInStart());
+    try {
+      dispatch(signInStart());
 
-    const res = await fetch(`${API_URL}/api/auth/signin`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-
-    const data = await res.json();
-
-    if (data.success === false) {
-      toast({ title: "Sign in Failed! Please try again." });
-      dispatch(signInFailure(data.message));
-    }
-
-    if (res.ok) {
-      const currentRes = await fetch(`${API_URL}/api/auth/current`, {
+      const res = await fetch(`${API_URL}/api/auth/signin`, {
+        method: "POST",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
       });
-      const currentData = await currentRes.json();
 
-      if (currentRes.ok) {
-        dispatch(signInSuccess(currentData.user));
-      } else {
-        dispatch(signInSuccess(data.user));
+      const data = await res.json();
+
+      if (data.success === false) {
+        toast({ title: "Sign in Failed! Please try again." });
+        dispatch(signInFailure(data.message));
       }
 
-      toast({ title: "Sign in Successful!" });
-      navigate("/");
+      if (res.ok) {
+        dispatch(signInSuccess(data.user));
+        toast({ title: "Sign in Successful!" });
+        navigate("/");
+      }
+    } catch (error) {
+      toast({ title: "Something went wrong!" });
+      dispatch(signInFailure(error.message));
     }
-  } catch (error) {
-    toast({ title: "Something went wrong!" });
-    dispatch(signInFailure(error.message));
   }
-}
 
   return (
     <div className="min-h-screen mt-20">

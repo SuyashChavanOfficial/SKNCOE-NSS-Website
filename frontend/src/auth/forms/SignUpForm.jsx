@@ -26,7 +26,7 @@ const formSchema = z.object({
   email: z.string().email({ message: "Invalid Email Address" }),
   password: z
     .string()
-    .min(5, { message: "Password should be atleast of 5 characters" }),
+    .min(8, { message: "Password should be atleast of 8 characters" }),
 });
 
 const SignUpForm = () => {

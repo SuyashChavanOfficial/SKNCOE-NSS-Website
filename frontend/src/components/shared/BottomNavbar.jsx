@@ -14,6 +14,7 @@ const BottomNavbar = () => {
     try {
       const res = await fetch(`${API_URL}/api/user/signout`, {
         method: "POST",
+        credentials: "include",
       });
 
       const data = await res.json();

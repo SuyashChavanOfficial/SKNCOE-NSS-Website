@@ -3,6 +3,7 @@ import CommentSection from "@/components/shared/CommentSection";
 import PostCard from "@/components/shared/PostCard";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -20,7 +21,9 @@ const NewsDetails = () => {
       try {
         setLoading(true);
 
-        const res = await fetch(`${API_URL}/api/post/getposts?slug=${postSlug}`);
+        const res = await fetch(
+          `${API_URL}/api/post/getposts?slug=${postSlug}`
+        );
         const data = await res.json();
 
         if (!res.ok) {
@@ -66,17 +69,15 @@ const NewsDetails = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <video
-          src="/assets/videos/Loading_Files.webm"
-          autoPlay
+        <DotLottieReact
+          src="https://lottie.host/d9a9a224-1020-4c17-b95a-c53f72c115ff/9TiQ3jn6Q1.lottie"
           loop
-          muted
-          playsInline
+          autoplay
         />
       </div>
     );
   }
-  
+
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
       <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">

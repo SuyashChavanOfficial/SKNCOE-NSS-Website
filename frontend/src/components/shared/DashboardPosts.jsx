@@ -110,6 +110,7 @@ const DashboardPosts = () => {
                 <TableHead className="w-[200px]">Date Updated</TableHead>
                 <TableHead>Post Image</TableHead>
                 <TableHead>Post Title</TableHead>
+                <TableHead>Likes</TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Delete</TableHead>
                 <TableHead>Edit</TableHead>
@@ -139,12 +140,15 @@ const DashboardPosts = () => {
                     <Link to={`/post/${post.slug}`}>{post.title}</Link>
                   </TableCell>
 
-                  {/* For Category  */}
+                  {/* For Author  */}
                   <TableCell>
                     <Link to={`/post/${post.slug}`}>
                       {post.userId.username}
                     </Link>
                   </TableCell>
+
+                  {/* ✅ Likes */}
+                  <TableCell>{post.numberOfLikes || 0}</TableCell>
 
                   <TableCell>
                     <AlertDialog>

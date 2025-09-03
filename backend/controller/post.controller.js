@@ -147,3 +147,31 @@ export const getPostsInPeriod = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const likePost = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+
+    if (!post) {
+      return next(errorHandler(404, "Post not found!"));
+    }
+
+    const userIndex = post.likes.findIndex(
+      (id) => id.toString() === req.user.id
+    );
+
+    if (userIndex === -1) {
+      post.numberOfLikes += 1;
+      post.likes.push(req.user.id);
+    } else {
+      post.numberOfLikes = Math.max(0, post.numberOfLikes - 1);
+      post.likes.splice(userIndex, 1);
+    }
+
+    await post.save();
+
+    res.status(200).json(post);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Heart } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const NewsDetails = () => {
@@ -15,6 +17,10 @@ const NewsDetails = () => {
   const [error, setError] = useState(false);
   const [post, setPost] = useState(null);
   const [recentArticles, setRecentArticles] = useState([]);
+
+  const navigate = useNavigate();
+
+  const { currentUser } = useSelector((state) => state.user);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -78,6 +84,26 @@ const NewsDetails = () => {
     );
   }
 
+  const handleLike = async () => {
+    if (!currentUser) {
+      navigate("/sign-in");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/post/likePost/${post._id}`, {
+        method: "PUT",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPost(data);
+      }
+    } catch (error) {
+      console.log("Error liking post:", error);
+    }
+  };
+
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
       <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">
@@ -116,6 +142,20 @@ const NewsDetails = () => {
 
       <div className="max-w-4xl mx-auto w-full">
         <Advertise />
+      </div>
+
+      <div className="flex items-center gap-3 p-3 max-w-3xl mx-auto">
+        <button
+          onClick={handleLike}
+          className="flex items-center gap-2 text-red-600 font-semibold"
+        >
+          <Heart
+            className={`w-6 h-6 ${
+              post?.likes?.includes(currentUser?._id) ? "fill-red-600" : ""
+            }`}
+          />
+          {post?.numberOfLikes || 0} Likes
+        </button>
       </div>
 
       <CommentSection postId={post._id} />

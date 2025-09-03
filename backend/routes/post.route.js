@@ -5,6 +5,7 @@ import {
   deletepost,
   getPosts,
   getPostsInPeriod,
+  likePost,
   updatepost,
 } from "../controller/post.controller.js";
 
@@ -15,5 +16,7 @@ router.get("/getposts", getPosts);
 router.delete("/deletepost/:postId/:userId", verifyToken, deletepost);
 router.put("/updatepost/:postId/:userId", verifyToken, updatepost);
 router.get("/getPostsInPeriod", verifyToken, getPostsInPeriod);
+router.put("/likePost/:postId", verifyToken, likePost);
+
 
 export default router;

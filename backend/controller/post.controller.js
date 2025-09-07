@@ -162,7 +162,7 @@ export const getPostById = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.postId);
     if (!post) return next(errorHandler(404, "Post not found!"));
-    res.status(200).json(post);
+    res.status(200).json({ post }); // ✅ wrapped in object
   } catch (error) {
     next(error);
   }

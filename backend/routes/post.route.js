@@ -14,6 +14,7 @@ const router = express.Router();
 
 router.post("/create", verifyToken, create);
 router.get("/getposts", getPosts);
+router.get("/getpostbyid/:postId", getPostById);
 router.get("/getpost/:slug", getPostBySlug);
 router.delete("/deletepost/:postId/:userId", verifyToken, deletepost);
 router.put("/updatepost/:postId/:userId", verifyToken, updatepost);

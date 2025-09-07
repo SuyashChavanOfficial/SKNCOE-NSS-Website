@@ -32,7 +32,7 @@ const EditNews = () => {
   useEffect(() => {
     try {
       const fetchPost = async () => {
-        const res = await fetch(`${API_URL}/api/post/getposts?postId=${postId}`);
+        const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
 
         const data = await res.json();
 

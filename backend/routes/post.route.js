@@ -3,6 +3,7 @@ import { verifyToken } from "../utils/verifyUser.js";
 import {
   create,
   deletepost,
+  getPostById,
   getPostBySlug,
   getPosts,
   getPostsInPeriod,

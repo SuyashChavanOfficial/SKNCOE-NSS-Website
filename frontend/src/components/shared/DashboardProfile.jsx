@@ -27,7 +27,7 @@ import {
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardProfile = () => {
-  const { currentUser, error, loading} = useSelector((state) => state.user);
+  const { currentUser, error, loading } = useSelector((state) => state.user);
 
   const profilePicRef = useRef();
   const dispatch = useDispatch();
@@ -155,11 +155,20 @@ const DashboardProfile = () => {
           ref={profilePicRef}
           onChange={handleImageChange}
         />
-        <div className="w-32 h-32 self-center cursor-pointer overflow-hidden">
+
+        <div className="relative w-40 h-40 self-center cursor-pointer overflow-hidden">
+          {/* Outer Ring (your circular PNG/SVG with transparent center) */}
+          <img
+            src="./nss-logo.png" // replace with your ring-like structure
+            className="w-full h-full"
+          />
+
+          {/* Inner Profile Picture */}
           <img
             src={imageFileUrl || currentUser.profilePicture}
-            alt=""
-            className="rounded-full w-full h-full object-cover border-8 border-gray-300"
+            alt="Profile Picture"
+            className="absolute top-1/2 left-1/2 w-24 h-24 rounded-full object-cover 
+               -translate-x-1/2 -translate-y-1/2 cursor-pointer"
             onClick={() => profilePicRef.current.click()}
           />
         </div>
@@ -188,7 +197,7 @@ const DashboardProfile = () => {
         />
 
         <Button type="submit" className="h-12 bg-green-600" disabled={loading}>
-          {loading ? "Updating..." : "Update Profile" } 
+          {loading ? "Updating..." : "Update Profile"}
         </Button>
       </form>
 

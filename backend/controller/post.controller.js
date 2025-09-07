@@ -9,11 +9,7 @@ export const create = async (req, res, next) => {
   if (!req.body.title || !req.body.content || !req.body.image) {
     return next(errorHandler(400, "All Fields are required"));
   }
-  const slug = req.body.title
-    .split(" ")
-    .join("-")
-    .toLowerCase()
-    .replace(/[^a-zA-Z0-9-]/g, "");
+  const slug = req.body.title.trim().replace(/\s+/g, "-");
 
   const newPost = new Post({
     ...req.body,

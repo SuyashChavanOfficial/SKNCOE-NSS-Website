@@ -157,9 +157,9 @@ const DashboardProfile = () => {
         />
 
         <div className="relative w-40 h-40 self-center cursor-pointer overflow-hidden">
-          {/* Outer Ring (your circular PNG/SVG with transparent center) */}
+          {/* Outer Ring - NSS Logo */}
           <img
-            src="./nss-logo.png" // replace with your ring-like structure
+            src="./nss-logo.png"
             className="w-full h-full"
           />
 

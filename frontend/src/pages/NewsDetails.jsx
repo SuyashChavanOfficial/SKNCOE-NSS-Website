@@ -10,6 +10,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Heart } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const NewsDetails = () => {
   const { postSlug } = useParams();
 
@@ -19,17 +20,15 @@ const NewsDetails = () => {
   const [recentArticles, setRecentArticles] = useState([]);
 
   const navigate = useNavigate();
-
   const { currentUser } = useSelector((state) => state.user);
 
+  // ✅ Fetch single post by slug
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setLoading(true);
 
-        const res = await fetch(
-          `${API_URL}/api/post/getposts?slug=${postSlug}`
-        );
+        const res = await fetch(`${API_URL}/api/post/getpost/${postSlug}`);
         const data = await res.json();
 
         if (!res.ok) {
@@ -38,10 +37,11 @@ const NewsDetails = () => {
           return;
         }
 
-        setPost(data.posts[0]);
+        setPost(data);
         setError(false);
         setLoading(false);
       } catch (error) {
+        console.log("Error fetching post:", error);
         setError(true);
         setLoading(false);
       }

@@ -3,6 +3,7 @@ import { verifyToken } from "../utils/verifyUser.js";
 import {
   create,
   deletepost,
+  getPostBySlug,
   getPosts,
   getPostsInPeriod,
   likePost,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post("/create", verifyToken, create);
 router.get("/getposts", getPosts);
+router.get("/getpost/:slug", getPostBySlug);
 router.delete("/deletepost/:postId/:userId", verifyToken, deletepost);
 router.put("/updatepost/:postId/:userId", verifyToken, updatepost);
 router.get("/getPostsInPeriod", verifyToken, getPostsInPeriod);

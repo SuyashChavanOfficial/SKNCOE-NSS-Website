@@ -84,6 +84,7 @@ const DashboardProfile = () => {
       } else {
         toast({ title: "User Updated Successfully." });
         dispatch(updateSuccess(data));
+        setFormData({ ...formData, password: "" });
       }
     } catch (error) {
       toast({ title: "User Update Failure. Please try again!" });
@@ -173,7 +174,7 @@ const DashboardProfile = () => {
           <Input
             type={showPassword ? "text" : "password"}
             id="password"
-            placeholder="password"
+            placeholder="********"
             className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 pr-10"
             onChange={handleChange}
           />

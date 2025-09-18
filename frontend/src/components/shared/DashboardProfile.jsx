@@ -48,6 +48,14 @@ const DashboardProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File size exceeds 500 KB. Please select a smaller image.",
+      });
+      return;
+    }
+
     try {
       dispatch(updateStart());
 

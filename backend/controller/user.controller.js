@@ -149,7 +149,9 @@ export const getUsersInPeriod = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     if (!startDate || !endDate) {
-      return res.status(400).json({ message: "startDate and endDate are required" });
+      return res
+        .status(400)
+        .json({ message: "startDate and endDate are required" });
     }
 
     const start = new Date(startDate);
@@ -160,8 +162,31 @@ export const getUsersInPeriod = async (req, res) => {
       createdAt: { $gte: start, $lte: end },
     });
 
-    res.status(200).json({ total });  // 🔥 don’t return full users array
+    res.status(200).json({ total }); // 🔥 don’t return full users array
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateAdmins = async (req, res, next) => {
+  if (!req.user.isSuperAdmin) {
+    return next(errorHandler(403, "Only Super Admin can update admins!"));
+  }
+
+  try {
+    const { updates } = req.body; // [{ userId, isAdmin }]
+    if (!Array.isArray(updates)) {
+      return next(errorHandler(400, "Invalid data format"));
+    }
+
+    const updatePromises = updates.map((u) =>
+      User.findByIdAndUpdate(u.userId, { isAdmin: u.isAdmin }, { new: true })
+    );
+
+    await Promise.all(updatePromises);
+
+    res.status(200).json({ message: "Admins updated successfully" });
+  } catch (error) {
+    next(error);
   }
 };

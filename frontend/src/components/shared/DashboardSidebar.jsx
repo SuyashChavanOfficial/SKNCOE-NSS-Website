@@ -92,6 +92,18 @@ const DashboardSidebar = () => {
             </li>
           )}
 
+          {currentUser && currentUser.isSuperAdmin && (
+            <li>
+              <Link
+                to={"/dashboard?tab=admins"}
+                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              >
+                <FaUsers className="mr-3" />
+                <span>Manage Admins</span>
+              </Link>
+            </li>
+          )}
+
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link

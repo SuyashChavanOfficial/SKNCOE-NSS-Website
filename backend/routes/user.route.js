@@ -5,6 +5,7 @@ import {
   getUsers,
   getUsersInPeriod,
   signout,
+  updateAdmins,
   updateUser,
 } from "../controller/user.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
@@ -17,5 +18,6 @@ router.post("/signout", signout);
 router.get("/getusers", verifyToken, getUsers);
 router.get("/getUsersInPeriod", verifyToken, getUsersInPeriod);
 router.get("/:userId", getUserById);
+router.put("/updateAdmins", verifyToken, updateAdmins);
 
 export default router;

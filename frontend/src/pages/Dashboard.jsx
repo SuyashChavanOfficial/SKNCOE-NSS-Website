@@ -1,4 +1,5 @@
 import BottomNavbar from "@/components/shared/BottomNavbar";
+import DashboardAdmins from "@/components/shared/DashboardAdmins";
 import DashboardComments from "@/components/shared/DashboardComments";
 import DashboardPosts from "@/components/shared/DashboardPosts";
 import DashboardProfile from "@/components/shared/DashboardProfile";
@@ -35,15 +36,18 @@ const Dashboard = () => {
 
         {/* news articles */}
         {tab === "posts" && <DashboardPosts />}
-        
+
         {/* Users */}
         {tab === "users" && <DashboardUsers />}
-        
+
         {/* Comments */}
         {tab === "comments" && <DashboardComments />}
-        
+
         {/* Main Dashboard */}
         {tab === "dashboard" && <MainDashboard />}
+
+        {/* Admin Dashboard */}
+        {tab === "admins" && <DashboardAdmins />}
       </div>
     </div>
   );

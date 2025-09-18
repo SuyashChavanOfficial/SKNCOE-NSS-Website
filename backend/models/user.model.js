@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
     },
+    profilePictureId: {
+      type: String,
+      default: null,
+    },
     isAdmin: {
       type: Boolean,
       default: false,

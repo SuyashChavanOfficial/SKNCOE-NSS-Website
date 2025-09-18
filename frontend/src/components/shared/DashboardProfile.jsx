@@ -50,15 +50,21 @@ const DashboardProfile = () => {
 
     try {
       dispatch(updateStart());
+
+      // Upload new file
       const uploadedFile = await uploadFile(file);
       const profilePictureUrl = await getFileUrl(uploadedFile.$id);
 
-      // update DB immediately with new photo
+      // Call API → update user in DB & delete old photo
       const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profilePicture: profilePictureUrl }),
+        body: JSON.stringify({
+          profilePicture: profilePictureUrl,
+          profilePictureId: uploadedFile.$id, // store fileId too
+          deleteOldPictureId: currentUser.profilePictureId, // send old fileId for deletion
+        }),
       });
 
       const data = await res.json();
@@ -222,7 +228,11 @@ const DashboardProfile = () => {
 
         {/* Edit / Save Button */}
         <Button type="submit" className="h-12 bg-green-600" disabled={loading}>
-          {isEditing ? (loading ? "Saving..." : "Save Changes") : "Edit Profile"}
+          {isEditing
+            ? loading
+              ? "Saving..."
+              : "Save Changes"
+            : "Edit Profile"}
         </Button>
       </form>
 

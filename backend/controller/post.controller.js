@@ -31,14 +31,17 @@ export const getPosts = async (req, res, next) => {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
     const sortDirection = req.query.order === "asc" ? 1 : -1;
+    const excludeId = req.query.excludeId;
 
-    const posts = await Post.find()
-      .populate("userId", "username") // ✅ populate author
+    const query = excludeId ? { _id: { $ne: excludeId } } : {};
+
+    const posts = await Post.find(query)
+      .populate("userId", "username")
       .sort({ createdAt: sortDirection })
       .skip(startIndex)
       .limit(limit);
 
-    const totalPosts = await Post.countDocuments();
+    const totalPosts = await Post.countDocuments(query);
 
     res.status(200).json({
       posts,

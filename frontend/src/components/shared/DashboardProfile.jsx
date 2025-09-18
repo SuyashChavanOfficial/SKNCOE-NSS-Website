@@ -176,14 +176,19 @@ const DashboardProfile = () => {
             id="password"
             placeholder="********"
             className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 pr-10"
+            value={formData.password || ""}
             onChange={handleChange}
           />
-          <span
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
-            onClick={() => setShowPassword((prev) => !prev)}
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </span>
+
+          {/* 👇 Show eye only if password field is not empty */}
+          {formData.password && (
+            <span
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          )}
         </div>
 
         <Button type="submit" className="h-12 bg-green-600" disabled={loading}>

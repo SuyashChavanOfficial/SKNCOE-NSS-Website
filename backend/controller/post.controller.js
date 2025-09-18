@@ -1,14 +1,13 @@
 import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js";
+import { storage } from "../lib/appwrite.js";
 
 export const create = async (req, res, next) => {
-  if (!req.user.isAdmin) {
-    return next(errorHandler(403, "You are not authorized to create a News"));
-  }
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
-  if (!req.body.title || !req.body.content || !req.body.image) {
+  if (!req.body.title || !req.body.content || !req.body.image)
     return next(errorHandler(400, "All Fields are required"));
-  }
+
   const slug = req.body.title.trim().replace(/\s+/g, "-");
 
   const newPost = new Post({
@@ -19,7 +18,6 @@ export const create = async (req, res, next) => {
 
   try {
     const savedPost = await newPost.save();
-
     res.status(201).json(savedPost);
   } catch (error) {
     next(error);
@@ -53,42 +51,57 @@ export const getPosts = async (req, res, next) => {
 };
 
 export const deletepost = async (req, res, next) => {
-  if (!req.user.isAdmin || req.user.id !== req.params.userId) {
-    return next(
-      errorHandler(403, "You are not authorized to delete this News")
-    );
-  }
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
-    await Post.findByIdAndDelete(req.params.postId);
+    const post = await Post.findById(req.params.postId);
+    if (!post) return next(errorHandler(404, "Post not found!"));
 
-    res.status(200).json("Post has been Deleted Successfully!");
+    // 🗑️ delete file if exists
+    if (post.imageId) {
+      try {
+        await storage.deleteFile(process.env.APPWRITE_STORAGE_ID, post.imageId);
+      } catch (err) {
+        console.log("Failed to delete news image:", err.message);
+      }
+    }
+
+    await Post.findByIdAndDelete(req.params.postId);
+    res.status(200).json("Post and its image deleted successfully!");
   } catch (error) {
     next(error);
   }
 };
 
 export const updatepost = async (req, res, next) => {
-  if (!req.user.isAdmin) {
-    return next(
-      errorHandler(403, "You are not authorized to update this News")
-    );
-  }
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
+    const updateData = {
+      title: req.body.title,
+      content: req.body.content,
+      category: req.body.category,
+      image: req.body.image,
+      imageId: req.body.imageId,
+    };
+
+    // 🗑️ delete old image if new one uploaded
+    if (req.body.deleteOldImageId) {
+      try {
+        await storage.deleteFile(
+          process.env.APPWRITE_STORAGE_ID,
+          req.body.deleteOldImageId
+        );
+      } catch (err) {
+        console.log("Failed to delete old news image:", err.message);
+      }
+    }
+
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.postId,
-      {
-        $set: {
-          title: req.body.title,
-          content: req.body.content,
-          category: req.body.category,
-          image: req.body.image,
-        },
-      },
+      { $set: updateData },
       { new: true }
     );
-
     res.status(200).json(updatedPost);
   } catch (error) {
     next(error);

@@ -22,6 +22,10 @@ const postSchema = new mongoose.Schema(
       default:
         "https://images.pexels.com/photos/518543/pexels-photo-518543.jpeg",
     },
+    imageId: {
+      type: String,
+      default: null,
+    },
     content: {
       type: String,
       required: true,

@@ -16,6 +16,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const CreateNews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -35,22 +36,24 @@ const CreateNews = () => {
       }
 
       setImageUploading(true);
-
       setImageUploadError(null);
 
       const uploadedFile = await uploadFile(file);
       const postImageUrl = await getFileUrl(uploadedFile.$id);
 
-      setFormData({ ...formData, image: postImageUrl });
+      // ✅ store both image and imageId
+      setFormData({
+        ...formData,
+        image: postImageUrl,
+        imageId: uploadedFile.$id,
+      });
 
       toast({ title: "Image Uploaded Successfully!" });
 
-      if (postImageUrl) {
-        setImageUploading(false);
-      }
+      if (postImageUrl) setImageUploading(false);
     } catch (error) {
       setImageUploadError("Image upload failed");
-      toast({ title: "Image Uploaded Failed!" });
+      toast({ title: "Image Upload Failed!" });
       setImageUploading(false);
     }
   };
@@ -62,9 +65,7 @@ const CreateNews = () => {
       const res = await fetch(`${API_URL}/api/post/create`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -76,11 +77,9 @@ const CreateNews = () => {
         return;
       }
 
-      if (res.ok) {
-        toast({ title: "Congratulations! News Published Successfully." });
-        setCreatePostError(null);
-        navigate(`/post/${data.slug}`);
-      }
+      toast({ title: "Congratulations! News Published Successfully." });
+      setCreatePostError(null);
+      navigate(`/post/${data.slug}`);
     } catch (error) {
       toast({ title: "Something went wrong! Please try again" });
       setCreatePostError("Something went wrong! Please try again");
@@ -96,14 +95,14 @@ const CreateNews = () => {
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4 sm:flex-row justify-between">
           <Input
-            className="w-full sm:w-3/4  h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="w-full sm:w-3/4 h-12 border-slate-400 focus-visible:ring-0"
             type="text"
             placeholder="Title"
             required
             id="title"
-            onChange={(e) => {
-              setFormData({ ...formData, title: e.target.value });
-            }}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
           />
 
           <Select
@@ -111,7 +110,7 @@ const CreateNews = () => {
               setFormData({ ...formData, category: value })
             }
           >
-            <SelectTrigger className="w-full sm:w-1/4 h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <SelectTrigger className="w-full sm:w-1/4 h-12 border-slate-400 focus-visible:ring-0">
               <SelectValue placeholder="Select a Category" />
             </SelectTrigger>
             <SelectContent>
@@ -124,13 +123,12 @@ const CreateNews = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-4 items-center justify-between border-4 border-slate-600 border-dotted p-3 ">
+
+        <div className="flex gap-4 items-center border-4 border-slate-600 border-dotted p-3">
           <Input
             type="file"
             accept="image/*"
-            onChange={(e) => {
-              setFile(e.target.files[0]);
-            }}
+            onChange={(e) => setFile(e.target.files[0])}
           />
           <Button
             type="button"
@@ -142,7 +140,6 @@ const CreateNews = () => {
         </div>
 
         {imageUploadError && <p className="text-red-600">{imageUploadError}</p>}
-
         {formData.image && (
           <img
             src={formData.image}
@@ -155,19 +152,15 @@ const CreateNews = () => {
           value={formData.content || ""}
           placeholder="Write News here..."
           required
-          onChange={(value) => {
-            setFormData({ ...formData, content: value });
-          }}
+          onChange={(value) => setFormData({ ...formData, content: value })}
         />
 
-        <Button
-          type="submit"
-          className="h-12 bg-green-600 font-semibold max-sm:mt-5 text-md"
-        >
+        <Button type="submit" className="h-12 bg-green-600 font-semibold">
           Publish News
         </Button>
-
-        {createPostError && <p className="text-red-600 mt-5">{createPostError}</p>}
+        {createPostError && (
+          <p className="text-red-600 mt-5">{createPostError}</p>
+        )}
       </form>
     </div>
   );

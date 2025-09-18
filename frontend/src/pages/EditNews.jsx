@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const EditNews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -30,32 +31,22 @@ const EditNews = () => {
   const [updatePostError, setUpdatePostError] = useState(null);
 
   useEffect(() => {
-    try {
-      const fetchPost = async () => {
-        const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
+    const fetchPost = async () => {
+      const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
+      const data = await res.json();
 
-        const data = await res.json();
+      if (!res.ok) {
+        setUpdatePostError(data.message);
+        return;
+      }
 
-        if (!res.ok) {
-          console.log(data.message);
-          setUpdatePostError(data.message);
-          return;
-        }
-
-        if (res.ok) {
-          setUpdatePostError(null);
-          if (data.post) {
-            setFormData(data.post);
-          } else {
-            setUpdatePostError("Post not found");
-          }
-        }
-      };
-
-      fetchPost();
-    } catch (error) {
-      console.log(error.message);
-    }
+      if (data.post) {
+        setFormData(data.post);
+      } else {
+        setUpdatePostError("Post not found");
+      }
+    };
+    fetchPost();
   }, [postId]);
 
   const handleImageUpload = async () => {
@@ -67,22 +58,24 @@ const EditNews = () => {
       }
 
       setImageUploading(true);
-
       setImageUploadError(null);
 
       const uploadedFile = await uploadFile(file);
       const postImageUrl = await getFileUrl(uploadedFile.$id);
 
-      setFormData({ ...formData, image: postImageUrl });
+      // ✅ send old imageId for deletion
+      setFormData({
+        ...formData,
+        image: postImageUrl,
+        imageId: uploadedFile.$id,
+        deleteOldImageId: formData.imageId || null,
+      });
 
       toast({ title: "Image Uploaded Successfully!" });
-
-      if (postImageUrl) {
-        setImageUploading(false);
-      }
+      if (postImageUrl) setImageUploading(false);
     } catch (error) {
       setImageUploadError("Image upload failed");
-      toast({ title: "Image Uploaded Failed!" });
+      toast({ title: "Image Upload Failed!" });
       setImageUploading(false);
     }
   };
@@ -90,36 +83,26 @@ const EditNews = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const res = await fetch(
-        `${API_URL}/api/post/updatepost/${formData._id}/${currentUser._id}`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast({ title: "Something went wrong! Please try again" });
-        setUpdatePostError(data.message);
-        return;
+    const res = await fetch(
+      `${API_URL}/api/post/updatepost/${formData._id}/${currentUser._id}`,
+      {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       }
+    );
 
-      if (res.ok) {
-        toast({ title: "Congratulations! News Published Successfully." });
-        setUpdatePostError(null);
-        navigate(`/post/${data.slug}`);
-      }
-    } catch (error) {
+    const data = await res.json();
+
+    if (!res.ok) {
       toast({ title: "Something went wrong! Please try again" });
-      setUpdatePostError("Something went wrong! Please try again");
+      setUpdatePostError(data.message);
+      return;
     }
+
+    toast({ title: "News Updated Successfully." });
+    navigate(`/post/${data.slug}`);
   };
 
   return (
@@ -131,24 +114,24 @@ const EditNews = () => {
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4 sm:flex-row justify-between">
           <Input
-            className="w-full sm:w-3/4  h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="w-full sm:w-3/4 h-12 border-slate-400"
             type="text"
             placeholder="Title"
             required
             id="title"
-            onChange={(e) => {
-              setFormData({ ...formData, title: e.target.value });
-            }}
             value={formData.title || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
           />
 
           <Select
+            value={formData.category || ""}
             onValueChange={(value) =>
               setFormData({ ...formData, category: value })
             }
-            value={formData.category || ""}
           >
-            <SelectTrigger className="w-full sm:w-1/4 h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <SelectTrigger className="w-full sm:w-1/4 h-12 border-slate-400">
               <SelectValue placeholder="Select a Category" />
             </SelectTrigger>
             <SelectContent>
@@ -161,13 +144,12 @@ const EditNews = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-4 items-center justify-between border-4 border-slate-600 border-dotted p-3 ">
+
+        <div className="flex gap-4 items-center border-4 border-slate-600 border-dotted p-3">
           <Input
             type="file"
             accept="image/*"
-            onChange={(e) => {
-              setFile(e.target.files[0]);
-            }}
+            onChange={(e) => setFile(e.target.files[0])}
           />
           <Button
             type="button"
@@ -179,7 +161,6 @@ const EditNews = () => {
         </div>
 
         {imageUploadError && <p className="text-red-600">{imageUploadError}</p>}
-
         {formData.image && (
           <img
             src={formData.image}
@@ -192,18 +173,12 @@ const EditNews = () => {
           value={formData.content || ""}
           placeholder="Write News here..."
           required
-          onChange={(value) => {
-            setFormData({ ...formData, content: value });
-          }}
+          onChange={(value) => setFormData({ ...formData, content: value })}
         />
 
-        <Button
-          type="submit"
-          className="h-12 bg-green-600 font-semibold max-sm:mt-5 text-md"
-        >
+        <Button type="submit" className="h-12 bg-green-600 font-semibold">
           Update News
         </Button>
-
         {updatePostError && (
           <p className="text-red-600 mt-5">{updatePostError}</p>
         )}

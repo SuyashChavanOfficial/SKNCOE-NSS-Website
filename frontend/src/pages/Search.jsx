@@ -232,7 +232,7 @@ const Search = () => {
 
         <Separator className="bg-slate-300" />
 
-        <div className="p-7 flex flex-wrap gap-4 justify-around">
+        <div className="p-7 flex flex-wrap gap-8 justify-items-start">
           {!loading && posts.length === 0 && (
             <>
               <p className="text-xl text-gray-500">No Posts Found!</p>

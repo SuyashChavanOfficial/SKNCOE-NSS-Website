@@ -124,8 +124,13 @@ const DashboardAdmins = () => {
           </Table>
 
           {/* Toggle button */}
+
           <Button
-            className="mt-5 bg-slate-700 text-white"
+            className={`mt-5 text-white ${
+              editMode
+                ? "bg-slate-700 hover:bg-green-600"
+                : "bg-green-600 hover:bg-slate-700"
+            }`}
             onClick={editMode ? handleSave : () => setEditMode(true)}
           >
             {editMode ? "Save Admins" : "Edit Admins"}

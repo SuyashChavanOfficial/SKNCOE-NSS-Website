@@ -24,6 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
 } from "../ui/alert-dialog";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // 👈 added
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardProfile = () => {
@@ -36,10 +37,10 @@ const DashboardProfile = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imageFileUrl, setImageFileUrl] = useState(null);
   const [formData, setFormData] = useState({});
+  const [showPassword, setShowPassword] = useState(false); // 👈 added
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-
     if (file) {
       setImageFile(file);
       setImageFileUrl(URL.createObjectURL(file));
@@ -52,11 +53,9 @@ const DashboardProfile = () => {
 
   const uploadImage = async () => {
     if (!imageFile) return currentUser.profilePicture;
-
     try {
       const uploadedFile = await uploadFile(imageFile);
       const profilePictureUrl = await getFileUrl(uploadedFile.$id);
-
       return profilePictureUrl;
     } catch (error) {
       toast({ title: "User Update Failure. Please try again!" });
@@ -66,28 +65,19 @@ const DashboardProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       dispatch(updateStart());
-
-      // wait until image is uploaded
       const profilePicture = await uploadImage();
-      const updateProfile = {
-        ...formData,
-        profilePicture,
-      };
+      const updateProfile = { ...formData, profilePicture };
 
       const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
         method: "PUT",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateProfile),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         toast({ title: "User Update Failure. Please try again!" });
         dispatch(updateFailure(data.message));
@@ -104,14 +94,11 @@ const DashboardProfile = () => {
   const handleDeleteUser = async () => {
     try {
       dispatch(deleteUserStart());
-
       const res = await fetch(`${API_URL}/api/user/delete/${currentUser._id}`, {
         method: "DELETE",
         credentials: "include",
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         dispatch(deleteUserFailure(data.message));
       } else {
@@ -129,9 +116,7 @@ const DashboardProfile = () => {
         method: "POST",
         credentials: "include",
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         console.log(data.message);
       } else {
@@ -157,13 +142,7 @@ const DashboardProfile = () => {
         />
 
         <div className="relative w-40 h-40 self-center cursor-pointer overflow-hidden">
-          {/* Outer Ring - NSS Logo */}
-          <img
-            src="./nss-logo.png"
-            className="w-full h-full"
-          />
-
-          {/* Inner Profile Picture */}
+          <img src="./nss-logo.png" className="w-full h-full" />
           <img
             src={imageFileUrl || currentUser.profilePicture}
             alt="Profile Picture"
@@ -188,13 +167,23 @@ const DashboardProfile = () => {
           className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
           onChange={handleChange}
         />
-        <Input
-          type="password"
-          id="password"
-          placeholder="password"
-          className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-          onChange={handleChange}
-        />
+
+        {/* 👇 Updated Password Input */}
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            id="password"
+            placeholder="password"
+            className="h-12 border-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 pr-10"
+            onChange={handleChange}
+          />
+          <span
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
+            onClick={() => setShowPassword((prev) => !prev)}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        </div>
 
         <Button type="submit" className="h-12 bg-green-600" disabled={loading}>
           {loading ? "Updating..." : "Update Profile"}
@@ -208,7 +197,6 @@ const DashboardProfile = () => {
               Delete Account
             </Button>
           </AlertDialogTrigger>
-
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -228,7 +216,6 @@ const DashboardProfile = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
         <Button
           variant="ghost"
           className="cursor-pointer"

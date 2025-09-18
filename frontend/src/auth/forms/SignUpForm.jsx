@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import {
   Form,
   FormControl,
@@ -34,6 +35,8 @@ const SignUpForm = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -141,9 +144,21 @@ const SignUpForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
-
                     <FormControl>
-                      <Input type="password" placeholder="* * * *" {...field} />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="* * * *"
+                          {...field}
+                          className="pr-10"
+                        />
+                        <span
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                        >
+                          {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

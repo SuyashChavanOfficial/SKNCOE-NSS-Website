@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../../hooks/use-toast.js";
 import { z } from "zod";
@@ -21,6 +21,7 @@ import {
   signInSuccess,
 } from "@/redux/user/userSlice.js";
 import GoogleAuth from "@/components/shared/GoogleAuth.jsx";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const formSchema = z.object({
@@ -34,6 +35,8 @@ const SignInForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useDispatch();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const { loading, error: errorMessage } = useSelector((state) => state.user);
   const form = useForm({
@@ -119,9 +122,21 @@ const SignInForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
-
                     <FormControl>
-                      <Input type="password" placeholder="* * * *" {...field} />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="* * * *"
+                          {...field}
+                          className="pr-10"
+                        />
+                        <span
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                        >
+                          {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

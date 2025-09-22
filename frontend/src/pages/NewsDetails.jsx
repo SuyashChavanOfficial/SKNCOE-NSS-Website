@@ -104,6 +104,22 @@ const NewsDetails = () => {
     }
   };
 
+  const readingTime = (text) => {
+    if (!text) return "0 sec read";
+
+    const wordsPerMinute = 120;
+    const words = text.trim().split(/\s+/).length;
+    const minutes = Math.floor(words / wordsPerMinute);
+    const seconds = Math.floor(
+      (words % wordsPerMinute) / (wordsPerMinute / 60)
+    );
+
+    if (minutes === 0) return `${seconds} sec read`;
+    return `${minutes} min${minutes > 1 ? "s" : ""}${
+      seconds > 0 ? ` ${seconds} sec` : ""
+    } read`;
+  };
+
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
       <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">
@@ -128,9 +144,7 @@ const NewsDetails = () => {
         <span>
           Published on - {post && new Date(post.createdAt).toLocaleDateString()}
         </span>
-        <span className="italic">
-          {post && (post.content.length / 100).toFixed(0)} mins read
-        </span>
+        <span className="italic">{readingTime(post?.content)}</span>
       </div>
 
       <Separator className="bg-slate-300" />

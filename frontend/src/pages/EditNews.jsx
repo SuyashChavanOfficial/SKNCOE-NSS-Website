@@ -41,7 +41,10 @@ const EditNews = () => {
       }
 
       if (data.post) {
-        setFormData(data.post);
+        setFormData({
+          ...data.post,
+          category: data.post.category || "uncategorised",
+        });
       } else {
         setUpdatePostError("Post not found");
       }
@@ -63,7 +66,6 @@ const EditNews = () => {
       const uploadedFile = await uploadFile(file);
       const postImageUrl = await getFileUrl(uploadedFile.$id);
 
-      // ✅ send old imageId for deletion
       setFormData({
         ...formData,
         image: postImageUrl,
@@ -83,13 +85,18 @@ const EditNews = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const finalFormData = {
+      ...formData,
+      category: formData.category || "uncategorised", // ✅ enforce default
+    };
+
     const res = await fetch(
       `${API_URL}/api/post/updatepost/${formData._id}/${currentUser._id}`,
       {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       }
     );
 
@@ -126,7 +133,7 @@ const EditNews = () => {
           />
 
           <Select
-            value={formData.category || ""}
+            value={formData.category || "uncategorised"}
             onValueChange={(value) =>
               setFormData({ ...formData, category: value })
             }
@@ -137,6 +144,7 @@ const EditNews = () => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Category</SelectLabel>
+                <SelectItem value="uncategorised">Uncategorised</SelectItem>
                 <SelectItem value="tree-plantation">Tree Plantation</SelectItem>
                 <SelectItem value="donation-drive">Donation Drive</SelectItem>
                 <SelectItem value="camp">Camp</SelectItem>

@@ -41,7 +41,6 @@ const CreateNews = () => {
       const uploadedFile = await uploadFile(file);
       const postImageUrl = await getFileUrl(uploadedFile.$id);
 
-      // ✅ store both image and imageId
       setFormData({
         ...formData,
         image: postImageUrl,
@@ -62,11 +61,16 @@ const CreateNews = () => {
     e.preventDefault();
 
     try {
+      const finalFormData = {
+        ...formData,
+        category: formData.category || "uncategorised",
+      };
+
       const res = await fetch(`${API_URL}/api/post/create`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       });
 
       const data = await res.json();
@@ -106,6 +110,7 @@ const CreateNews = () => {
           />
 
           <Select
+            value={formData.category || "uncategorised"}
             onValueChange={(value) =>
               setFormData({ ...formData, category: value })
             }
@@ -116,6 +121,7 @@ const CreateNews = () => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Category</SelectLabel>
+                <SelectItem value="uncategorised">Uncategorised</SelectItem>
                 <SelectItem value="tree-plantation">Tree Plantation</SelectItem>
                 <SelectItem value="donation-drive">Donation Drive</SelectItem>
                 <SelectItem value="camp">Camp</SelectItem>

@@ -13,10 +13,13 @@ import CreateNews from "./pages/CreateNews";
 import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
 import EditNews from "./pages/EditNews";
 import NewsDetails from "./pages/NewsDetails";
+import CreateActivity from "./pages/CreateActivity";
+import EditActivity from "./pages/EditActivity";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import Search from "./pages/Search";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "./redux/user/userSlice";
+import Activities from "./pages/Activities";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -58,10 +61,22 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />}></Route>
         </Route>
         <Route path="/news" element={<Search />}></Route>
+        <Route path="/activities" element={<Activities />}></Route>
         <Route path="/post/:postSlug" element={<NewsDetails />}></Route>
         <Route element={<AdminPrivateRoute />}>
+          {/* For News  */}
           <Route path="/create-post" element={<CreateNews />} />
           <Route path="/update-post/:postId" element={<EditNews />} />
+          
+          {/* For Activities  */}
+          <Route
+            path="/dashboard/create-activity"
+            element={<CreateActivity />}
+          />
+          <Route
+            path="/dashboard/activity/edit/:activityId"
+            element={<EditActivity />}
+          />
         </Route>
       </Routes>
 

@@ -14,20 +14,18 @@ import {
 import { signOutSuccess } from "@/redux/user/userSlice";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const Header = () => {
   const { currentUser } = useSelector((state) => state.user);
-
   const dispatch = useDispatch();
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-
     const searchTermFromUrl = urlParams.get("searchTerm");
-
     if (searchTermFromUrl) {
       setSearchTerm(searchTermFromUrl);
     }
@@ -39,7 +37,6 @@ const Header = () => {
         method: "POST",
         credentials: "include",
       });
-
       const data = await res.json();
 
       if (!res.ok) {
@@ -56,15 +53,14 @@ const Header = () => {
     e.preventDefault();
     const urlParams = new URLSearchParams(location.search);
     urlParams.set("searchTerm", searchTerm);
-
     const searchQuery = urlParams.toString();
-
-    navigate(`/search?${searchQuery}`)
+    navigate(`/search?${searchQuery}`);
   };
 
   return (
     <nav className="shadow-lg sticky">
       <div className="flex justify-between items-center max-w-6xl lg:max-w-7xl p-4">
+        {/* Logo */}
         <Link to={"/"}>
           <h1 className="font-bold text-xl sm:text-2xl flex-wrap">
             <span className="text-red-600">SKNCOE</span>
@@ -72,6 +68,7 @@ const Header = () => {
           </h1>
         </Link>
 
+        {/* Search Bar */}
         <form
           className="p-3 bg-blue-100 rounded-lg flex items-center"
           onSubmit={handleSubmit}
@@ -88,6 +85,7 @@ const Header = () => {
           </button>
         </form>
 
+        {/* Navigation Links */}
         <ul className="flex gap-4">
           <li className="hidden lg:inline text-slate-700 hover:underline">
             <Link to={"/"}>Home</Link>
@@ -98,8 +96,12 @@ const Header = () => {
           <li className="hidden lg:inline text-slate-700 hover:underline">
             <Link to={"/news"}>News Articles</Link>
           </li>
+          <li className="hidden lg:inline text-slate-700 hover:underline">
+            <Link to={"/activities"}>Activities</Link>
+          </li>
         </ul>
 
+        {/* User Menu */}
         {currentUser ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -120,7 +122,6 @@ const Header = () => {
                   <span>{currentUser.email}</span>
                 </div>
               </DropdownMenuItem>
-
               <DropdownMenuItem className="font-semibold mt-1">
                 <Link to="/dashboard?tab=profile">Profile</Link>
               </DropdownMenuItem>

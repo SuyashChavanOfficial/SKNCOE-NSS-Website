@@ -1,4 +1,5 @@
 import BottomNavbar from "@/components/shared/BottomNavbar";
+import DashboardActivities from "@/components/shared/DashboardActivities";
 import DashboardAdmins from "@/components/shared/DashboardAdmins";
 import DashboardComments from "@/components/shared/DashboardComments";
 import DashboardPosts from "@/components/shared/DashboardPosts";
@@ -33,6 +34,9 @@ const Dashboard = () => {
       <div className="w-full">
         {/* Dashboard Profile */}
         {tab === "profile" && <DashboardProfile />}
+
+        {/* Activities */}
+        {tab === "activities" && <DashboardActivities />}
 
         {/* news articles */}
         {tab === "posts" && <DashboardPosts />}

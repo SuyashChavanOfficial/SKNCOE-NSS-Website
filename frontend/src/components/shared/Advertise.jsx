@@ -11,11 +11,12 @@ const Advertise = () => {
           <span className="text-red-600">Activities</span>?
         </h2>
         <p className="text-gray-500 my-2">Click here to know more!</p>
-        <Button className="bg-blue-500 text-md mt-2 h-min">
-          <Link to="/activities" className="text-wrap">
+
+        <Link to="/activities">
+          <Button className="bg-blue-500 text-md mt-2 h-min w-full">
             Join Now!
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
       <div className="p-7 w-full md:w-2/5">
         <img

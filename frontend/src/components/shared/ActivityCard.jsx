@@ -46,9 +46,11 @@ const ActivityCard = ({ activity, onToggleInterest, currentUser, isAdmin }) => {
             {userIsInterested ? "Interested ✓" : "Mark Interest"}
           </button>
 
-          <span className="text-sm text-gray-600">
-            {interestedCount} interested
-          </span>
+          {currentUser?.isAdmin && (
+            <span className="text-sm text-gray-600">
+              {interestedCount} interested
+            </span>
+          )}
 
           {isPast && (
             <span className="ml-auto text-xs py-0.5 px-2 rounded bg-gray-100 text-gray-700">

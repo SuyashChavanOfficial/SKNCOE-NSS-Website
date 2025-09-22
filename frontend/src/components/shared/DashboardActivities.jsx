@@ -75,7 +75,15 @@ const DashboardActivities = () => {
                 <div className="text-xs text-gray-500">
                   Starts: {new Date(a.startDate).toLocaleString()}
                 </div>
+
+                {/* Show interested count only for admins */}
+                {currentUser?.isAdmin && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    {a.interestedUsers?.length || 0} interested
+                  </div>
+                )}
               </div>
+
               <Link
                 to={`/dashboard/activity/${a._id}`}
                 className="text-green-600 hover:underline"

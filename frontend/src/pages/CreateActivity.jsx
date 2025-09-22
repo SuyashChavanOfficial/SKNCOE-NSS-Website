@@ -29,6 +29,11 @@ const CreateActivity = () => {
       return;
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "Poster must be less than 500 KB" });
+      return;
+    }
+
     try {
       setUploading(true);
       const uploadedFile = await uploadFile(file);

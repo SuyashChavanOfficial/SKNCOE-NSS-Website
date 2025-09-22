@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+const MAX_FILE_SIZE = 500 * 1024; // 500 KB
 
 const EditActivity = () => {
   const { activityId } = useParams();
@@ -16,6 +17,7 @@ const EditActivity = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
+  // Fetch activity
   useEffect(() => {
     const fetchActivity = async () => {
       try {
@@ -35,9 +37,13 @@ const EditActivity = () => {
       return;
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "Poster must be less than 500 KB" });
+      return;
+    }
+
     try {
       setUploading(true);
-
       const uploadedFile = await uploadFile(file);
       const url = await getFileUrl(uploadedFile.$id);
 
@@ -55,6 +61,7 @@ const EditActivity = () => {
       toast({ title: "Poster uploaded successfully!" });
     } catch (err) {
       toast({ title: "Poster upload failed" });
+      console.error(err);
     } finally {
       setUploading(false);
     }

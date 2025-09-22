@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const activitySchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
     poster: {
       type: String,
       required: true,

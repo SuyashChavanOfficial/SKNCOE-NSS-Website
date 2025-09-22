@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+const MAX_FILE_SIZE = 500 * 1024; // 500 KB
 
 const CreateActivity = () => {
   const { toast } = useToast();
@@ -43,6 +44,7 @@ const CreateActivity = () => {
       toast({ title: "Poster uploaded successfully!" });
     } catch (err) {
       toast({ title: "Poster upload failed" });
+      console.error(err);
     } finally {
       setUploading(false);
     }
@@ -55,7 +57,10 @@ const CreateActivity = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          expectedDurationHours: Number(formData.expectedDurationHours),
+        }),
       });
 
       const data = await res.json();
@@ -98,7 +103,10 @@ const CreateActivity = () => {
           placeholder="Duration (hours)"
           value={formData.expectedDurationHours}
           onChange={(e) =>
-            setFormData({ ...formData, expectedDurationHours: e.target.value })
+            setFormData({
+              ...formData,
+              expectedDurationHours: e.target.value,
+            })
           }
           required
         />

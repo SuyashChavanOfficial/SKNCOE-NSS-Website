@@ -47,12 +47,14 @@ const EditActivity = () => {
       const uploadedFile = await uploadFile(file);
       const url = await getFileUrl(uploadedFile.$id);
 
-      // if replacing an old poster, mark it for deletion
+      // Prepare updated form data
       const update = {
         ...formData,
         poster: url,
         posterId: uploadedFile.$id,
       };
+
+      // Mark old poster for deletion
       if (formData.posterId) {
         update.deleteOldPosterId = formData.posterId;
       }
@@ -74,7 +76,10 @@ const EditActivity = () => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          expectedDurationHours: Number(formData.expectedDurationHours),
+        }),
       });
 
       const data = await res.json();
@@ -107,7 +112,11 @@ const EditActivity = () => {
 
         <Input
           type="datetime-local"
-          value={formData.startDate?.slice(0, 16)}
+          value={
+            formData.startDate
+              ? new Date(formData.startDate).toISOString().slice(0, 16)
+              : ""
+          }
           onChange={(e) =>
             setFormData({ ...formData, startDate: e.target.value })
           }

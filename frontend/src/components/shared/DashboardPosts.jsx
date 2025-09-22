@@ -140,15 +140,15 @@ const DashboardPosts = () => {
                     <Link to={`/post/${post.slug}`}>{post.title}</Link>
                   </TableCell>
 
+                  {/* ✅ Likes */}
+                  <TableCell>{post.numberOfLikes || 0}</TableCell>
+
                   {/* For Author  */}
                   <TableCell>
                     <Link to={`/post/${post.slug}`}>
                       {post.userId.username}
                     </Link>
                   </TableCell>
-
-                  {/* ✅ Likes */}
-                  <TableCell>{post.numberOfLikes || 0}</TableCell>
 
                   <TableCell>
                     <AlertDialog>

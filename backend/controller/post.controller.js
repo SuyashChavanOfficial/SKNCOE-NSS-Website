@@ -28,10 +28,25 @@ export const getPosts = async (req, res, next) => {
   try {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
-    const sortDirection = req.query.order === "asc" ? 1 : -1;
-    const excludeId = req.query.excludeId;
+    const sortDirection = req.query.sort === "asc" ? 1 : -1;
 
-    const query = excludeId ? { _id: { $ne: excludeId } } : {};
+    const searchTerm = req.query.searchTerm || "";
+    const category = req.query.category || "";
+
+    const query = {};
+
+    // Filter by searchTerm
+    if (searchTerm) {
+      query.$or = [
+        { title: { $regex: searchTerm, $options: "i" } },
+        { content: { $regex: searchTerm, $options: "i" } },
+      ];
+    }
+
+    // Filter by category
+    if (category && category.toLowerCase() !== "all") {
+      query.category = category;
+    }
 
     const posts = await Post.find(query)
       .populate("userId", "username")

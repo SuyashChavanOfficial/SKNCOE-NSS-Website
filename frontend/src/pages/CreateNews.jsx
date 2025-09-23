@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { getFileUrl, uploadFile } from "@/lib/appwrite/uploadImage";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
@@ -22,10 +22,31 @@ const CreateNews = () => {
   const navigate = useNavigate();
 
   const [file, setFile] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({ category: "uncategorised" });
+  const [categories, setCategories] = useState(["uncategorised"]);
   const [imageUploadError, setImageUploadError] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [createPostError, setCreatePostError] = useState(null);
+
+  // Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/category`);
+        const data = await res.json();
+        if (res.ok) {
+          const names = data.map((c) => c.name);
+          setCategories([
+            "uncategorised",
+            ...names.filter((n) => n !== "uncategorised"),
+          ]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleImageUpload = async () => {
     try {
@@ -48,7 +69,6 @@ const CreateNews = () => {
       });
 
       toast({ title: "Image Uploaded Successfully!" });
-
       if (postImageUrl) setImageUploading(false);
     } catch (error) {
       setImageUploadError("Image upload failed");
@@ -110,7 +130,7 @@ const CreateNews = () => {
           />
 
           <Select
-            value={formData.category || "uncategorised"}
+            value={formData.category}
             onValueChange={(value) =>
               setFormData({ ...formData, category: value })
             }
@@ -121,10 +141,11 @@ const CreateNews = () => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Category</SelectLabel>
-                <SelectItem value="uncategorised">Uncategorised</SelectItem>
-                <SelectItem value="tree-plantation">Tree Plantation</SelectItem>
-                <SelectItem value="donation-drive">Donation Drive</SelectItem>
-                <SelectItem value="camp">Camp</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>

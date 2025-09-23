@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
 import activityRoutes from "./routes/activity.route.js";
+import categoryRoutes from "./routes/category.route.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -43,6 +44,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/activity", activityRoutes);
+app.use("/api/category", categoryRoutes);
 
 // To handle errors
 app.use((err, req, res, next) => {

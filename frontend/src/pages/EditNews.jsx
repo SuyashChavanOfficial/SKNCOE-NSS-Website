@@ -26,10 +26,12 @@ const EditNews = () => {
 
   const [file, setFile] = useState(null);
   const [formData, setFormData] = useState({});
+  const [categories, setCategories] = useState([]);
   const [imageUploadError, setImageUploadError] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [updatePostError, setUpdatePostError] = useState(null);
 
+  // ✅ Fetch post details
   useEffect(() => {
     const fetchPost = async () => {
       const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
@@ -52,6 +54,24 @@ const EditNews = () => {
     fetchPost();
   }, [postId]);
 
+  // ✅ Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/category`);
+        const data = await res.json();
+        if (res.ok) {
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // ✅ Upload image
   const handleImageUpload = async () => {
     try {
       if (!file) {
@@ -82,6 +102,7 @@ const EditNews = () => {
     }
   };
 
+  // ✅ Submit update
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -120,6 +141,7 @@ const EditNews = () => {
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4 sm:flex-row justify-between">
+          {/* Title */}
           <Input
             className="w-full sm:w-3/4 h-12 border-slate-400"
             type="text"
@@ -132,6 +154,7 @@ const EditNews = () => {
             }
           />
 
+          {/* Dynamic Category Selector */}
           <Select
             value={formData.category || "uncategorised"}
             onValueChange={(value) =>
@@ -145,14 +168,17 @@ const EditNews = () => {
               <SelectGroup>
                 <SelectLabel>Category</SelectLabel>
                 <SelectItem value="uncategorised">Uncategorised</SelectItem>
-                <SelectItem value="tree-plantation">Tree Plantation</SelectItem>
-                <SelectItem value="donation-drive">Donation Drive</SelectItem>
-                <SelectItem value="camp">Camp</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat._id} value={cat.name}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>
         </div>
 
+        {/* Image Upload */}
         <div className="flex gap-4 items-center border-4 border-slate-600 border-dotted p-3">
           <Input
             type="file"
@@ -177,6 +203,7 @@ const EditNews = () => {
           />
         )}
 
+        {/* Content Editor */}
         <Editor
           value={formData.content || ""}
           placeholder="Write News here..."

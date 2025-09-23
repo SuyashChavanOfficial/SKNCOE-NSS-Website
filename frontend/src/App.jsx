@@ -20,6 +20,7 @@ import Search from "./pages/Search";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "./redux/user/userSlice";
 import Activities from "./pages/Activities";
+import CategoryManager from "./components/shared/CategoryManager";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -63,6 +64,7 @@ const App = () => {
         <Route path="/news" element={<Search />}></Route>
         <Route path="/activities" element={<Activities />}></Route>
         <Route path="/post/:postSlug" element={<NewsDetails />}></Route>
+        
         <Route element={<AdminPrivateRoute />}>
           {/* For News  */}
           <Route path="/create-post" element={<CreateNews />} />
@@ -77,6 +79,13 @@ const App = () => {
             path="/dashboard/activity/edit/:activityId"
             element={<EditActivity />}
           />
+          
+          <Route
+            path="/category-manager"
+            element={<CategoryManager />}
+          />
+
+
         </Route>
       </Routes>
 

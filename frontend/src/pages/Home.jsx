@@ -34,21 +34,33 @@ const Home = () => {
 
   return (
     <div>
-      <div className="flex flex-col gap-6 p-28 max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold">
-          Welcome to <span className="text-red-700">SKNCOE</span>
-          <span className="text-blue-800"> NSS</span>
-        </h1>
-        <p className="text-gray-600 mt-3 text-lg">
-          Working for society with utter dedication and taking big challenges to
-          solve problems.
-        </p>
-        <p className="text-gray-500 italic mt-1 ">सेवा परमो धर्म:</p>
-        <Link to={"/search"}>
-          <Button className="bg-yellow-400 hover:bg-yellow-500 text-blac py-3 px-6 rounded-full font-semibold shadow-lg flex items-center gap-2 w-fit">
-            View all News. <ArrowRight className="h-5 w-5" />
-          </Button>
-        </Link>
+      <div className="flex flex-col md:flex-row items-center gap-10 p-6 md:p-10 max-w-6xl mx-auto">
+        {/* Left Section */}
+        <div className="flex-1 text-center md:text-left">
+          <h1 className="text-3xl md:text-4xl font-bold">
+            Welcome to <span className="text-red-700">SKNCOE</span>
+            <span className="text-blue-800"> NSS</span>
+          </h1>
+          <p className="text-gray-600 mt-3 text-base md:text-lg">
+            Working for society with utter dedication and taking big challenges
+            to solve problems.
+          </p>
+          <p className="text-gray-500 italic mt-1">सेवा परमो धर्म:</p>
+          <Link to={"/search"}>
+            <Button className="bg-yellow-400 hover:bg-yellow-500 text-black py-3 px-6 rounded-full font-semibold shadow-lg flex items-center gap-2 w-fit mt-4 mx-auto md:mx-0">
+              View all News. <ArrowRight className="h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+
+        {/* Right Section (Image) */}
+        <div className="flex-1 flex justify-center">
+          <img
+            src="/nss-logo.webp"
+            alt="SKNCOE NSS"
+            className="rounded-lg w-40 sm:w-56 md:w-72 lg:w-96 object-contain animate-spin-slow"
+          />
+        </div>
       </div>
 
       <section className="pb-16 bg-white">

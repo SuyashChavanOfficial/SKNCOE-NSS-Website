@@ -50,10 +50,7 @@ const Footer = () => {
           <p className="text-gray-400 text-sm">Vadgaon Bk., Pune - 41</p>
           <p className="text-gray-400 text-sm">
             <span className="font-bold">Email: </span>
-            <a
-              href="mailto:skncoenss@gmail.com"
-              className="hover:text-white"
-            >
+            <a href="mailto:skncoenss@gmail.com" className="hover:text-white">
               skncoenss@gmail.com
             </a>
           </p>
@@ -88,7 +85,10 @@ const Footer = () => {
         </div>
 
         <p className="mt-4">
-          &copy; {new Date().getFullYear()} SKNCOE NSS. All Rights Reserved.
+          &copy;{new Date().getFullYear()} SKNCOE NSS. All Rights Reserved.
+        </p>
+        <p className="mt-4">
+          Made with ❤️ by <a href="https://suyashchavan.me" className="font-bold hover:text-white">Tech Decoder</a>.
         </p>
       </div>
     </div>

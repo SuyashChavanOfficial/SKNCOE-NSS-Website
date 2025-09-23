@@ -13,7 +13,7 @@ const About = () => {
             </h2>
             <p className="text-gray-600 leading-relaxed ">
               We are SKNCOE NSS, the top 3 unit in Pune Division, working
-              towards bringing the actual on ground change in the society.
+              towards bringing the actual on-ground change in the society.
             </p>
           </div>
 
@@ -28,10 +28,154 @@ const About = () => {
         </div>
       </div>
 
-      {/* Team Section */}
+      {/* Program Officers Section  */}
       <div className="w-full bg-gray-100 py-12">
         <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">
-          Meet our Team
+          Our Program Officers
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/4140/4140039.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Dr. Sanjay Kumar Pingat
+            </h3>
+
+            <p className="text-gray-500">Program Officer</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/4140/4140051.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Prof. Bhoomi Patil
+            </h3>
+
+            <p className="text-gray-500">Program Officer</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Prof. Ghanshyam Firme
+            </h3>
+
+            <p className="text-gray-500">Staff Coordinator</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Working Committee Section */}
+      <div className="w-full py-12">
+        <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">
+          Our Working Committee
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/4140/4140039.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Shashank Malwade
+            </h3>
+
+            <p className="text-gray-500">Discipline Head</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/4140/4140051.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Shruti Ganbote
+            </h3>
+
+            <p className="text-gray-500">Documentation Head</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Vedant Kadam
+            </h3>
+
+            <p className="text-gray-500">Social Media Head</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/18269/18269822.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Soham Dunake
+            </h3>
+
+            <p className="text-gray-500">Finance Head</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/2347/2347320.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Amruta Nannavare
+            </h3>
+
+            <p className="text-gray-500">Cultural Head</p>
+          </div>
+
+          <div className="text-center ">
+            <img
+              src="https://cdn-icons-png.flaticon.com/128/6997/6997662.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+
+            <h3 className="text-xl font-semibold text-gray-700">
+              Vaishnavi Kharade
+            </h3>
+
+            <p className="text-gray-500">Cultural Head</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Advisory Committee Section */}
+      <div className="w-full py-12 bg-gray-100">
+        <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">
+          Our Advisory Committee
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -48,7 +192,7 @@ const About = () => {
 
             <p className="text-gray-500">Discipline Head</p>
           </div>
-          
+
           <div className="text-center ">
             <img
               src="https://cdn-icons-png.flaticon.com/128/4140/4140051.png"
@@ -62,7 +206,7 @@ const About = () => {
 
             <p className="text-gray-500">Documentation Head</p>
           </div>
-          
+
           <div className="text-center ">
             <img
               src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png"
@@ -104,7 +248,7 @@ const About = () => {
 
             <p className="text-gray-500">Sponsorship Head</p>
           </div>
-          
+
           <div className="text-center ">
             <img
               src="https://cdn-icons-png.flaticon.com/128/14663/14663189.png"

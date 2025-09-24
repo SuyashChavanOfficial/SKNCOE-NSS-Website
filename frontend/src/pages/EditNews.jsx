@@ -61,7 +61,16 @@ const EditNews = () => {
         const res = await fetch(`${API_URL}/api/category`);
         const data = await res.json();
         if (res.ok) {
-          setCategories(data);
+          const sorted = data
+            .filter((c) => c.name.toLowerCase() !== "uncategorised")
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, "en", { sensitivity: "base" })
+            );
+
+          setCategories([
+            { _id: "uncategorised", name: "uncategorised" },
+            ...sorted,
+          ]);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -167,10 +176,10 @@ const EditNews = () => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Category</SelectLabel>
-                <SelectItem value="uncategorised">Uncategorised</SelectItem>
                 {categories.map((cat) => (
-                  <SelectItem key={cat._id} value={cat.name}>
-                    {cat.name}
+                  <SelectItem key={cat._id || cat} value={cat.name || cat}>
+                    {(cat.name || cat).charAt(0).toUpperCase() +
+                      (cat.name || cat).slice(1)}
                   </SelectItem>
                 ))}
               </SelectGroup>

@@ -36,10 +36,12 @@ const CreateNews = () => {
         const data = await res.json();
         if (res.ok) {
           const names = data.map((c) => c.name);
-          setCategories([
-            "uncategorised",
-            ...names.filter((n) => n !== "uncategorised"),
-          ]);
+
+          const sorted = names
+            .filter((n) => n.toLowerCase() !== "uncategorised")
+            .sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }));
+
+          setCategories(["uncategorised", ...sorted]);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);

@@ -40,8 +40,15 @@ const Search = () => {
       const res = await fetch(`${API_URL}/api/category`);
       const data = await res.json();
       if (res.ok) {
-        const catData = data.map((c) => ({ id: c._id, name: c.name }));
-        setCategories([{ id: null, name: "all" }, ...catData]);
+        const sortedCategories = data
+          .filter((c) => c.name.toLowerCase() !== "all")
+          .sort((a, b) =>
+            a.name.localeCompare(b.name, "en", { sensitivity: "base" })
+          );
+
+        const catData = [{ id: null, name: "all" }, ...sortedCategories];
+
+        setCategories(catData);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -185,7 +192,7 @@ const Search = () => {
                   <SelectGroup>
                     <SelectLabel>Category</SelectLabel>
                     {categories.map((cat) => (
-                      <SelectItem key={cat.id || "all"} value={cat.name}>
+                      <SelectItem key={cat.id || cat.name} value={cat.name}>
                         {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                       </SelectItem>
                     ))}

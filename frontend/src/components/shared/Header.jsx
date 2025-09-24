@@ -39,10 +39,11 @@ const Header = () => {
       });
       const data = await res.json();
 
-      if (!res.ok) {
-        console.log(data.message);
-      } else {
+      if (res.ok) {
         dispatch(signOutSuccess());
+        navigate("/");
+      } else {
+        console.log(data.message);
       }
     } catch (error) {
       console.log(error);
@@ -61,7 +62,15 @@ const Header = () => {
     <nav className="shadow-lg sticky top-0 bg-white z-50">
       <div className="flex justify-between items-center max-w-6xl lg:max-w-7xl p-4">
         {/* Logo */}
-        <Link to={"/"}>
+        <Link to={"/"} className="flex items-center gap-2">
+          {/* Logo Image */}
+          <img
+            src="/nss-logo.png"
+            alt="SKNCOE NSS Logo"
+            className="w-8 h-8 object-contain"
+          />
+
+          {/* Title */}
           <h1 className="font-bold text-xl sm:text-2xl flex-wrap">
             <span className="text-red-600">SKNCOE</span>
             <span className="text-blue-900">NSS</span>
@@ -117,6 +126,7 @@ const Header = () => {
             <DropdownMenuContent className="w-60" modal={false}>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-200" />
+
               <DropdownMenuItem className="block font-semibold text-sm">
                 <div className="flex flex-col gap-1">
                   <span>@{currentUser.username}</span>
@@ -124,26 +134,31 @@ const Header = () => {
                 </div>
               </DropdownMenuItem>
 
-              {/* Navigation links (only mobile) */}
               <DropdownMenuSeparator className="bg-gray-200 lg:hidden" />
-              <DropdownMenuItem className="lg:hidden">
-                <Link to="/">Home</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="lg:hidden">
-                <Link to="/about">About</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="lg:hidden">
-                <Link to="/news">News Articles</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="lg:hidden">
-                <Link to="/activities">Activities</Link>
-              </DropdownMenuItem>
+
+              <Link to="/" className="lg:hidden">
+                <DropdownMenuItem>Home</DropdownMenuItem>
+              </Link>
+              <Link to="/about" className="lg:hidden">
+                <DropdownMenuItem>About</DropdownMenuItem>
+              </Link>
+              <Link to="/news" className="lg:hidden">
+                <DropdownMenuItem>News Articles</DropdownMenuItem>
+              </Link>
+              <Link to="/activities" className="lg:hidden">
+                <DropdownMenuItem>Activities</DropdownMenuItem>
+              </Link>
 
               <DropdownMenuSeparator className="bg-gray-200" />
-              <DropdownMenuItem>
-                <Link to="/dashboard?tab=profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignout}>
+
+              <Link to="/dashboard?tab=profile">
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+              </Link>
+
+              <DropdownMenuItem
+                onClick={handleSignout}
+                className="text-red-600"
+              >
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>

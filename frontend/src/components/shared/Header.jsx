@@ -58,7 +58,7 @@ const Header = () => {
   };
 
   return (
-    <nav className="shadow-lg sticky">
+    <nav className="shadow-lg sticky top-0 bg-white z-50">
       <div className="flex justify-between items-center max-w-6xl lg:max-w-7xl p-4">
         {/* Logo */}
         <Link to={"/"}>
@@ -85,18 +85,18 @@ const Header = () => {
           </button>
         </form>
 
-        {/* Navigation Links */}
-        <ul className="flex gap-4">
-          <li className="hidden lg:inline text-slate-700 hover:underline">
+        {/* Navigation Links (visible on large screens only) */}
+        <ul className="hidden lg:flex gap-4">
+          <li className="text-slate-700 hover:underline">
             <Link to={"/"}>Home</Link>
           </li>
-          <li className="hidden lg:inline text-slate-700 hover:underline">
+          <li className="text-slate-700 hover:underline">
             <Link to={"/about"}>About</Link>
           </li>
-          <li className="hidden lg:inline text-slate-700 hover:underline">
+          <li className="text-slate-700 hover:underline">
             <Link to={"/news"}>News Articles</Link>
           </li>
-          <li className="hidden lg:inline text-slate-700 hover:underline">
+          <li className="text-slate-700 hover:underline">
             <Link to={"/activities"}>Activities</Link>
           </li>
         </ul>
@@ -109,7 +109,7 @@ const Header = () => {
                 <img
                   src={currentUser.profilePicture}
                   alt="user profile picture"
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-10 h-10 rounded-full object-cover cursor-pointer"
                 />
               </div>
             </DropdownMenuTrigger>
@@ -122,13 +122,27 @@ const Header = () => {
                   <span>{currentUser.email}</span>
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem className="font-semibold mt-1">
+
+              {/* Navigation links inside dropdown (for small screens) */}
+              <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuItem>
+                <Link to="/">Home</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link to="/about">About</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link to="/news">News Articles</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link to="/activities">Activities</Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuItem>
                 <Link to="/dashboard?tab=profile">Profile</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="font-semibold mt-1"
-                onClick={handleSignout}
-              >
+              <DropdownMenuItem onClick={handleSignout}>
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>

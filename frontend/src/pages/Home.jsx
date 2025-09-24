@@ -10,7 +10,7 @@ const Home = () => {
   const [posts, setPosts] = useState([]);
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await fetch(`${API_URL}/api/post/getPosts?limit=6`);
+      const res = await fetch(`${API_URL}/api/post/getPosts?limit=3&sort=desc`);
       const data = await res.json();
 
       if (res.ok) {

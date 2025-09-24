@@ -113,7 +113,8 @@ const Header = () => {
                 />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-60">
+
+            <DropdownMenuContent className="w-60" modal={false}>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-200" />
               <DropdownMenuItem className="block font-semibold text-sm">
@@ -123,18 +124,18 @@ const Header = () => {
                 </div>
               </DropdownMenuItem>
 
-              {/* Navigation links inside dropdown (for small screens) */}
-              <DropdownMenuSeparator className="bg-gray-200" />
-              <DropdownMenuItem>
+              {/* Navigation links (only mobile) */}
+              <DropdownMenuSeparator className="bg-gray-200 lg:hidden" />
+              <DropdownMenuItem className="lg:hidden">
                 <Link to="/">Home</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="lg:hidden">
                 <Link to="/about">About</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="lg:hidden">
                 <Link to="/news">News Articles</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="lg:hidden">
                 <Link to="/activities">Activities</Link>
               </DropdownMenuItem>
 

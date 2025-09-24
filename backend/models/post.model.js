@@ -45,6 +45,7 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    newsDate: { type: Date, required: true },
   },
   { timestamps: true }
 );

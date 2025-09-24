@@ -5,15 +5,18 @@ import { storage } from "../lib/appwrite.js";
 export const create = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
-  if (!req.body.title || !req.body.content || !req.body.image)
-    return next(errorHandler(400, "All Fields are required"));
+  const { title, content, image, newsDate } = req.body;
 
-  const slug = req.body.title.trim().replace(/\s+/g, "-");
+  if (!title || !content || !image || !newsDate)
+    return next(errorHandler(400, "All fields including date are required"));
+
+  const slug = title.trim().replace(/\s+/g, "-");
 
   const newPost = new Post({
     ...req.body,
     slug,
     userId: req.user.id,
+    newsDate: new Date(newsDate), // ✅ ensure Date type
   });
 
   try {
@@ -50,7 +53,7 @@ export const getPosts = async (req, res, next) => {
 
     const posts = await Post.find(query)
       .populate("userId", "username")
-      .sort({ createdAt: sortDirection })
+      .sort({ newsDate: sortDirection })
       .skip(startIndex)
       .limit(limit);
 
@@ -137,7 +140,7 @@ export const getPostsInPeriod = async (req, res) => {
     end.setHours(23, 59, 59, 999);
 
     const total = await Post.countDocuments({
-      createdAt: { $gte: start, $lte: end },
+      newsDate: { $gte: start, $lte: end },
     });
 
     res.status(200).json({ total });

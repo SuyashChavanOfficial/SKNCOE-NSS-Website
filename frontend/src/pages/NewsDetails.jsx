@@ -142,7 +142,7 @@ const NewsDetails = () => {
 
       <div className="flex justify-between p-3 mx-auto w-full max-w-2xl text-xs">
         <span>
-          Published on - {post && new Date(post.createdAt).toLocaleDateString()}
+          Published on - {post && new Date(post.newsDate).toLocaleDateString()}
         </span>
         <span className="italic">{readingTime(post?.content)}</span>
       </div>

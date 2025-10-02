@@ -75,7 +75,9 @@ export const getActivityById = async (req, res, next) => {
   try {
     const activity = await Activity.findById(req.params.activityId)
       .populate("createdBy", "username")
-      .populate("interestedUsers", "username");
+      .populate("interestedUsers", "username")
+      .populate("linkedPost");
+
     if (!activity) return next(errorHandler(404, "Activity not found"));
     res.status(200).json({ activity });
   } catch (error) {
@@ -100,6 +102,7 @@ export const updateActivity = async (req, res, next) => {
       expectedDurationHours:
         req.body.expectedDurationHours ?? existing.expectedDurationHours,
       description: req.body.description ?? existing.description,
+      linkedPost: req.body.linkedPost || existing.linkedPost,
     };
 
     if (
@@ -195,6 +198,23 @@ export const getInterestedUsers = async (req, res, next) => {
     );
     if (!activity) return next(errorHandler(404, "Activity not found"));
     res.status(200).json({ interestedUsers: activity.interestedUsers });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const linkNewsToActivity = async (req, res, next) => {
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+
+  try {
+    const { postId } = req.body;
+    const activity = await Activity.findById(req.params.activityId);
+    if (!activity) return next(errorHandler(404, "Activity not found"));
+
+    activity.linkedPost = postId;
+    await activity.save();
+
+    res.status(200).json({ message: "News linked to activity", activity });
   } catch (error) {
     next(error);
   }

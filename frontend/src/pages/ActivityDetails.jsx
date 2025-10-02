@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useSelector } from "react-redux";
+import { Button } from "@/components/ui/button";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
 const ActivityDetails = () => {
   const { activityId } = useParams();
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [activity, setActivity] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState("");
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -17,27 +23,54 @@ const ActivityDetails = () => {
         setLoading(true);
         const res = await fetch(`${API_URL}/api/activity/get/${activityId}`);
         const data = await res.json();
-
-        if (!res.ok) {
-          setError(true);
-          setLoading(false);
-          return;
+        if (res.ok) {
+          setActivity(data.activity);
+          setSelectedPost(data.activity.linkedPost?._id || "");
         }
-
-        setActivity(data.activity);
-        setError(false);
-        setLoading(false);
       } catch (err) {
-        console.error("Error fetching activity:", err);
-        setError(true);
+        console.error(err);
+      } finally {
         setLoading(false);
       }
     };
-
     fetchActivity();
   }, [activityId]);
 
-  if (loading) {
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/post/getposts?limit=100`);
+        const data = await res.json();
+        if (res.ok) setPosts(data.posts);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    if (currentUser?.isAdmin) fetchPosts();
+  }, [currentUser]);
+
+  const handleLinkPost = async () => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/activity/linkNews/${activityId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ postId: selectedPost }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setActivity(data.activity);
+        alert("News linked successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
         <DotLottieReact
@@ -47,13 +80,10 @@ const ActivityDetails = () => {
         />
       </div>
     );
-  }
 
-  if (error || !activity) {
+  if (!activity)
     return <p className="text-center mt-10 text-red-600">Activity not found</p>;
-  }
 
-  // calculate end time
   const start = new Date(activity.startDate);
   const end = new Date(
     start.getTime() + activity.expectedDurationHours * 3600 * 1000
@@ -85,6 +115,43 @@ const ActivityDetails = () => {
       <div className="p-3 max-w-3xl mx-auto w-full text-gray-800 text-lg">
         {activity.description || "No description provided."}
       </div>
+
+      {/* Linked News */}
+      {activity.linkedPost && (
+        <div
+          className="mt-6 p-3 border rounded shadow-md cursor-pointer hover:shadow-lg transition"
+          onClick={() => navigate(`/post/${activity.linkedPost.slug}`)}
+        >
+          <h2 className="text-xl font-semibold mb-2">News Highlight</h2>
+          <p className="text-lg font-medium">{activity.linkedPost.title}</p>
+          <img
+            src={activity.linkedPost.image}
+            alt={activity.linkedPost.title}
+            className="mt-2 w-full h-64 object-cover rounded"
+          />
+        </div>
+      )}
+
+      {/* Admin controls */}
+      {currentUser?.isAdmin && (
+        <div className="mt-4 flex flex-col gap-2">
+          <select
+            value={selectedPost}
+            onChange={(e) => setSelectedPost(e.target.value)}
+            className="p-2 border rounded"
+          >
+            <option value="">Select a news to link</option>
+            {posts.map((post) => (
+              <option key={post._id} value={post._id}>
+                {post.title}
+              </option>
+            ))}
+          </select>
+          <Button className="bg-blue-600 text-white" onClick={handleLinkPost}>
+            Link News
+          </Button>
+        </div>
+      )}
     </main>
   );
 };

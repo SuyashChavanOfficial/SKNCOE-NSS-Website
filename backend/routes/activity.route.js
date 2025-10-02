@@ -7,6 +7,7 @@ import {
   deleteActivity,
   toggleInterest,
   getInterestedUsers,
+  linkNewsToActivity,
 } from "../controller/activity.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
@@ -20,5 +21,7 @@ router.delete("/delete/:activityId", verifyToken, deleteActivity);
 
 router.put("/toggleInterest/:activityId", verifyToken, toggleInterest);
 router.get("/interestedUsers/:activityId", verifyToken, getInterestedUsers);
+
+router.put("/linkNews/:activityId", verifyToken, linkNewsToActivity);
 
 export default router;

@@ -25,6 +25,11 @@ const activitySchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    linkedPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
+    },
   },
   { timestamps: true }
 );

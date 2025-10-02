@@ -1,6 +1,7 @@
 import Activity from "../models/activity.model.js";
 import { errorHandler } from "../utils/error.js";
 import { storage } from "../lib/appwrite.js";
+import { initializeAttendanceForActivity } from "./attendance.controller.js";
 
 // helper to decide if activity is completed
 const isCompleted = (activity) => {
@@ -37,6 +38,10 @@ export const createActivity = async (req, res, next) => {
     });
 
     const saved = await newActivity.save();
+
+    // ✅ Create attendance records for all volunteers
+    await initializeAttendanceForActivity(saved._id);
+
     res.status(201).json(saved);
   } catch (error) {
     next(error);

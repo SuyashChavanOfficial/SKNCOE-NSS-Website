@@ -80,6 +80,26 @@ const DashboardSidebar = () => {
             </li>
           )}
 
+          <li>
+            <Link
+              to={"/dashboard?tab=volunteers"}
+              className="flex items-center p-2 hover:bg-slate-300 rounded"
+            >
+              <FaUsers className="mr-3" />
+              <span>Volunteers</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to={"/dashboard?tab=attendance"}
+              className="flex items-center p-2 hover:bg-slate-300 rounded"
+            >
+              <IoDocuments className="mr-3" />
+              <span>Attendance</span>
+            </Link>
+          </li>
+
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link
@@ -91,7 +111,7 @@ const DashboardSidebar = () => {
               </Link>
             </li>
           )}
-          
+
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link

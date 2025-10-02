@@ -53,10 +53,6 @@ const EditActivity = () => {
         posterId: uploadedFile.$id,
       };
 
-      if (formData.posterId) {
-        update.deleteOldPosterId = formData.posterId;
-      }
-
       setFormData(update);
       toast({ title: "Poster uploaded successfully!" });
     } catch (err) {

@@ -87,24 +87,33 @@ export const updateActivity = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
+    const existing = await Activity.findById(req.params.activityId);
+    if (!existing) return next(errorHandler(404, "Activity not found"));
+
     const updateData = {
       title: req.body.title,
-      poster: req.body.poster,
-      posterId: req.body.posterId,
-      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
-      expectedDurationHours: req.body.expectedDurationHours,
-      description: req.body.description,
+      poster: req.body.poster || existing.poster,
+      posterId: req.body.posterId || existing.posterId,
+      startDate: req.body.startDate
+        ? new Date(req.body.startDate)
+        : existing.startDate,
+      expectedDurationHours:
+        req.body.expectedDurationHours ?? existing.expectedDurationHours,
+      description: req.body.description ?? existing.description,
     };
 
-    // deleteOldPosterId if provided (from client) - remove old file in storage
-    if (req.body.deleteOldPosterId) {
+    if (
+      req.body.posterId &&
+      existing.posterId &&
+      req.body.posterId !== existing.posterId
+    ) {
       try {
         await storage.deleteFile(
           process.env.APPWRITE_STORAGE_ID,
-          req.body.deleteOldPosterId
+          existing.posterId
         );
       } catch (err) {
-        console.log("Failed to delete old activity poster:", err.message);
+        console.log("⚠️ Failed to delete old activity poster:", err.message);
       }
     }
 
@@ -113,6 +122,7 @@ export const updateActivity = async (req, res, next) => {
       { $set: updateData },
       { new: true }
     );
+
     res.status(200).json(updated);
   } catch (error) {
     next(error);

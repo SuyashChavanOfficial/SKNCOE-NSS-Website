@@ -18,21 +18,23 @@ export const initializeAttendanceForActivity = async (activityId) => {
 // ✅ Mark attendance
 export const markAttendance = async (req, res, next) => {
   try {
-    const { activityId, volunteerId, status } = req.body;
+    const updates = Array.isArray(req.body) ? req.body : [req.body];
+    // each object: { volunteerId, activityId, status }
 
-    if (!["present", "absent"].includes(status)) {
-      return next(errorHandler(400, "Invalid status"));
-    }
+    const results = await Promise.all(
+      updates.map(async ({ volunteerId, activityId, status }) => {
+        if (!["present", "absent"].includes(status)) {
+          throw errorHandler(400, "Invalid status");
+        }
+        return Attendance.findOneAndUpdate(
+          { volunteer: volunteerId, activity: activityId },
+          { status },
+          { new: true, upsert: true } // upsert in case record does not exist
+        ).populate("volunteer activity");
+      })
+    );
 
-    const updated = await Attendance.findOneAndUpdate(
-      { volunteer: volunteerId, activity: activityId },
-      { status },
-      { new: true }
-    ).populate("volunteer activity");
-
-    if (!updated) return next(errorHandler(404, "Attendance record not found"));
-
-    res.status(200).json(updated);
+    res.status(200).json(results);
   } catch (error) {
     next(error);
   }

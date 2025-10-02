@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -11,11 +12,13 @@ const ActivityDetails = () => {
   const { activityId } = useParams();
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [activity, setActivity] = useState(null);
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -50,6 +53,7 @@ const ActivityDetails = () => {
   }, [currentUser]);
 
   const handleLinkPost = async () => {
+    if (!selectedPost) return;
     try {
       const res = await fetch(
         `${API_URL}/api/activity/linkNews/${activityId}`,
@@ -63,10 +67,18 @@ const ActivityDetails = () => {
       if (res.ok) {
         const data = await res.json();
         setActivity(data.activity);
-        alert("News linked successfully!");
+        setShowDropdown(false); // hide dropdown after linking
+        toast({
+          title: "News linked successfully!",
+        });
       }
     } catch (err) {
       console.error(err);
+      toast({
+        title: "Failed to link news",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
@@ -118,38 +130,61 @@ const ActivityDetails = () => {
 
       {/* Linked News */}
       {activity.linkedPost && (
-        <div
-          className="mt-6 p-3 border rounded shadow-md cursor-pointer hover:shadow-lg transition"
-          onClick={() => navigate(`/post/${activity.linkedPost.slug}`)}
-        >
-          <h2 className="text-xl font-semibold mb-2">News Highlight</h2>
-          <p className="text-lg font-medium">{activity.linkedPost.title}</p>
-          <img
-            src={activity.linkedPost.image}
-            alt={activity.linkedPost.title}
-            className="mt-2 w-full h-64 object-cover rounded"
-          />
-        </div>
+        <Link to={`/post/${activity.linkedPost.slug}`}>
+          <div className="mt-6 p-3 border rounded shadow-md cursor-pointer hover:shadow-lg transition">
+            <h2 className="text-xl font-semibold mb-2">News Highlight</h2>
+            <p className="text-lg font-medium">{activity.linkedPost.title}</p>
+            <img
+              src={activity.linkedPost.image}
+              alt={activity.linkedPost.title}
+              className="mt-2 w-full h-64 object-cover rounded"
+            />
+          </div>
+        </Link>
       )}
 
       {/* Admin controls */}
       {currentUser?.isAdmin && (
         <div className="mt-4 flex flex-col gap-2">
-          <select
-            value={selectedPost}
-            onChange={(e) => setSelectedPost(e.target.value)}
-            className="p-2 border rounded"
-          >
-            <option value="">Select a news to link</option>
-            {posts.map((post) => (
-              <option key={post._id} value={post._id}>
-                {post.title}
-              </option>
-            ))}
-          </select>
-          <Button className="bg-blue-600 text-white" onClick={handleLinkPost}>
-            Link News
-          </Button>
+          {/* Show dropdown only when requested */}
+          {showDropdown && (
+            <>
+              <select
+                value={selectedPost}
+                onChange={(e) => setSelectedPost(e.target.value)}
+                className="p-2 border rounded"
+              >
+                <option value="">
+                  {activity.linkedPost
+                    ? "Select a news to update"
+                    : "Select a news to link"}
+                </option>
+                {posts.map((post) => (
+                  <option key={post._id} value={post._id}>
+                    {post.title}
+                  </option>
+                ))}
+              </select>
+              <Button
+                className="bg-blue-600 text-white"
+                onClick={handleLinkPost}
+              >
+                Save
+              </Button>
+            </>
+          )}
+
+          {/* Button to trigger dropdown */}
+          {!showDropdown && (
+            <Button
+              className={`${
+                activity.linkedPost ? "bg-green-600" : "bg-blue-600"
+              } text-white`}
+              onClick={() => setShowDropdown(true)}
+            >
+              {activity.linkedPost ? "Update Linked News" : "Link News"}
+            </Button>
+          )}
         </div>
       )}
     </main>

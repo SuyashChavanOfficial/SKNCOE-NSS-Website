@@ -65,6 +65,7 @@ const App = () => {
         <Route path="/news" element={<Search />}></Route>
         <Route path="/activities" element={<Activities />}></Route>
         <Route path="/post/:postSlug" element={<NewsDetails />}></Route>
+        
         <Route
           path="/dashboard/activity/:activityId"
           element={<ActivityDetails />}

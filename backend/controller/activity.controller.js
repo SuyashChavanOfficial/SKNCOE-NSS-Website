@@ -214,7 +214,14 @@ export const linkNewsToActivity = async (req, res, next) => {
     activity.linkedPost = postId;
     await activity.save();
 
-    res.status(200).json({ message: "News linked to activity", activity });
+    const updatedActivity = await Activity.findById(activity._id)
+      .populate("linkedPost")
+      .populate("createdBy", "username")
+      .populate("interestedUsers", "username");
+
+    res
+      .status(200)
+      .json({ message: "News linked to activity", activity: updatedActivity });
   } catch (error) {
     next(error);
   }

@@ -20,7 +20,7 @@ import Search from "./pages/Search";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "./redux/user/userSlice";
 import Activities from "./pages/Activities";
-import CategoryManager from "./components/shared/CategoryManager";
+import CategoryManager from "./components/shared/DashboardCategory";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 

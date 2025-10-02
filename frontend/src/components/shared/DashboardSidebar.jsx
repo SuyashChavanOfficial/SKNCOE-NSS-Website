@@ -119,7 +119,7 @@ const DashboardSidebar = () => {
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link
-                to={"/category-manager"}
+                to={"/dashboard?tab=category-manager"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
                 <FaPenSquare className="mr-3" />

@@ -16,7 +16,7 @@ import {
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
-const CategoryManager = () => {
+const DashboardCategory = () => {
   const { toast } = useToast();
 
   const [categories, setCategories] = useState(["uncategorised"]);
@@ -189,4 +189,4 @@ const CategoryManager = () => {
   );
 };
 
-export default CategoryManager;
+export default DashboardCategory;

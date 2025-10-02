@@ -9,6 +9,7 @@ import DashboardUsers from "@/components/shared/DashboardUsers";
 import MainDashboard from "@/components/shared/MainDashboard";
 import DashboardVolunteers from "@/components/shared/DashboardVolunteers";
 import DashboardAttendance from "@/components/shared/DashboardAttendance";
+import DashboardCategory from "@/components/shared/DashboardCategory";
 
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -55,6 +56,8 @@ const Dashboard = () => {
 
         {/* Admin Dashboard */}
         {tab === "admins" && <DashboardAdmins />}
+        
+        {tab === "category-manager" && <DashboardCategory />}
 
         {tab === "volunteers" && <DashboardVolunteers />}
         {tab === "attendance" && <DashboardAttendance />}

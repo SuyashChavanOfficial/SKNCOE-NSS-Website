@@ -18,7 +18,16 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -32,6 +41,8 @@ const DashboardVolunteers = () => {
     password: "",
     dob: "",
   });
+  const [editingVolunteer, setEditingVolunteer] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchVolunteers = async () => {
     try {
@@ -49,20 +60,55 @@ const DashboardVolunteers = () => {
     if (currentUser?.isAdmin) fetchVolunteers();
   }, [currentUser]);
 
-  const handleAddVolunteer = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/volunteer/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
+  const openDialog = (volunteer = null) => {
+    setEditingVolunteer(volunteer);
+    setFormData(
+      volunteer
+        ? {
+            name: volunteer.name,
+            batch: volunteer.batch,
+            email: volunteer.email,
+            password: "",
+            dob: volunteer.dob.split("T")[0],
+          }
+        : { name: "", batch: "", email: "", password: "", dob: "" }
+    );
+    setDialogOpen(true);
+  };
 
-      const data = await res.json();
-      if (res.ok) {
-        setVolunteers((prev) => [data, ...prev]);
-        setFormData({ name: "", batch: "", email: "", password: "", dob: "" });
+  const handleSave = async () => {
+    try {
+      if (editingVolunteer) {
+        // Update
+        const res = await fetch(
+          `${API_URL}/api/volunteer/update/${editingVolunteer._id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(formData),
+          }
+        );
+        const data = await res.json();
+        if (res.ok) {
+          setVolunteers((prev) =>
+            prev.map((v) => (v._id === data._id ? data : v))
+          );
+        }
+      } else {
+        // Add
+        const res = await fetch(`${API_URL}/api/volunteer/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        if (res.ok) setVolunteers((prev) => [data, ...prev]);
       }
+      setDialogOpen(false);
+      setEditingVolunteer(null);
+      setFormData({ name: "", batch: "", email: "", password: "", dob: "" });
     } catch (err) {
       console.log(err);
     }
@@ -86,56 +132,60 @@ const DashboardVolunteers = () => {
     <div className="p-4">
       <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold">Volunteers</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Add Volunteer</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Volunteer</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2">
-              <Input
-                placeholder="Name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-              <Input
-                placeholder="Batch (22-24)"
-                value={formData.batch}
-                onChange={(e) =>
-                  setFormData({ ...formData, batch: e.target.value })
-                }
-              />
-              <Input
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-              <Input
-                placeholder="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-              />
-              <Input
-                type="date"
-                value={formData.dob}
-                onChange={(e) =>
-                  setFormData({ ...formData, dob: e.target.value })
-                }
-              />
-              <Button onClick={handleAddVolunteer}>Save</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => openDialog()}>Add Volunteer</Button>
       </div>
+
+      {/* Reusable Dialog for Add/Edit */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingVolunteer ? "Edit Volunteer" : "Add Volunteer"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Input
+              placeholder="Name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+            <Input
+              placeholder="Batch (22-24)"
+              value={formData.batch}
+              onChange={(e) =>
+                setFormData({ ...formData, batch: e.target.value })
+              }
+            />
+            <Input
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+            <Input
+              placeholder="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+            />
+            <Input
+              type="date"
+              value={formData.dob}
+              onChange={(e) =>
+                setFormData({ ...formData, dob: e.target.value })
+              }
+            />
+            <Button onClick={handleSave}>
+              {editingVolunteer ? "Update" : "Save"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Table>
         <TableCaption>List of all volunteers</TableCaption>
@@ -153,7 +203,15 @@ const DashboardVolunteers = () => {
               <TableCell>{v.name}</TableCell>
               <TableCell>{v.batch}</TableCell>
               <TableCell>{v.email}</TableCell>
-              <TableCell>
+              <TableCell className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openDialog(v)}
+                >
+                  Edit
+                </Button>
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <span className="font-medium text-red-600 hover:underline cursor-pointer">
@@ -168,8 +226,7 @@ const DashboardVolunteers = () => {
                       </AlertDialogTitle>
                       <AlertDialogDescription>
                         This action cannot be undone. This will permanently
-                        delete the volunteer account and remove their data from
-                        our servers.
+                        delete the volunteer account.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex gap-2">

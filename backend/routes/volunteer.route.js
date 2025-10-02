@@ -4,6 +4,7 @@ import {
   getVolunteers,
   getVolunteerById,
   deleteVolunteer,
+  updateVolunteer,
 } from "../controller/volunteer.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
@@ -42,6 +43,14 @@ router.delete("/delete/:volunteerId", verifyToken, (req, res, next) => {
       .status(403)
       .json({ message: "Only admins can delete volunteers" });
   deleteVolunteer(req, res, next);
+});
+
+router.put("/update/:volunteerId", verifyToken, (req, res, next) => {
+  if (!req.user.isAdmin)
+    return res
+      .status(403)
+      .json({ message: "Only admins can update volunteers" });
+  updateVolunteer(req, res, next);
 });
 
 export default router;

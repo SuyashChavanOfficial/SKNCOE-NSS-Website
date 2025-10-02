@@ -56,3 +56,29 @@ export const deleteVolunteer = async (req, res, next) => {
     next(error);
   }
 };
+
+// Update volunteer
+export const updateVolunteer = async (req, res, next) => {
+  try {
+    const { name, batch, email, password, dob } = req.body;
+
+    const updateData = { name, batch, email, dob };
+
+    if (password) {
+      const hashed = bcryptjs.hashSync(password, 10);
+      updateData.password = hashed;
+    }
+
+    const updated = await Volunteer.findByIdAndUpdate(
+      req.params.volunteerId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    if (!updated) return next(errorHandler(404, "Volunteer not found"));
+
+    res.status(200).json(updated);
+  } catch (err) {
+    next(err);
+  }
+};

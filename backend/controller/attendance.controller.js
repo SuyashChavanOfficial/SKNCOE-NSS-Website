@@ -63,3 +63,18 @@ export const getAttendanceByVolunteer = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllAttendance = async (req, res, next) => {
+  try {
+    // Optional: only admins can fetch all
+    if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+
+    const allRecords = await Attendance.find()
+      .populate("volunteer", "name batch email")
+      .populate("activity", "title startDate");
+
+    res.status(200).json(allRecords);
+  } catch (err) {
+    next(err);
+  }
+};

@@ -17,43 +17,60 @@ const DashboardAttendance = () => {
   const [activities, setActivities] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch activities and volunteers
   useEffect(() => {
     const fetchData = async () => {
-      const [aRes, vRes] = await Promise.all([
-        fetch(`${API_URL}/api/activity/get`),
-        fetch(`${API_URL}/api/volunteer/get`, { credentials: "include" }),
-      ]);
+      try {
+        setLoading(true);
+        const [aRes, vRes] = await Promise.all([
+          fetch(`${API_URL}/api/activity/get`, { credentials: "include" }),
+          fetch(`${API_URL}/api/volunteer/get`, { credentials: "include" }),
+        ]);
 
-      const aData = await aRes.json();
-      const vData = await vRes.json();
-      if (aRes.ok) setActivities([...aData.upcoming, ...aData.completed]);
-      if (vRes.ok) setVolunteers(vData);
+        const aData = await aRes.json();
+        const vData = await vRes.json();
+
+        if (aRes.ok) setActivities([...aData.upcoming, ...aData.completed]);
+        if (vRes.ok) setVolunteers(vData);
+
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
     };
 
     fetchData();
   }, []);
 
-  // fetch attendance (all records)
+  // Fetch all attendance records
   useEffect(() => {
     const fetchAttendance = async () => {
-      const res = await fetch(
-        `${API_URL}/api/attendance/activity/${activities[0]?._id}`,
-        {
+      if (!activities.length) return;
+      try {
+        const res = await fetch(`${API_URL}/api/attendance`, {
           credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAttendance(data); // expects array of { volunteer, activity, status }
         }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setAttendance(data);
+      } catch (err) {
+        console.error(err);
       }
     };
-    if (activities.length > 0) fetchAttendance();
+    fetchAttendance();
   }, [activities]);
+
+  if (loading) {
+    return <p className="p-4">Loading...</p>;
+  }
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Attendance</h1>
         <Toggle
           pressed={view === "activity"}
@@ -82,7 +99,8 @@ const DashboardAttendance = () => {
                 {activities.map((a) => {
                   const record = attendance.find(
                     (rec) =>
-                      rec.volunteer._id === v._id && rec.activity._id === a._id
+                      rec.volunteer?._id === v._id &&
+                      rec.activity?._id === a._id
                   );
                   return (
                     <TableCell key={a._id}>
@@ -95,10 +113,10 @@ const DashboardAttendance = () => {
           </TableBody>
         </Table>
       ) : (
-        <div className="mt-4">
+        <div className="mt-4 space-y-6">
           {activities.map((a) => (
-            <div key={a._id} className="mb-6 border rounded p-3">
-              <h2 className="font-semibold">{a.title}</h2>
+            <div key={a._id} className="border rounded p-3">
+              <h2 className="font-semibold mb-2">{a.title}</h2>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -110,8 +128,8 @@ const DashboardAttendance = () => {
                   {volunteers.map((v) => {
                     const record = attendance.find(
                       (rec) =>
-                        rec.volunteer._id === v._id &&
-                        rec.activity._id === a._id
+                        rec.volunteer?._id === v._id &&
+                        rec.activity?._id === a._id
                     );
                     return (
                       <TableRow key={v._id}>

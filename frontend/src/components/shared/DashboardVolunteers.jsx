@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -153,13 +154,35 @@ const DashboardVolunteers = () => {
               <TableCell>{v.batch}</TableCell>
               <TableCell>{v.email}</TableCell>
               <TableCell>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(v._id)}
-                >
-                  Delete
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <span className="font-medium text-red-600 hover:underline cursor-pointer">
+                      Delete
+                    </span>
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete the volunteer account and remove their data from
+                        our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex gap-2">
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <Button
+                        className="bg-red-600 text-white"
+                        onClick={() => handleDelete(v._id)}
+                      >
+                        Delete
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))}

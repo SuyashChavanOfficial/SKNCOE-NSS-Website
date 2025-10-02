@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Attendance from "./attendance.model.js"; // import attendance model
 
 const activitySchema = new mongoose.Schema(
   {
@@ -27,6 +28,14 @@ const activitySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+activitySchema.pre("findOneAndDelete", async function (next) {
+  const activityId = this.getQuery()["_id"];
+  if (activityId) {
+    await Attendance.deleteMany({ activity: activityId });
+  }
+  next();
+});
 
 const Activity = mongoose.model("Activity", activitySchema);
 export default Activity;

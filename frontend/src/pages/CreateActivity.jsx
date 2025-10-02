@@ -78,12 +78,16 @@ const CreateActivity = () => {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Create Activity</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="p-6 max-w-3xl mx-auto flex items-center flex-col">
+      <h2 className="text-3xl font-bold mb-4">Create Activity</h2>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 flex items-center flex-col w-full"
+      >
         <Input
           type="text"
           placeholder="Title"
+          className="w-full h-12 text-lg"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
@@ -91,6 +95,7 @@ const CreateActivity = () => {
 
         <Input
           type="datetime-local"
+          className="w-full h-12 text-lg"
           value={formData.startDate}
           onChange={(e) =>
             setFormData({ ...formData, startDate: e.target.value })
@@ -101,6 +106,7 @@ const CreateActivity = () => {
         <Input
           type="number"
           placeholder="Duration (hours)"
+          className="w-full h-12 text-lg"
           value={formData.expectedDurationHours}
           onChange={(e) =>
             setFormData({
@@ -113,7 +119,7 @@ const CreateActivity = () => {
 
         <textarea
           placeholder="Description"
-          className="w-full p-2 border rounded"
+          className="w-full h-40 p-3 border rounded text-md"
           value={formData.description}
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
@@ -121,15 +127,16 @@ const CreateActivity = () => {
         />
 
         {/* Poster Upload */}
-        <div className="flex gap-4 items-center border-2 border-dashed p-3 rounded">
+        <div className="flex gap-4 items-center border-2 border-dashed p-3 rounded w-full">
           <Input
             type="file"
             accept="image/*"
+            className="w-full h-12 text-lg"
             onChange={(e) => setFile(e.target.files[0])}
           />
           <Button
             type="button"
-            className="bg-slate-700 text-white"
+            className="bg-slate-700 text-white h-12 px-6"
             onClick={handleUploadPoster}
           >
             {uploading ? "Uploading..." : "Upload Poster"}
@@ -140,11 +147,14 @@ const CreateActivity = () => {
           <img
             src={formData.poster}
             alt="Poster Preview"
-            className="w-full h-64 object-cover mt-2 rounded"
+            className="w-full h-72 object-cover mt-2 rounded"
           />
         )}
 
-        <Button type="submit" className="bg-blue-600 text-white">
+        <Button
+          type="submit"
+          className="bg-blue-600 text-white h-12 w-full text-sm"
+        >
           Create Activity
         </Button>
       </form>

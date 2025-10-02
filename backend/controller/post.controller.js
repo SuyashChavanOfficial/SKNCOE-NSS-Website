@@ -35,10 +35,10 @@ export const getPosts = async (req, res, next) => {
 
     const searchTerm = req.query.searchTerm || "";
     const category = req.query.category || "";
+    const excludeId = req.query.excludeId;
 
     const query = {};
 
-    // Filter by searchTerm
     if (searchTerm) {
       query.$or = [
         { title: { $regex: searchTerm, $options: "i" } },
@@ -46,9 +46,13 @@ export const getPosts = async (req, res, next) => {
       ];
     }
 
-    // Filter by category
     if (category && category.toLowerCase() !== "all") {
       query.category = category;
+    }
+
+    // ✅ Exclude current post if excludeId provided
+    if (excludeId) {
+      query._id = { $ne: excludeId };
     }
 
     const posts = await Post.find(query)

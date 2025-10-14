@@ -14,7 +14,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import PostCard from "@/components/shared/PostCard";
-import { Menu, X } from "lucide-react";
+import Pagination from "@/components/shared/Pagination";
+import { Menu, X } from "lucide-react"; // ✅ imported
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -29,7 +30,11 @@ const Search = () => {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([{ id: null, name: "all" }]);
   const [loading, setLoading] = useState(false);
-  const [showMore, setShowMore] = useState(false);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const postsPerPage = 9;
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,9 +50,7 @@ const Search = () => {
           .sort((a, b) =>
             a.name.localeCompare(b.name, "en", { sensitivity: "base" })
           );
-
         const catData = [{ id: null, name: "all" }, ...sortedCategories];
-
         setCategories(catData);
       }
     } catch (error) {
@@ -59,35 +62,40 @@ const Search = () => {
     fetchCategories();
   }, []);
 
-  // Fetch posts based on URL params
+  // ✅ Fetch posts based on filters or URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
 
-    const searchTermFromUrl = urlParams.get("searchTerm");
-    const sortFromUrl = urlParams.get("sort");
-    const categoryFromUrl = urlParams.get("category");
+    const searchTermFromUrl = urlParams.get("searchTerm") || "";
+    const sortFromUrl = urlParams.get("sort") || "desc";
+    const categoryFromUrl = urlParams.get("category") || "all";
+    const pageFromUrl = parseInt(urlParams.get("page")) || 1;
 
-    if (searchTermFromUrl || sortFromUrl || categoryFromUrl) {
-      setSidebarData((prev) => ({
-        ...prev,
-        searchTerm: searchTermFromUrl || "",
-        sort: sortFromUrl || "desc",
-        category: categoryFromUrl || "all",
-      }));
-    }
+    setSidebarData({
+      searchTerm: searchTermFromUrl,
+      sort: sortFromUrl,
+      category: categoryFromUrl,
+    });
+
+    setCurrentPage(pageFromUrl);
 
     const fetchPosts = async () => {
       setLoading(true);
+      const startIndex = (pageFromUrl - 1) * postsPerPage;
+      urlParams.set("startIndex", startIndex);
+      urlParams.set("limit", postsPerPage);
+
       const searchQuery = urlParams.toString();
       const res = await fetch(`${API_URL}/api/post/getposts?${searchQuery}`);
       if (!res.ok) {
         setLoading(false);
         return;
       }
+
       const data = await res.json();
       setPosts(data.posts);
+      setTotalPosts(data.totalPosts);
       setLoading(false);
-      setShowMore(data.posts.length >= 9);
     };
 
     fetchPosts();
@@ -99,34 +107,41 @@ const Search = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const urlParams = new URLSearchParams(location.search);
+    const urlParams = new URLSearchParams();
 
-    urlParams.set("searchTerm", sidebarData.searchTerm);
-    urlParams.set("sort", sidebarData.sort);
-
-    if (sidebarData.category && sidebarData.category !== "all") {
+    if (sidebarData.searchTerm)
+      urlParams.set("searchTerm", sidebarData.searchTerm);
+    if (sidebarData.category && sidebarData.category !== "all")
       urlParams.set("category", sidebarData.category);
-    } else {
-      urlParams.delete("category");
-    }
+    if (sidebarData.sort) urlParams.set("sort", sidebarData.sort);
+
+    // reset to first page whenever filters change
+    urlParams.set("page", 1);
 
     navigate(`/search?${urlParams.toString()}`);
+    setIsSidebarOpen(false);
   };
 
-  const handleShowMore = async () => {
-    const startIndex = posts.length;
+  const handlePageChange = (pageNum) => {
     const urlParams = new URLSearchParams(location.search);
-    urlParams.set("startIndex", startIndex);
-    const searchQuery = urlParams.toString();
-    const res = await fetch(`${API_URL}/api/post/getposts?${searchQuery}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    setPosts([...posts, ...data.posts]);
-    setShowMore(data.posts.length >= 9);
+    urlParams.set("page", pageNum);
+    navigate(`/search?${urlParams.toString()}`);
   };
 
   return (
     <div className="flex flex-col md:flex-row">
+      {/* ✅ Mobile top bar with hamburger */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 bg-white sticky top-0 z-40">
+        <h1 className="text-lg font-semibold text-slate-700">News Articles</h1>
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          {isSidebarOpen ? (
+            <X className="w-6 h-6 text-slate-700" />
+          ) : (
+            <Menu className="w-6 h-6 text-slate-700" />
+          )}
+        </button>
+      </div>
+
       {/* Sidebar */}
       <aside
         className={`
@@ -228,6 +243,15 @@ const Search = () => {
         <Separator className="bg-slate-300" />
 
         <div className="p-7 flex flex-wrap gap-8 justify-items-start">
+          {loading && (
+            <DotLottieReact
+              src="https://lottie.host/56f5cd8e-3b11-4dff-8796-df29e53e7bff/S3GWuLfZ57.lottie"
+              loop
+              autoplay
+              height={75}
+            />
+          )}
+
           {!loading && posts.length === 0 && (
             <>
               <p className="text-xl text-gray-500">No Posts Found!</p>
@@ -240,28 +264,15 @@ const Search = () => {
             </>
           )}
 
-          {loading && (
-            <DotLottieReact
-              src="https://lottie.host/56f5cd8e-3b11-4dff-8796-df29e53e7bff/S3GWuLfZ57.lottie"
-              loop
-              autoplay
-              height={75}
-            />
-          )}
-
           {!loading &&
-            posts &&
             posts.map((post) => <PostCard key={post._id} post={post} />)}
-
-          {showMore && (
-            <button
-              onClick={handleShowMore}
-              className="text-slate-800 text-lg hover:underline p-7 w-full"
-            >
-              Show More
-            </button>
-          )}
         </div>
+
+        <Pagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          handlePageChange={handlePageChange}
+        />
       </div>
     </div>
   );

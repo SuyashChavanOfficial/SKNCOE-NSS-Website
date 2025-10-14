@@ -65,7 +65,7 @@ const Header = () => {
   };
 
   return (
-    <nav className="shadow-md sticky top-0 bg-white z-50 border-b border-red-100">
+    <nav className="shadow-md sticky top-0 bg-white z-50 border-b">
       <div className="flex justify-between items-center max-w-6xl lg:max-w-7xl p-4">
         {/* Logo */}
         <Link to={"/"} className="flex items-center gap-2">

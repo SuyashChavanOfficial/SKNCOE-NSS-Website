@@ -105,6 +105,7 @@ export const updatepost = async (req, res, next) => {
       category: req.body.category,
       image: req.body.image,
       imageId: req.body.imageId,
+      newsDate: new Date(req.body.newsDate), // ✅ Added this line
     };
 
     // 🗑️ delete old image if new one uploaded

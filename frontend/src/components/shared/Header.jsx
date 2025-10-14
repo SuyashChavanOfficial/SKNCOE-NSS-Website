@@ -75,7 +75,7 @@ const Header = () => {
             className="w-8 h-8 object-contain"
           />
           {/* Hide text on mobile */}
-          <h1 className="font-bold text-xl sm:text-2xl flex-wrap hidden sm:block">
+          <h1 className="font-bold text-xl sm:text-2xl flex-wrap">
             <span className="text-red-600">SKNCOE</span>
             <span className="text-blue-900">NSS</span>
           </h1>

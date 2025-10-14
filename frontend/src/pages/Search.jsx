@@ -216,13 +216,32 @@ const Search = () => {
               </Select>
             </div>
 
-            <Button
-              type="submit"
-              className="bg-red-600 text-white py-2 px-4 rounded-md shadow-lg "
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              Apply Filters
-            </Button>
+            {/* Buttons */}
+            <div className="flex gap-3 mt-2">
+              <Button
+                type="submit"
+                className="bg-red-600 text-white py-2 px-4 rounded-md shadow-lg"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Apply Filters
+              </Button>
+
+              <Button
+                type="button"
+                className="bg-gray-200 text-gray-700 py-2 px-4 rounded-md shadow-lg hover:bg-gray-300"
+                onClick={() => {
+                  setSidebarData({
+                    searchTerm: "",
+                    sort: "desc",
+                    category: "all",
+                  });
+                  navigate("/search");
+                  setIsSidebarOpen(false);
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
           </form>
         </div>
       </aside>

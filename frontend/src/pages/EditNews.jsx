@@ -37,24 +37,26 @@ const EditNews = () => {
     title: "",
     category: "uncategorised",
     date: "",
-    academicYear: "2025-26",
+    academicYear: "",
   });
   const [categories, setCategories] = useState(["uncategorised"]);
   const [imageUploading, setImageUploading] = useState(false);
   const [updatePostError, setUpdatePostError] = useState(null);
 
   // Academic Years for dropdown
-  const academicYears = ["2025-26", "2026-27", "2027-28"];
+  const academicYears = ["2024-25", "2025-26", "2026-27", "2027-28", "2028-29"];
 
   // Fetch post details
   useEffect(() => {
     const fetchPost = async () => {
       const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
       const data = await res.json();
+
       if (!res.ok) {
         setUpdatePostError(data.message);
         return;
       }
+
       if (data.post) {
         setFormData({
           title: data.post.title,
@@ -64,6 +66,7 @@ const EditNews = () => {
           image: data.post.image || "",
           imageId: data.post.imageId || null,
           _id: data.post._id,
+          academicYear: data.post.academicYear || "",
         });
       }
     };
@@ -173,9 +176,10 @@ const EditNews = () => {
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         />
 
-        {/* Date & Category 50-50 */}
+        {/* Date, Academic Year & Category */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:w-1/2">
+          {/* Date Picker */}
+          <div className="w-full sm:w-1/3">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -198,6 +202,7 @@ const EditNews = () => {
             </Popover>
           </div>
 
+          {/* Academic Year */}
           <div className="w-full sm:w-1/3">
             <Select
               value={formData.academicYear}
@@ -222,7 +227,8 @@ const EditNews = () => {
             </Select>
           </div>
 
-          <div className="w-full sm:w-1/2">
+          {/* Category */}
+          <div className="w-full sm:w-1/3">
             <Select
               value={formData.category}
               onValueChange={(value) =>

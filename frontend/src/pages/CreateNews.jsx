@@ -34,7 +34,7 @@ const CreateNews = () => {
     title: "",
     category: "uncategorised",
     date: "",
-    academicYear: "2025-26", // default year
+    academicYear: "",
   });
   const [categories, setCategories] = useState(["uncategorised"]);
   const [imageUploading, setImageUploading] = useState(false);
@@ -97,6 +97,7 @@ const CreateNews = () => {
       ...formData,
       category: formData.category || "uncategorised",
       newsDate: formData.date,
+      academicYear: formData.academicYear || "2025-26",
     };
 
     try {

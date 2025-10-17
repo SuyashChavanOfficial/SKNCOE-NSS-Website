@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import PostCard from "@/components/shared/PostCard";
 import Pagination from "@/components/shared/Pagination";
-import { Menu, X } from "lucide-react"; // ✅ imported
+import { Menu, X } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -25,10 +25,12 @@ const Search = () => {
     searchTerm: "",
     sort: "desc",
     category: "all",
+    academicYear: "all",
   });
 
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([{ id: null, name: "all" }]);
+  const [academicYears, setAcademicYears] = useState(["all"]);
   const [loading, setLoading] = useState(false);
   const [totalPosts, setTotalPosts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,31 +52,44 @@ const Search = () => {
           .sort((a, b) =>
             a.name.localeCompare(b.name, "en", { sensitivity: "base" })
           );
-        const catData = [{ id: null, name: "all" }, ...sortedCategories];
-        setCategories(catData);
+        setCategories([{ id: null, name: "all" }, ...sortedCategories]);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
   };
 
+  const fetchAcademicYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = ["all"];
+    for (let i = 0; i < 5; i++) {
+      const start = currentYear + i;
+      const end = start + 1;
+      years.push(`${start}-${end.toString().slice(-2)}`);
+    }
+    setAcademicYears(years);
+  };
+
   useEffect(() => {
     fetchCategories();
+    fetchAcademicYears();
   }, []);
 
-  // ✅ Fetch posts based on filters or URL params
+  // Fetch posts based on filters or URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
 
     const searchTermFromUrl = urlParams.get("searchTerm") || "";
     const sortFromUrl = urlParams.get("sort") || "desc";
     const categoryFromUrl = urlParams.get("category") || "all";
+    const academicYearFromUrl = urlParams.get("academicYear") || "all";
     const pageFromUrl = parseInt(urlParams.get("page")) || 1;
 
     setSidebarData({
       searchTerm: searchTermFromUrl,
       sort: sortFromUrl,
       category: categoryFromUrl,
+      academicYear: academicYearFromUrl,
     });
 
     setCurrentPage(pageFromUrl);
@@ -113,11 +128,11 @@ const Search = () => {
       urlParams.set("searchTerm", sidebarData.searchTerm);
     if (sidebarData.category && sidebarData.category !== "all")
       urlParams.set("category", sidebarData.category);
+    if (sidebarData.academicYear && sidebarData.academicYear !== "all")
+      urlParams.set("academicYear", sidebarData.academicYear);
     if (sidebarData.sort) urlParams.set("sort", sidebarData.sort);
 
-    // reset to first page whenever filters change
     urlParams.set("page", 1);
-
     navigate(`/search?${urlParams.toString()}`);
     setIsSidebarOpen(false);
   };
@@ -216,6 +231,33 @@ const Search = () => {
               </Select>
             </div>
 
+            {/* Academic Year */}
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-gray-600">
+                Academic Year:
+              </label>
+              <Select
+                onValueChange={(value) =>
+                  setSidebarData({ ...sidebarData, academicYear: value })
+                }
+                value={sidebarData.academicYear || "all"}
+              >
+                <SelectTrigger className="w-full border border-slate-400">
+                  <SelectValue placeholder="Select Academic Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Academic Year</SelectLabel>
+                    {academicYears.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Buttons */}
             <div className="flex gap-3 mt-2">
               <Button
@@ -234,6 +276,7 @@ const Search = () => {
                     searchTerm: "",
                     sort: "desc",
                     category: "all",
+                    academicYear: "all",
                   });
                   navigate("/search");
                   setIsSidebarOpen(false);

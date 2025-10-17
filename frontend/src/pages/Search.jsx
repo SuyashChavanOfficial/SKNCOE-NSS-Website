@@ -24,13 +24,13 @@ const Search = () => {
   const [sidebarData, setSidebarData] = useState({
     searchTerm: "",
     sort: "desc",
-    category: "all",
-    academicYear: "all",
+    category: "All",
+    academicYear: "All",
   });
 
   const [posts, setPosts] = useState([]);
-  const [categories, setCategories] = useState([{ id: null, name: "all" }]);
-  const [academicYears, setAcademicYears] = useState(["all"]);
+  const [categories, setCategories] = useState([{ id: null, name: "All" }]);
+  const [academicYears, setAcademicYears] = useState(["All"]);
   const [loading, setLoading] = useState(false);
   const [totalPosts, setTotalPosts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,11 +48,11 @@ const Search = () => {
       const data = await res.json();
       if (res.ok) {
         const sortedCategories = data
-          .filter((c) => c.name.toLowerCase() !== "all")
+          .filter((c) => c.name.toLowerCase() !== "All")
           .sort((a, b) =>
             a.name.localeCompare(b.name, "en", { sensitivity: "base" })
           );
-        setCategories([{ id: null, name: "all" }, ...sortedCategories]);
+        setCategories([{ id: null, name: "All" }, ...sortedCategories]);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -61,7 +61,7 @@ const Search = () => {
 
   const fetchAcademicYears = () => {
     const currentYear = new Date().getFullYear();
-    const years = ["all"];
+    const years = ["All"];
     for (let i = 0; i < 5; i++) {
       const start = currentYear + i;
       const end = start + 1;
@@ -81,8 +81,8 @@ const Search = () => {
 
     const searchTermFromUrl = urlParams.get("searchTerm") || "";
     const sortFromUrl = urlParams.get("sort") || "desc";
-    const categoryFromUrl = urlParams.get("category") || "all";
-    const academicYearFromUrl = urlParams.get("academicYear") || "all";
+    const categoryFromUrl = urlParams.get("category") || "All";
+    const academicYearFromUrl = urlParams.get("academicYear") || "All";
     const pageFromUrl = parseInt(urlParams.get("page")) || 1;
 
     setSidebarData({
@@ -126,9 +126,9 @@ const Search = () => {
 
     if (sidebarData.searchTerm)
       urlParams.set("searchTerm", sidebarData.searchTerm);
-    if (sidebarData.category && sidebarData.category !== "all")
+    if (sidebarData.category && sidebarData.category !== "All")
       urlParams.set("category", sidebarData.category);
-    if (sidebarData.academicYear && sidebarData.academicYear !== "all")
+    if (sidebarData.academicYear && sidebarData.academicYear !== "All")
       urlParams.set("academicYear", sidebarData.academicYear);
     if (sidebarData.sort) urlParams.set("sort", sidebarData.sort);
 
@@ -213,7 +213,7 @@ const Search = () => {
                 onValueChange={(value) =>
                   setSidebarData({ ...sidebarData, category: value })
                 }
-                value={sidebarData.category || "all"}
+                value={sidebarData.category || "All"}
               >
                 <SelectTrigger className="w-full border border-slate-400">
                   <SelectValue placeholder="Select a Category" />
@@ -240,7 +240,7 @@ const Search = () => {
                 onValueChange={(value) =>
                   setSidebarData({ ...sidebarData, academicYear: value })
                 }
-                value={sidebarData.academicYear || "all"}
+                value={sidebarData.academicYear || "All"}
               >
                 <SelectTrigger className="w-full border border-slate-400">
                   <SelectValue placeholder="Select Academic Year" />
@@ -275,8 +275,8 @@ const Search = () => {
                   setSidebarData({
                     searchTerm: "",
                     sort: "desc",
-                    category: "all",
-                    academicYear: "all",
+                    category: "All",
+                    academicYear: "All",
                   });
                   navigate("/search");
                   setIsSidebarOpen(false);

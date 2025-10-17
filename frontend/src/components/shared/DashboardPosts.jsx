@@ -21,58 +21,45 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
+import Pagination from "../shared/Pagination";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const DashboardPosts = () => {
   const { currentUser } = useSelector((state) => state.user);
-
   const [userPosts, setUserPosts] = useState([]);
-  const [showMore, setShowMore] = useState(true);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 9; // same as search page
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
   const [postIdToDelete, setPostIdToDelete] = useState("");
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/post/getposts`);
-        const data = await res.json();
-
-        if (res.ok) {
-          setUserPosts(data.posts);
-
-          if (data.posts.length < 9) {
-            setShowMore(false);
-          }
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    if (currentUser.isAdmin) {
-      fetchPost();
-    }
-  }, [currentUser?.isAdmin]);
-
-  const handleShowMore = async () => {
-    const startIndex = userPosts.length;
-
+  const fetchPosts = async (page = 1) => {
     try {
+      const startIndex = (page - 1) * postsPerPage;
       const res = await fetch(
-        `${API_URL}/api/post/getposts?startIndex=${startIndex}`
+        `${API_URL}/api/post/getposts?startIndex=${startIndex}&limit=${postsPerPage}&sort=desc`
       );
-
       const data = await res.json();
 
       if (res.ok) {
-        setUserPosts((prev) => [...prev, ...data.posts]);
-
-        if (data.posts.length < 9) {
-          setShowMore(false);
-        }
+        setUserPosts(data.posts);
+        setTotalPosts(data.totalPosts);
       }
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
     }
+  };
+
+  useEffect(() => {
+    if (currentUser?.isAdmin) {
+      fetchPosts(currentPage);
+    }
+  }, [currentUser?.isAdmin, currentPage]);
+
+  const handlePageChange = (pageNum) => {
+    setCurrentPage(pageNum);
   };
 
   const handleDeletePost = async () => {
@@ -87,9 +74,7 @@ const DashboardPosts = () => {
       if (!res.ok) {
         console.log(data.message);
       } else {
-        setUserPosts((prev) =>
-          prev.filter((post) => post._id !== postIdToDelete)
-        );
+        fetchPosts(currentPage);
       }
     } catch (error) {
       console.log(error.message);
@@ -107,56 +92,55 @@ const DashboardPosts = () => {
 
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Date Updated</TableHead>
-                <TableHead>Post Image</TableHead>
-                <TableHead>Post Title</TableHead>
-                <TableHead>Likes</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Delete</TableHead>
-                <TableHead>Edit</TableHead>
+                <TableHead className="w-[150px] text-slate-700">
+                  Date Updated
+                </TableHead>
+                <TableHead className="text-slate-700">Post Image</TableHead>
+                <TableHead className="text-slate-700">Post Title</TableHead>
+                <TableHead className="text-slate-700">Likes</TableHead>
+                <TableHead className="text-slate-700">Author</TableHead>
+                <TableHead className="text-slate-700 text-center">
+                  Delete
+                </TableHead>
+                <TableHead className="text-slate-700 text-center">
+                  Edit
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody className="divide-y">
               {userPosts.map((post) => (
                 <TableRow key={post._id}>
-                  {/* for updated date  */}
                   <TableCell>
-                    {new Date(post.updatedAt).toLocaleDateString()}
+                    {new Date(post.updatedAt).toLocaleDateString("en-GB")}
                   </TableCell>
 
-                  {/* for image  */}
                   <TableCell>
                     <Link to={`/post/${post.slug}`}>
                       <img
                         src={post.image}
                         alt={post.title}
-                        className="w-20 h-10 object-cover bg-gray-500"
+                        className="w-20 h-10 object-cover bg-gray-200 rounded"
                       />
                     </Link>
                   </TableCell>
 
-                  {/* For title  */}
-                  <TableCell>
+                  <TableCell className="font-medium text-slate-700">
                     <Link to={`/post/${post.slug}`}>{post.title}</Link>
                   </TableCell>
 
-                  {/* ✅ Likes */}
                   <TableCell>{post.numberOfLikes || 0}</TableCell>
 
-                  {/* For Author  */}
-                  <TableCell>
-                    <Link to={`/post/${post.slug}`}>
-                      {post.userId.username}
-                    </Link>
+                  <TableCell className="text-slate-600">
+                    {post.userId.username}
                   </TableCell>
 
-                  <TableCell>
+                  {/* Delete */}
+                  <TableCell className="text-center">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <span
-                          onClick={() => {
-                            setPostIdToDelete(post._id);
-                          }}
+                          onClick={() => setPostIdToDelete(post._id)}
                           className="font-medium text-red-600 hover:underline cursor-pointer"
                         >
                           Delete
@@ -170,8 +154,7 @@ const DashboardPosts = () => {
                           </AlertDialogTitle>
                           <AlertDialogDescription>
                             This action cannot be undone. This will permanently
-                            delete your post and remove your data from our
-                            servers.
+                            delete the post.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -180,36 +163,36 @@ const DashboardPosts = () => {
                             className="bg-red-600"
                             onClick={handleDeletePost}
                           >
-                            Continue
+                            Confirm
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   </TableCell>
 
-                  <TableCell>
+                  {/* Edit */}
+                  <TableCell className="text-center">
                     <Link
                       to={`/update-post/${post._id}`}
-                      className="font-medium text-green-600 hover:underline cursor-pointer"
+                      className="font-medium text-blue-900 hover:underline"
                     >
-                      <span>Edit</span>
+                      Edit
                     </Link>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-          {showMore && (
-            <button
-              onClick={handleShowMore}
-              className="w-full text-blue-700 self-center text-sm py-7"
-            >
-              Show More
-            </button>
-          )}
+
+          {/* ✅ Pagination added here */}
+          <Pagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            handlePageChange={handlePageChange}
+          />
         </>
       ) : (
-        <p>You have no post yet</p>
+        <p className="text-slate-600 mt-5 text-lg">No posts found.</p>
       )}
     </div>
   );

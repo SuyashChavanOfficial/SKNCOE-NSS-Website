@@ -30,7 +30,7 @@ const DashboardPosts = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [totalPosts, setTotalPosts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 9; // same as search page
+  const postsPerPage = 9;
   const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   const [postIdToDelete, setPostIdToDelete] = useState("");
@@ -95,6 +95,9 @@ const DashboardPosts = () => {
                 <TableHead className="w-[150px] text-slate-700">
                   Date Updated
                 </TableHead>
+                <TableHead className="w-[150px] text-slate-700">
+                  News Date
+                </TableHead>
                 <TableHead className="text-slate-700">Post Image</TableHead>
                 <TableHead className="text-slate-700">Post Title</TableHead>
                 <TableHead className="text-slate-700">Likes</TableHead>
@@ -113,6 +116,9 @@ const DashboardPosts = () => {
                 <TableRow key={post._id}>
                   <TableCell>
                     {new Date(post.updatedAt).toLocaleDateString("en-GB")}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(post.newsDate).toLocaleDateString("en-GB")}
                   </TableCell>
 
                   <TableCell>
@@ -135,7 +141,6 @@ const DashboardPosts = () => {
                     {post.userId.username}
                   </TableCell>
 
-                  {/* Delete */}
                   <TableCell className="text-center">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -170,7 +175,6 @@ const DashboardPosts = () => {
                     </AlertDialog>
                   </TableCell>
 
-                  {/* Edit */}
                   <TableCell className="text-center">
                     <Link
                       to={`/update-post/${post._id}`}
@@ -184,7 +188,6 @@ const DashboardPosts = () => {
             </TableBody>
           </Table>
 
-          {/* ✅ Pagination added here */}
           <Pagination
             totalPages={totalPages}
             currentPage={currentPage}

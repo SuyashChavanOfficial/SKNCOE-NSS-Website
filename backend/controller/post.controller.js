@@ -2,13 +2,19 @@ import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js";
 import { storage } from "../lib/appwrite.js";
 
+// ✅ Create Post
 export const create = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
-  const { title, content, image, newsDate } = req.body;
+  const { title, content, image, newsDate, academicYear } = req.body;
 
-  if (!title || !content || !image || !newsDate)
-    return next(errorHandler(400, "All fields including date are required"));
+  if (!title || !content || !image || !newsDate || !academicYear)
+    return next(
+      errorHandler(
+        400,
+        "All fields including date and academic year are required"
+      )
+    );
 
   const slug = title.trim().replace(/\s+/g, "-");
 
@@ -16,7 +22,7 @@ export const create = async (req, res, next) => {
     ...req.body,
     slug,
     userId: req.user.id,
-    newsDate: new Date(newsDate), // ✅ ensure Date type
+    newsDate: new Date(newsDate),
   });
 
   try {
@@ -35,6 +41,7 @@ export const getPosts = async (req, res, next) => {
 
     const searchTerm = req.query.searchTerm || "";
     const category = req.query.category || "";
+    const academicYear = req.query.academicYear || "";
     const excludeId = req.query.excludeId;
 
     const query = {};
@@ -50,7 +57,10 @@ export const getPosts = async (req, res, next) => {
       query.category = category;
     }
 
-    // ✅ Exclude current post if excludeId provided
+    if (academicYear && academicYear.toLowerCase() !== "all") {
+      query.academicYear = academicYear;
+    }
+
     if (excludeId) {
       query._id = { $ne: excludeId };
     }
@@ -103,12 +113,12 @@ export const updatepost = async (req, res, next) => {
       title: req.body.title,
       content: req.body.content,
       category: req.body.category,
+      academicYear: req.body.academicYear,
       image: req.body.image,
       imageId: req.body.imageId,
-      newsDate: new Date(req.body.newsDate), // ✅ Added this line
+      newsDate: new Date(req.body.newsDate),
     };
 
-    // 🗑️ delete old image if new one uploaded
     if (req.body.deleteOldImageId) {
       try {
         await storage.deleteFile(

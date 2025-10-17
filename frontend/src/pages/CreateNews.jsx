@@ -34,10 +34,14 @@ const CreateNews = () => {
     title: "",
     category: "uncategorised",
     date: "",
+    academicYear: "2025-26", // default year
   });
   const [categories, setCategories] = useState(["uncategorised"]);
   const [imageUploading, setImageUploading] = useState(false);
   const [createPostError, setCreatePostError] = useState(null);
+
+  // Academic Years for dropdown
+  const academicYears = ["2025-26", "2026-27", "2027-28"];
 
   // Fetch categories
   useEffect(() => {
@@ -62,16 +66,9 @@ const CreateNews = () => {
 
   // Handle Image Upload
   const handleImageUpload = async () => {
-    if (!file) {
-      toast({ title: "Please select an image!" });
-      return;
-    }
-
+    if (!file) return toast({ title: "Please select an image!" });
     if (file.size > 1 * 1024 * 1024) {
-      toast({
-        title: "File size exceeds 1 MB. Please select a smaller image.",
-      });
-      return;
+      return toast({ title: "File size exceeds 1 MB" });
     }
 
     try {
@@ -94,10 +91,7 @@ const CreateNews = () => {
   // Submit News
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.date) {
-      toast({ title: "Please select a date for the news." });
-      return;
-    }
+    if (!formData.date) return toast({ title: "Please select a date" });
 
     const finalFormData = {
       ...formData,
@@ -141,10 +135,10 @@ const CreateNews = () => {
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         />
 
-        {/* Date & Category 50-50 */}
+        {/* Date & Category & Academic Year */}
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Date Picker */}
-          <div className="w-full sm:w-1/2">
+          {/* Date */}
+          <div className="w-full sm:w-1/3">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -167,8 +161,33 @@ const CreateNews = () => {
             </Popover>
           </div>
 
+          {/* Academic Year */}
+          <div className="w-full sm:w-1/3">
+            <Select
+              value={formData.academicYear}
+              onValueChange={(value) =>
+                setFormData({ ...formData, academicYear: value })
+              }
+              className="w-full"
+            >
+              <SelectTrigger className="w-full h-12 border-slate-400 focus-visible:ring-0">
+                <SelectValue placeholder="Select Academic Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Academic Year</SelectLabel>
+                  {academicYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Category */}
-          <div className="w-full sm:w-1/2">
+          <div className="w-full sm:w-1/3">
             <Select
               value={formData.category}
               onValueChange={(value) =>
@@ -199,6 +218,7 @@ const CreateNews = () => {
             <Input
               type="file"
               accept="image/*"
+              placeholder="Choose image (Max 1 MB)"
               onChange={(e) => setFile(e.target.files[0])}
             />
             <Button
@@ -210,7 +230,7 @@ const CreateNews = () => {
             </Button>
           </div>
           <p className="text-gray-500 text-xs mt-1">
-            Hint: Maximum image size allowed is 1 MB.
+            Note: Maximum image size allowed is 1 MB.
           </p>
         </div>
 

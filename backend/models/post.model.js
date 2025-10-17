@@ -16,6 +16,10 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: "uncategorized",
     },
+    academicYear: {
+      type: String,
+      default: "2025-26",
+    },
     image: {
       type: String,
       required: true,

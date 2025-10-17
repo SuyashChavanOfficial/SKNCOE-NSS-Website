@@ -37,10 +37,14 @@ const EditNews = () => {
     title: "",
     category: "uncategorised",
     date: "",
+    academicYear: "2025-26",
   });
   const [categories, setCategories] = useState(["uncategorised"]);
   const [imageUploading, setImageUploading] = useState(false);
   const [updatePostError, setUpdatePostError] = useState(null);
+
+  // Academic Years for dropdown
+  const academicYears = ["2025-26", "2026-27", "2027-28"];
 
   // Fetch post details
   useEffect(() => {
@@ -192,6 +196,30 @@ const EditNews = () => {
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="w-full sm:w-1/3">
+            <Select
+              value={formData.academicYear}
+              onValueChange={(value) =>
+                setFormData({ ...formData, academicYear: value })
+              }
+              className="w-full"
+            >
+              <SelectTrigger className="w-full h-12 border-slate-400 focus-visible:ring-0">
+                <SelectValue placeholder="Select Academic Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Academic Year</SelectLabel>
+                  {academicYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="w-full sm:w-1/2">

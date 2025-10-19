@@ -54,6 +54,21 @@ const DashboardPoster = () => {
     fetchPosters();
   }, []);
 
+  // Simple helper to confirm current user & admin status BEFORE uploading
+  const checkIsAdmin = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/current`, {
+        credentials: "include",
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      return !!data.user?.isAdmin;
+    } catch (err) {
+      console.log("Auth check failed:", err);
+      return false;
+    }
+  };
+
   // Reset form
   const resetForm = () => {
     setFormData({ caption: "", media: "", mediaId: "", mediaType: "image" });
@@ -68,14 +83,19 @@ const DashboardPoster = () => {
     if (!formData.caption || (!formData.media && !file))
       return toast({ title: "Fill all fields!" });
 
-    let uploadedFileId = null;
+    let uploadedFileId = null; 
 
     try {
+      const isAdmin = await checkIsAdmin();
+      if (!isAdmin) {
+        toast({ title: "You are not authorized to perform this action." });
+        return;
+      }
+
       let mediaUrl = formData.media;
       let mediaId = formData.mediaId;
       let mediaType = formData.mediaType;
 
-      // Upload file to Appwrite first
       if (file) {
         setUploading(true);
         const uploadedFile = await uploadFile(file);
@@ -83,12 +103,11 @@ const DashboardPoster = () => {
 
         mediaUrl = await getFileUrl(uploadedFile.$id);
         mediaId = uploadedFile.$id;
-        uploadedFileId = uploadedFile.$id; // store it in case of failure
+        uploadedFileId = uploadedFile.$id;
         mediaType = file.type.startsWith("video") ? "video" : "image";
         setUploading(false);
       }
 
-      // Try saving poster to your backend (MongoDB)
       const posterData = {
         caption: formData.caption,
         media: mediaUrl,
@@ -114,19 +133,20 @@ const DashboardPoster = () => {
       }
 
       const data = await res.json();
-
-      // If unauthorized or error → delete uploaded file
       if (!res.ok) {
         if (uploadedFileId) {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
+          try {
+            await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+              method: "DELETE",
+              credentials: "include",
+            });
+          } catch (delErr) {
+            console.error("Failed to delete orphan uploaded file:", delErr);
+          }
         }
         return toast({ title: data.message || "Something went wrong!" });
       }
 
-      // Success case
       toast({
         title: editingPoster
           ? "Poster updated successfully!"
@@ -136,20 +156,25 @@ const DashboardPoster = () => {
       fetchPosters();
     } catch (err) {
       console.log(err);
-      // Also handle errors thrown before poster save
+
       if (uploadedFileId) {
-        await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        try {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        } catch (delErr) {
+          console.error("Failed to delete orphan uploaded file:", delErr);
+        }
       }
+
       toast({ title: "Something went wrong!" });
       setUploading(false);
     }
   };
 
   // Handle delete
-  const handleDelete = async (posterId, mediaId) => {
+  const handleDelete = async (posterId) => {
     try {
       const res = await fetch(`${API_URL}/api/poster/delete/${posterId}`, {
         method: "DELETE",
@@ -240,7 +265,7 @@ const DashboardPoster = () => {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-red-600"
-                        onClick={() => handleDelete(poster._id, poster.mediaId)}
+                        onClick={() => handleDelete(poster._id)}
                       >
                         Delete
                       </AlertDialogAction>

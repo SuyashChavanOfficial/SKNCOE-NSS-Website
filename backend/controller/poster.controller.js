@@ -20,36 +20,67 @@ export const getTodaysPoster = async (req, res, next) => {
   }
 };
 
-// Add new poster (Admin only)
+// Create poster (Admin only)
 export const createPoster = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
-    const { image, imageId, caption } = req.body;
+    const { media, mediaId, mediaType, caption } = req.body;
 
-    if (!image || !caption)
-      return next(errorHandler(400, "Image and caption are required"));
+    if (!media || !caption)
+      return next(errorHandler(400, "Media and caption are required"));
 
-    // Delete existing poster for today if exists
+    // Delete today's existing poster
     const existingPoster = await Poster.findOne();
-    if (existingPoster) {
-      if (existingPoster.imageId) {
-        try {
-          await storage.deleteFile(
-            process.env.APPWRITE_STORAGE_ID,
-            existingPoster.imageId
-          );
-        } catch (err) {
-          console.log("Failed to delete old poster image:", err.message);
-        }
+    if (existingPoster && existingPoster.mediaId) {
+      try {
+        await storage.deleteFile(
+          process.env.APPWRITE_STORAGE_ID,
+          existingPoster.mediaId
+        );
+      } catch (err) {
+        console.log("Failed to delete old media:", err.message);
       }
       await Poster.findByIdAndDelete(existingPoster._id);
     }
 
-    const newPoster = new Poster({ image, imageId, caption });
+    const newPoster = new Poster({ media, mediaId, mediaType, caption });
     const savedPoster = await newPoster.save();
 
     res.status(201).json(savedPoster);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update poster by ID (Admin only)
+export const updatePoster = async (req, res, next) => {
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+
+  try {
+    const { media, mediaId, mediaType, caption } = req.body;
+    const poster = await Poster.findById(req.params.posterId);
+    if (!poster) return next(errorHandler(404, "Poster not found"));
+
+    // Delete old media if new one uploaded
+    if (mediaId && poster.mediaId) {
+      try {
+        await storage.deleteFile(
+          process.env.APPWRITE_STORAGE_ID,
+          poster.mediaId
+        );
+      } catch (err) {
+        console.log("Failed to delete old media:", err.message);
+      }
+    }
+
+    poster.media = media || poster.media;
+    poster.mediaId = mediaId || poster.mediaId;
+    poster.mediaType = mediaType || poster.mediaType;
+    poster.caption = caption || poster.caption;
+
+    const updatedPoster = await poster.save();
+    res.status(200).json(updatedPoster);
   } catch (error) {
     next(error);
   }
@@ -63,52 +94,19 @@ export const deletePoster = async (req, res, next) => {
     const poster = await Poster.findById(req.params.posterId);
     if (!poster) return next(errorHandler(404, "Poster not found"));
 
-    if (poster.imageId) {
+    if (poster.mediaId) {
       try {
         await storage.deleteFile(
           process.env.APPWRITE_STORAGE_ID,
-          poster.imageId
+          poster.mediaId
         );
       } catch (err) {
-        console.log("Failed to delete poster image:", err.message);
+        console.log("Failed to delete poster media:", err.message);
       }
     }
 
     await Poster.findByIdAndDelete(req.params.posterId);
     res.status(200).json({ message: "Poster deleted successfully" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Update poster by ID (Admin only)
-export const updatePoster = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
-
-  try {
-    const { image, imageId, caption } = req.body;
-
-    const poster = await Poster.findById(req.params.posterId);
-    if (!poster) return next(errorHandler(404, "Poster not found"));
-
-    // Delete old image if new one uploaded
-    if (imageId && poster.imageId) {
-      try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          poster.imageId
-        );
-      } catch (err) {
-        console.log("Failed to delete old poster image:", err.message);
-      }
-    }
-
-    poster.image = image || poster.image;
-    poster.imageId = imageId || poster.imageId;
-    poster.caption = caption || poster.caption;
-
-    const updatedPoster = await poster.save();
-    res.status(200).json(updatedPoster);
   } catch (error) {
     next(error);
   }

@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 
 const posterSchema = new mongoose.Schema(
   {
-    image: { type: String, required: true },
-    imageId: { type: String, default: null },
+    media: { type: String, required: true },
+    mediaId: { type: String, default: null },
+    mediaType: { type: String, enum: ["image", "video"], default: "image" },
     caption: { type: String, required: true },
     date: { type: Date, required: true, default: () => new Date() },
   },

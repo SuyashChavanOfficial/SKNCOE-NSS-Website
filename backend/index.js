@@ -10,6 +10,7 @@ import activityRoutes from "./routes/activity.route.js";
 import categoryRoutes from "./routes/category.route.js";
 import attendanceRoutes from "./routes/attendance.route.js";
 import volunteerRoutes from "./routes/volunteer.route.js";
+import posterRoutes from "./routes/poster.route.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -50,6 +51,7 @@ app.use("/api/activity", activityRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/volunteer", volunteerRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/poster", posterRoutes);
 
 // To handle errors
 app.use((err, req, res, next) => {

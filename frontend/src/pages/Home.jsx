@@ -38,7 +38,7 @@ const Home = () => {
         {/* Left Section */}
         <div className="flex-1 text-center md:text-left">
           <h1 className="text-3xl md:text-4xl font-bold">
-            Welcome to <span className="text-red-700">SKNCOE</span>
+            Welcome to <span className="text-red-600">SKNCOE</span>
             <span className="text-blue-800"> NSS</span>
           </h1>
           <p className="text-gray-600 mt-3 text-base md:text-lg">

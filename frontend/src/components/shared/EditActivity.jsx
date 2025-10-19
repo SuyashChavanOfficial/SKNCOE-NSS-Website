@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
+import { ArrowLeft } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const MAX_FILE_SIZE = 500 * 1024; // 500 KB
@@ -93,9 +94,9 @@ const EditActivity = () => {
       <div className="mb-4 w-full">
         <button
           onClick={() => navigate("/dashboard?tab=activities")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 font-medium"
+          className="flex items-center gap-2 text-blue-900 hover:text-red-700 font-medium transition-all"
         >
-          ← Back to Activities
+          <ArrowLeft className="w-4 h-4" /> Back to Articles
         </button>
       </div>
 

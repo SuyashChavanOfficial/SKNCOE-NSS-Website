@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getFileUrl, uploadFile } from "@/lib/appwrite/uploadImage";
 import React, { useEffect, useState } from "react";
-import { Calendar } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Popover,
@@ -121,9 +121,9 @@ const CreateNews = () => {
       <div className="mb-4 w-full">
         <button
           onClick={() => navigate("/dashboard?tab=posts")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 font-medium"
+          className="flex items-center gap-2 text-blue-900 hover:text-red-700 font-medium transition-all"
         >
-          ← Back to Articles
+          <ArrowLeft className="w-4 h-4" /> Back to Articles
         </button>
       </div>
 

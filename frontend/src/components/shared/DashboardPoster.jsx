@@ -25,12 +25,13 @@ const DashboardPoster = () => {
   const [popupOpen, setPopupOpen] = useState(false);
   const [formData, setFormData] = useState({
     caption: "",
-    image: "",
-    imageId: "",
+    media: "", // could be image or video URL
+    mediaId: "", // Appwrite file ID
   });
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
+  // Fetch today's poster
   const fetchPoster = async () => {
     try {
       const res = await fetch(`${API_URL}/api/poster/today`);
@@ -46,24 +47,26 @@ const DashboardPoster = () => {
     fetchPoster();
   }, []);
 
+  // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.caption || (!formData.image && !file))
+    if (!formData.caption || (!formData.media && !file))
       return toast({ title: "Fill all fields!" });
 
     try {
-      let imageUrl = formData.image;
-      let imageId = formData.imageId;
+      let mediaUrl = formData.media;
+      let mediaId = formData.mediaId;
 
+      // Upload new file if selected
       if (file) {
         setUploading(true);
         const uploadedFile = await uploadFile(file);
-        imageUrl = await getFileUrl(uploadedFile.$id);
-        imageId = uploadedFile.$id;
+        mediaUrl = await getFileUrl(uploadedFile.$id);
+        mediaId = uploadedFile.$id;
         setUploading(false);
       }
 
-      const posterData = { ...formData, image: imageUrl, imageId };
+      const posterData = { ...formData, media: mediaUrl, mediaId };
       const res = await fetch(`${API_URL}/api/poster/create`, {
         method: "POST",
         credentials: "include",
@@ -72,11 +75,9 @@ const DashboardPoster = () => {
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        // Optional: delete uploaded image if poster creation fails
         if (file) {
-          await fetch(`${API_URL}/api/upload/delete/${imageId}`, {
+          await fetch(`${API_URL}/api/upload/delete/${mediaId}`, {
             method: "DELETE",
             credentials: "include",
           });
@@ -87,7 +88,7 @@ const DashboardPoster = () => {
       toast({ title: "Poster added successfully!" });
       setPopupOpen(false);
       setFile(null);
-      setFormData({ caption: "", image: "", imageId: "" });
+      setFormData({ caption: "", media: "", mediaId: "" });
       fetchPoster();
     } catch (err) {
       console.log(err);
@@ -96,6 +97,7 @@ const DashboardPoster = () => {
     }
   };
 
+  // Handle delete
   const handleDelete = async () => {
     if (!poster) return;
     try {
@@ -122,24 +124,34 @@ const DashboardPoster = () => {
 
       {poster ? (
         <div className="flex items-center gap-6 border p-4 rounded shadow-md">
-          <img
-            src={poster.image}
-            alt="Poster of the Day"
-            className="w-48 h-32 object-cover rounded"
-          />
+          {poster.media.endsWith(".mp4") ? (
+            <video
+              src={poster.media}
+              className="w-48 h-32 object-cover rounded"
+              controls
+            />
+          ) : (
+            <img
+              src={poster.media}
+              alt="Poster of the Day"
+              className="w-48 h-32 object-cover rounded"
+            />
+          )}
+
           <div className="flex-1">
             <p className="text-gray-700 font-medium">{poster.caption}</p>
             <p className="text-gray-500 text-sm">
               {format(new Date(poster.date), "do MMMM, yyyy")}
             </p>
           </div>
+
           <div className="flex gap-4">
             <Button
               onClick={() => {
                 setFormData({
                   caption: poster.caption,
-                  image: poster.image,
-                  imageId: poster.imageId,
+                  media: poster.media,
+                  mediaId: poster.mediaId,
                 });
                 setFile(null);
                 setPopupOpen(true);
@@ -173,23 +185,38 @@ const DashboardPoster = () => {
         <p className="text-gray-500">No poster for today.</p>
       )}
 
+      {/* Popup Form */}
       {popupOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
-            <h3 className="text-lg font-semibold mb-4">Add / Edit Poster</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Add / Edit Poster
+            </h3>
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <Input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/mp4"
                 onChange={(e) => setFile(e.target.files[0])}
               />
+
               {file && (
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt="preview"
-                  className="w-full h-40 object-cover rounded"
-                />
+                <>
+                  {file.type.startsWith("video") ? (
+                    <video
+                      src={URL.createObjectURL(file)}
+                      controls
+                      className="w-full h-40 object-cover rounded"
+                    />
+                  ) : (
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="preview"
+                      className="w-full h-40 object-cover rounded"
+                    />
+                  )}
+                </>
               )}
+
               <Textarea
                 type="text"
                 placeholder="Caption"
@@ -200,6 +227,7 @@ const DashboardPoster = () => {
                 className="h-36"
                 required
               />
+
               <Button type="submit" disabled={uploading}>
                 {uploading ? (
                   <div className="flex items-center gap-2">
@@ -210,6 +238,7 @@ const DashboardPoster = () => {
                   "Save Poster"
                 )}
               </Button>
+
               <div className="flex justify-end gap-2 mt-4">
                 <Button type="button" onClick={() => setPopupOpen(false)}>
                   Cancel

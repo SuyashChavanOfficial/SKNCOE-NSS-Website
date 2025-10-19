@@ -2,7 +2,17 @@ import Poster from "../models/poster.model.js";
 import { storage } from "../lib/appwrite.js";
 import { errorHandler } from "../utils/error.js";
 
-// Get today's poster
+// Get all posters (sorted by date, newest first)
+export const getAllPosters = async (req, res, next) => {
+  try {
+    const posters = await Poster.find().sort({ date: -1 });
+    res.status(200).json({ posters });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get today's poster (for backward compatibility)
 export const getTodaysPoster = async (req, res, next) => {
   try {
     const today = new Date();
@@ -12,7 +22,7 @@ export const getTodaysPoster = async (req, res, next) => {
 
     const poster = await Poster.findOne({
       date: { $gte: today, $lt: tomorrow },
-    });
+    }).sort({ date: -1 });
 
     res.status(200).json({ poster });
   } catch (error) {
@@ -29,20 +39,6 @@ export const createPoster = async (req, res, next) => {
 
     if (!media || !caption)
       return next(errorHandler(400, "Media and caption are required"));
-
-    // Delete today's existing poster
-    const existingPoster = await Poster.findOne();
-    if (existingPoster && existingPoster.mediaId) {
-      try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          existingPoster.mediaId
-        );
-      } catch (err) {
-        console.log("Failed to delete old media:", err.message);
-      }
-      await Poster.findByIdAndDelete(existingPoster._id);
-    }
 
     const newPoster = new Poster({ media, mediaId, mediaType, caption });
     const savedPoster = await newPoster.save();
@@ -63,7 +59,7 @@ export const updatePoster = async (req, res, next) => {
     if (!poster) return next(errorHandler(404, "Poster not found"));
 
     // Delete old media if new one uploaded
-    if (mediaId && poster.mediaId) {
+    if (mediaId && poster.mediaId && mediaId !== poster.mediaId) {
       try {
         await storage.deleteFile(
           process.env.APPWRITE_STORAGE_ID,
@@ -94,6 +90,7 @@ export const deletePoster = async (req, res, next) => {
     const poster = await Poster.findById(req.params.posterId);
     if (!poster) return next(errorHandler(404, "Poster not found"));
 
+    // Delete media from Appwrite storage
     if (poster.mediaId) {
       try {
         await storage.deleteFile(

@@ -3,14 +3,16 @@ import {
   createPoster,
   deletePoster,
   getTodaysPoster,
+  getAllPosters,
   updatePoster,
 } from "../controller/poster.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
 const router = express.Router();
 
-// Public route
+// Public routes
 router.get("/today", getTodaysPoster);
+router.get("/all", getAllPosters);
 
 // Admin routes
 router.post("/create", verifyToken, createPoster);

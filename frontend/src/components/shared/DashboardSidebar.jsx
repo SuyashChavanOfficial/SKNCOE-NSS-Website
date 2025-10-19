@@ -1,16 +1,24 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import {
+  FaChartBar,
   FaComments,
+  FaHandsHelping,
+  FaImage,
   FaPenSquare,
+  FaPeopleCarry,
   FaSignOutAlt,
   FaUser,
   FaUsers,
+  FaUserShield,
 } from "react-icons/fa";
 import { IoDocuments } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutSuccess } from "@/redux/user/userSlice";
-import { MdDashboardCustomize } from "react-icons/md";
+import {
+  MdCategory,
+  MdDashboardCustomize,
+} from "react-icons/md";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const DashboardSidebar = () => {
@@ -74,7 +82,7 @@ const DashboardSidebar = () => {
                 to={"/dashboard?tab=poster-of-the-day"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
-                <FaPenSquare className="mr-3" />
+                <FaImage className="mr-3" />
                 <span>Poster of the Day</span>
               </Link>
             </li>
@@ -86,7 +94,8 @@ const DashboardSidebar = () => {
                 to={"/dashboard?tab=activities"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
-                <FaPenSquare className="mr-3" />
+                <FaHandsHelping className="mr-3" />
+                {/* <FaPenSquare className="mr-3" /> */}
                 <span>Activities</span>
               </Link>
             </li>
@@ -98,7 +107,7 @@ const DashboardSidebar = () => {
                 to={"/dashboard?tab=volunteers"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
-                <FaUsers className="mr-3" />
+                <FaPeopleCarry className="mr-3" />
                 <span>Volunteers</span>
               </Link>
             </li>
@@ -110,7 +119,7 @@ const DashboardSidebar = () => {
                 to={"/dashboard?tab=attendance"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
-                <IoDocuments className="mr-3" />
+                <FaChartBar className="mr-3" />
                 <span>Attendance</span>
               </Link>
             </li>
@@ -134,7 +143,7 @@ const DashboardSidebar = () => {
                 to={"/dashboard?tab=category-manager"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
-                <FaPenSquare className="mr-3" />
+                <MdCategory className="mr-3" />
                 <span>Categories</span>
               </Link>
             </li>
@@ -148,18 +157,6 @@ const DashboardSidebar = () => {
               >
                 <IoDocuments className="mr-3" />
                 <span>Your Articles</span>
-              </Link>
-            </li>
-          )}
-
-          {currentUser && currentUser.isSuperAdmin && (
-            <li>
-              <Link
-                to={"/dashboard?tab=admins"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
-              >
-                <FaUsers className="mr-3" />
-                <span>Manage Admins</span>
               </Link>
             </li>
           )}
@@ -184,6 +181,18 @@ const DashboardSidebar = () => {
               >
                 <FaComments className="mr-3" />
                 <span>All Comments</span>
+              </Link>
+            </li>
+          )}
+
+          {currentUser && currentUser.isSuperAdmin && (
+            <li>
+              <Link
+                to={"/dashboard?tab=admins"}
+                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              >
+                <FaUserShield className="mr-3" />
+                <span>Manage Admins</span>
               </Link>
             </li>
           )}

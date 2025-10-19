@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Advertise from "@/components/shared/Advertise";
 import PostCard from "@/components/shared/PostCard";
+import PosterOfTheDay from "@/components/shared/PosterOfTheDay";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const Home = () => {
@@ -62,6 +63,9 @@ const Home = () => {
           />
         </div>
       </div>
+
+      {/* Poster of the Day */}
+      <PosterOfTheDay/>
 
       <section className="pb-16 bg-white">
         <div className="max-w-7xl mx-auto text-center">

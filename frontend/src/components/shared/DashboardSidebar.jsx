@@ -24,7 +24,6 @@ const DashboardSidebar = ({ closeSidebar }) => {
   const { currentUser } = useSelector((state) => state.user);
   const location = useLocation();
   const navigate = useNavigate();
-
   const queryTab = new URLSearchParams(location.search).get("tab");
 
   const handleSignout = async () => {
@@ -33,15 +32,11 @@ const DashboardSidebar = ({ closeSidebar }) => {
         method: "POST",
         credentials: "include",
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        console.log(data.message);
-      } else {
+      if (res.ok) {
         dispatch(signOutSuccess());
         navigate("/");
-      }
+      } else console.log(data.message);
     } catch (error) {
       console.log(error);
     }
@@ -52,14 +47,19 @@ const DashboardSidebar = ({ closeSidebar }) => {
     navigate(`/dashboard?tab=${tab}`);
   };
 
-  // ✅ Updated isActive logic
   const isActive = (tab) => {
     if (tab === "activities") {
-      // highlight for activities, create-activity, or edit-activity
       return (
         queryTab === "activities" ||
         queryTab === "create-activity" ||
         queryTab === "edit-activity"
+      );
+    }
+    if (tab === "posts") {
+      return (
+        queryTab === "posts" ||
+        queryTab === "create-news" ||
+        queryTab === "edit-news"
       );
     }
     return queryTab === tab;
@@ -79,7 +79,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                 onClick={() => handleLinkClick("dashboard")}
                 className={`flex items-center p-2 w-full rounded ${
                   isActive("dashboard")
-                    ? "bg-blue-500 text-white"
+                    ? "bg-blue-900 text-white"
                     : "hover:bg-slate-300"
                 }`}
               >
@@ -94,7 +94,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
               onClick={() => handleLinkClick("profile")}
               className={`flex items-center p-2 w-full rounded ${
                 isActive("profile")
-                  ? "bg-blue-500 text-white"
+                  ? "bg-blue-900 text-white"
                   : "hover:bg-slate-300"
               }`}
             >
@@ -110,7 +110,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("poster-of-the-day")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("poster-of-the-day")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -124,7 +124,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("activities")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("activities")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -138,7 +138,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("volunteers")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("volunteers")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -152,7 +152,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("attendance")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("attendance")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -161,26 +161,13 @@ const DashboardSidebar = ({ closeSidebar }) => {
                 </button>
               </li>
 
-              <li>
-                <button
-                  onClick={() => handleLinkClick("create-news")}
-                  className={`flex items-center p-2 w-full rounded ${
-                    isActive("create-news")
-                      ? "bg-blue-500 text-white"
-                      : "hover:bg-slate-300"
-                  }`}
-                >
-                  <FaPenSquare className="mr-3" />
-                  <span>Create News</span>
-                </button>
-              </li>
-
+              {/* Removed Create News (moved to DashboardPosts button) */}
               <li>
                 <button
                   onClick={() => handleLinkClick("category-manager")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("category-manager")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -194,7 +181,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("posts")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("posts")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -208,7 +195,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("users")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("users")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -222,7 +209,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                   onClick={() => handleLinkClick("comments")}
                   className={`flex items-center p-2 w-full rounded ${
                     isActive("comments")
-                      ? "bg-blue-500 text-white"
+                      ? "bg-blue-900 text-white"
                       : "hover:bg-slate-300"
                   }`}
                 >
@@ -239,7 +226,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
                 onClick={() => handleLinkClick("admins")}
                 className={`flex items-center p-2 w-full rounded ${
                   isActive("admins")
-                    ? "bg-blue-500 text-white"
+                    ? "bg-blue-900 text-white"
                     : "hover:bg-slate-300"
                 }`}
               >
@@ -256,7 +243,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
             onClick={handleSignout}
           >
             <FaSignOutAlt className="mr-3" />
-            <span> Logout</span>
+            <span>Logout</span>
           </button>
         </div>
       </nav>

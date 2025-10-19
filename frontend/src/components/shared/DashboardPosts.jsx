@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +32,8 @@ const DashboardPosts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 9;
   const totalPages = Math.ceil(totalPosts / postsPerPage);
-
   const [postIdToDelete, setPostIdToDelete] = useState("");
+  const navigate = useNavigate();
 
   const fetchPosts = async (page = 1) => {
     try {
@@ -42,7 +42,6 @@ const DashboardPosts = () => {
         `${API_URL}/api/post/getposts?startIndex=${startIndex}&limit=${postsPerPage}&sort=desc`
       );
       const data = await res.json();
-
       if (res.ok) {
         setUserPosts(data.posts);
         setTotalPosts(data.totalPosts);
@@ -53,14 +52,10 @@ const DashboardPosts = () => {
   };
 
   useEffect(() => {
-    if (currentUser?.isAdmin) {
-      fetchPosts(currentPage);
-    }
+    if (currentUser?.isAdmin) fetchPosts(currentPage);
   }, [currentUser?.isAdmin, currentPage]);
 
-  const handlePageChange = (pageNum) => {
-    setCurrentPage(pageNum);
-  };
+  const handlePageChange = (pageNum) => setCurrentPage(pageNum);
 
   const handleDeletePost = async () => {
     try {
@@ -68,50 +63,44 @@ const DashboardPosts = () => {
         `${API_URL}/api/post/deletepost/${postIdToDelete}/${currentUser._id}`,
         { method: "DELETE", credentials: "include" }
       );
-
       const data = await res.json();
-
-      if (!res.ok) {
-        console.log(data.message);
-      } else {
-        fetchPosts(currentPage);
-      }
+      if (res.ok) fetchPosts(currentPage);
+      else console.log(data.message);
     } catch (error) {
       console.log(error.message);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full p-3">
+    <div className="flex flex-col w-full p-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold">Your Articles</h2>
+        <button
+          onClick={() => navigate("/dashboard?tab=create-news")}
+          className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 font-medium transition-all"
+        >
+          + Create News
+        </button>
+      </div>
+
       {currentUser.isAdmin && userPosts.length > 0 ? (
         <>
           <Table>
-            <TableCaption>
-              A list of your recent published articles.
-            </TableCaption>
-
+            <TableCaption>List of your published articles</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[150px] text-slate-700">
-                  Date Updated
-                </TableHead>
-                <TableHead className="w-[150px] text-slate-700">
-                  News Date
-                </TableHead>
-                <TableHead className="text-slate-700">Post Image</TableHead>
-                <TableHead className="text-slate-700">Post Title</TableHead>
-                <TableHead className="text-slate-700">Likes</TableHead>
-                <TableHead className="text-slate-700">Author</TableHead>
-                <TableHead className="text-slate-700 text-center">
-                  Delete
-                </TableHead>
-                <TableHead className="text-slate-700 text-center">
-                  Edit
-                </TableHead>
+                <TableHead>Date Updated</TableHead>
+                <TableHead>News Date</TableHead>
+                <TableHead>Image</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Likes</TableHead>
+                <TableHead>Author</TableHead>
+                <TableHead className="text-center">Delete</TableHead>
+                <TableHead className="text-center">Edit</TableHead>
               </TableRow>
             </TableHeader>
 
-            <TableBody className="divide-y">
+            <TableBody>
               {userPosts.map((post) => (
                 <TableRow key={post._id}>
                   <TableCell>
@@ -120,46 +109,37 @@ const DashboardPosts = () => {
                   <TableCell>
                     {new Date(post.newsDate).toLocaleDateString("en-GB")}
                   </TableCell>
-
                   <TableCell>
                     <Link to={`/post/${post.slug}`}>
                       <img
                         src={post.image}
                         alt={post.title}
-                        className="w-20 h-10 object-cover bg-gray-200 rounded"
+                        className="w-20 h-10 object-cover rounded bg-gray-200"
                       />
                     </Link>
                   </TableCell>
-
                   <TableCell className="font-medium text-slate-700">
                     <Link to={`/post/${post.slug}`}>{post.title}</Link>
                   </TableCell>
-
                   <TableCell>{post.numberOfLikes || 0}</TableCell>
-
                   <TableCell className="text-slate-600">
                     {post.userId.username}
                   </TableCell>
-
                   <TableCell className="text-center">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <span
                           onClick={() => setPostIdToDelete(post._id)}
-                          className="font-medium text-red-600 hover:underline cursor-pointer"
+                          className="text-red-600 hover:underline cursor-pointer"
                         >
                           Delete
                         </span>
                       </AlertDialogTrigger>
-
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the post.
+                            This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -174,11 +154,10 @@ const DashboardPosts = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   </TableCell>
-
                   <TableCell className="text-center">
                     <Link
                       to={`/dashboard?tab=edit-news&id=${post._id}`}
-                      className="font-medium text-blue-900 hover:underline"
+                      className="text-blue-900 hover:underline"
                     >
                       Edit
                     </Link>

@@ -53,7 +53,7 @@ const DashboardActivities = () => {
 
         <button
           onClick={() => navigate("/dashboard?tab=create-activity")}
-          className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all"
+          className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 font-medium transition-all"
         >
           + Create Activity
         </button>

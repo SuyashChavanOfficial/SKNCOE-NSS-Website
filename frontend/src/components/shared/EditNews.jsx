@@ -15,7 +15,7 @@ import { getFileUrl, uploadFile } from "@/lib/appwrite/uploadImage";
 import React, { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
 import { useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Popover,
   PopoverContent,
@@ -39,83 +39,94 @@ const EditNews = () => {
     category: "uncategorised",
     date: "",
     academicYear: "",
+    content: "",
+    image: "",
   });
   const [categories, setCategories] = useState(["uncategorised"]);
+  const [categoryMap, setCategoryMap] = useState({}); // map lowercase -> original
   const [imageUploading, setImageUploading] = useState(false);
   const [updatePostError, setUpdatePostError] = useState(null);
 
-  // Academic Years for dropdown
   const academicYears = ["2024-25", "2025-26", "2026-27", "2027-28", "2028-29"];
-
-  // Fetch post details
-  useEffect(() => {
-    const fetchPost = async () => {
-      const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        setUpdatePostError(data.message);
-        return;
-      }
-
-      if (data.post) {
-        setFormData({
-          title: data.post.title,
-          category: data.post.category || "uncategorised",
-          date: data.post.newsDate || "",
-          content: data.post.content || "",
-          image: data.post.image || "",
-          imageId: data.post.imageId || null,
-          _id: data.post._id,
-          academicYear: data.post.academicYear || "",
-        });
-      }
-    };
-    fetchPost();
-  }, [postId]);
 
   // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
-      const res = await fetch(`${API_URL}/api/category`);
-      const data = await res.json();
-      if (res.ok) {
-        const sorted = data
-          .filter((c) => c.name.toLowerCase() !== "uncategorised")
-          .sort((a, b) =>
-            a.name.localeCompare(b.name, "en", { sensitivity: "base" })
-          );
-        setCategories(["uncategorised", ...sorted.map((c) => c.name)]);
+      try {
+        const res = await fetch(`${API_URL}/api/category`);
+        const data = await res.json();
+        if (res.ok) {
+          const sorted = data
+            .filter((c) => c.name.toLowerCase() !== "uncategorised")
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, "en", { sensitivity: "base" })
+            );
+
+          const allCategories = ["uncategorised", ...sorted.map((c) => c.name)];
+          setCategories(allCategories);
+
+          // Map lowercase -> original
+          const map = {};
+          allCategories.forEach((cat) => (map[cat.toLowerCase()] = cat));
+          setCategoryMap(map);
+        }
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchCategories();
   }, []);
 
-  const handleImageUpload = async () => {
-    if (!file) {
-      toast({ title: "Please select an image!" });
-      return;
-    }
+  // Fetch post details
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setUpdatePostError(data.message);
+          return;
+        }
 
-    if (file.size > 1 * 1024 * 1024) {
-      toast({
-        title: "File size exceeds 1 MB. Please select a smaller image.",
-      });
-      return;
-    }
+        if (data.post) {
+          const categoryLower = data.post.category
+            ? data.post.category.toLowerCase()
+            : "uncategorised";
+
+          setFormData({
+            title: data.post.title,
+            category: categoryMap[categoryLower] || "uncategorised",
+            date: data.post.newsDate || "",
+            content: data.post.content || "",
+            image: data.post.image || "",
+            imageId: data.post.imageId || null,
+            _id: data.post._id,
+            academicYear: data.post.academicYear || "",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchPost();
+  }, [postId, categoryMap]);
+
+  // Image upload
+  const handleImageUpload = async () => {
+    if (!file) return toast({ title: "Please select an image!" });
+    if (file.size > 1 * 1024 * 1024)
+      return toast({ title: "File size exceeds 1 MB!" });
 
     try {
       setImageUploading(true);
       const uploadedFile = await uploadFile(file);
       const postImageUrl = await getFileUrl(uploadedFile.$id);
-
       setFormData({
         ...formData,
         image: postImageUrl,
         imageId: uploadedFile.$id,
         deleteOldImageId: formData.imageId || null,
       });
-
       toast({ title: "Image Uploaded Successfully!" });
       setImageUploading(false);
     } catch {
@@ -124,12 +135,10 @@ const EditNews = () => {
     }
   };
 
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.date) {
-      toast({ title: "Please select a date for the news." });
-      return;
-    }
+    if (!formData.date) return toast({ title: "Please select a date!" });
 
     const finalFormData = {
       ...formData,
@@ -161,13 +170,21 @@ const EditNews = () => {
   };
 
   return (
-    <div className="p-3 max-w-3xl mx-auto min-h-screen">
-      <h1 className="text-center text-3xl my-7 font-semibold text-slate-700">
+    <div className="p-6 max-w-3xl mx-auto flex flex-col">
+      <div className="mb-4 w-full">
+        <button
+          onClick={() => navigate("/dashboard?tab=posts")}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 font-medium"
+        >
+          ← Back to Articles
+        </button>
+      </div>
+
+      <h1 className="text-center text-3xl mb-7 font-semibold text-slate-700">
         Edit News Article
       </h1>
 
       <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-        {/* Title */}
         <Input
           className="w-full h-12 border-slate-400 focus-visible:ring-0"
           type="text"
@@ -177,9 +194,8 @@ const EditNews = () => {
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         />
 
-        {/* Date, Academic Year & Category */}
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Date Picker */}
+          {/* Date */}
           <div className="w-full sm:w-1/3">
             <Popover>
               <PopoverTrigger asChild>
@@ -271,9 +287,6 @@ const EditNews = () => {
               {imageUploading ? "Uploading..." : "Upload Image"}
             </Button>
           </div>
-          <p className="text-gray-500 text-xs mt-1">
-            Note: Maximum image size allowed is 1 MB.
-          </p>
         </div>
 
         {formData.image && (
@@ -284,7 +297,6 @@ const EditNews = () => {
           />
         )}
 
-        {/* Editor */}
         <Editor
           value={formData.content || ""}
           placeholder="Write News here..."

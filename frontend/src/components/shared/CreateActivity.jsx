@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
-import { ArrowLeft } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const MAX_FILE_SIZE = 500 * 1024; // 500 KB
@@ -78,21 +77,20 @@ const CreateActivity = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto flex items-center flex-col">
-      <div className="w-full mb-3">
+    <div className="p-6 max-w-3xl mx-auto flex flex-col">
+      {/* Back button */}
+      <div className="mb-4 w-full">
         <button
           onClick={() => navigate("/dashboard?tab=activities")}
-          className="flex items-center gap-2 text-blue-900 hover:text-blue-700 font-medium transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 font-medium"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Activities
+          ← Back to Activities
         </button>
       </div>
 
       <h2 className="text-3xl font-bold mb-4">Create Activity</h2>
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 flex items-center flex-col w-full"
-      >
+
+      <form className="space-y-6 flex flex-col w-full" onSubmit={handleSubmit}>
         <Input
           type="text"
           placeholder="Title"
@@ -118,10 +116,7 @@ const CreateActivity = () => {
           className="w-full h-12 text-lg"
           value={formData.expectedDurationHours}
           onChange={(e) =>
-            setFormData({
-              ...formData,
-              expectedDurationHours: e.target.value,
-            })
+            setFormData({ ...formData, expectedDurationHours: e.target.value })
           }
           required
         />

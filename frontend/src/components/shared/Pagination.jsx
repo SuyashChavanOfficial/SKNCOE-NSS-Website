@@ -1,8 +1,22 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const Pagination = ({ totalPages, currentPage, handlePageChange }) => {
+const Pagination = ({ totalPages }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // ✅ Get current page from URL
+  const queryParams = new URLSearchParams(location.search);
+  const currentPage = parseInt(queryParams.get("page")) || 1;
+
   if (totalPages <= 1) return null;
+
+  const handlePageChange = (pageNum) => {
+    if (pageNum < 1 || pageNum > totalPages) return;
+    queryParams.set("page", pageNum);
+    navigate(`${location.pathname}?${queryParams.toString()}`);
+  };
 
   const pageNumbers = [];
 

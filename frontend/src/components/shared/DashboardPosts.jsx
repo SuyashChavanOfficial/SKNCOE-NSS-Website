@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,11 +29,17 @@ const DashboardPosts = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [userPosts, setUserPosts] = useState([]);
   const [totalPosts, setTotalPosts] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 9;
-  const totalPages = Math.ceil(totalPosts / postsPerPage);
   const [postIdToDelete, setPostIdToDelete] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const postsPerPage = 9;
+
+  // Get current page from URL query string
+  const queryParams = new URLSearchParams(location.search);
+  const currentPage = parseInt(queryParams.get("page")) || 1;
+
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   const fetchPosts = async (page = 1) => {
     try {
@@ -51,11 +57,16 @@ const DashboardPosts = () => {
     }
   };
 
+  // Fetch posts whenever page changes or admin changes
   useEffect(() => {
     if (currentUser?.isAdmin) fetchPosts(currentPage);
   }, [currentUser?.isAdmin, currentPage]);
 
-  const handlePageChange = (pageNum) => setCurrentPage(pageNum);
+  // Update URL when changing page
+  const handlePageChange = (pageNum) => {
+    if (pageNum < 1 || pageNum > totalPages) return;
+    navigate(`/dashboard?tab=posts&page=${pageNum}`);
+  };
 
   const handleDeletePost = async () => {
     try {

@@ -28,17 +28,19 @@ const PosterOfTheDay = () => {
   const formattedDate = format(new Date(poster.date), "do MMMM, yyyy");
 
   return (
-    <section className="max-w-7xl mx-auto my-10 p-6 bg-yellow-50 rounded-lg shadow-md flex flex-col md:flex-row items-center gap-6">
+    <section className=" mx-auto my-10 p-6 bg-blue-50 rounded-lg shadow-md flex flex-col items-center gap-6">
+      <div className="flex-1 text-center">
+        <h2 className="text-4xl font-bold text-red-600 mb-2">
+          Poster of the Day
+        </h2>
+        <p className="text-gray-600 italic mb-4">{formattedDate}</p>
+      </div>
       <img
         src={poster.image}
         alt="Poster of the Day"
         className="w-full md:w-1/2 h-auto object-cover rounded-lg shadow-lg"
       />
-      <div className="flex-1 text-center md:text-left">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Poster of the Day
-        </h2>
-        <p className="text-gray-600 italic mb-4">{formattedDate}</p>
+      <div className="flex-1 text-center">
         <p className="text-gray-700 text-lg">{poster.caption}</p>
       </div>
     </section>

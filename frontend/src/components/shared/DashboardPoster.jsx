@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
 import {
@@ -14,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { format } from "date-fns";
+import { Textarea } from "../ui/textarea";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -29,7 +31,6 @@ const DashboardPoster = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // Fetch today's poster
   const fetchPoster = async () => {
     try {
       const res = await fetch(`${API_URL}/api/poster/today`);
@@ -45,42 +46,43 @@ const DashboardPoster = () => {
     fetchPoster();
   }, []);
 
-  // Handle image upload
-  const handleImageUpload = async () => {
-    if (!file) return toast({ title: "Please select an image!" });
-    if (file.size > 5 * 1024 * 1024)
-      return toast({ title: "File size exceeds 5 MB!" });
-
-    try {
-      setUploading(true);
-      const uploadedFile = await uploadFile(file);
-      const url = await getFileUrl(uploadedFile.$id);
-      setFormData({ ...formData, image: url, imageId: uploadedFile.$id });
-      toast({ title: "Image uploaded successfully!" });
-      setUploading(false);
-    } catch (err) {
-      console.log(err);
-      toast({ title: "Image upload failed!" });
-      setUploading(false);
-    }
-  };
-
-  // Submit new poster
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.caption || !formData.image)
+    if (!formData.caption || (!formData.image && !file))
       return toast({ title: "Fill all fields!" });
 
     try {
+      let imageUrl = formData.image;
+      let imageId = formData.imageId;
+
+      if (file) {
+        setUploading(true);
+        const uploadedFile = await uploadFile(file);
+        imageUrl = await getFileUrl(uploadedFile.$id);
+        imageId = uploadedFile.$id;
+        setUploading(false);
+      }
+
+      const posterData = { ...formData, image: imageUrl, imageId };
       const res = await fetch(`${API_URL}/api/poster/create`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(posterData),
       });
+
       const data = await res.json();
-      if (!res.ok)
+
+      if (!res.ok) {
+        // Optional: delete uploaded image if poster creation fails
+        if (file) {
+          await fetch(`${API_URL}/api/upload/delete/${imageId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        }
         return toast({ title: data.message || "Something went wrong!" });
+      }
 
       toast({ title: "Poster added successfully!" });
       setPopupOpen(false);
@@ -90,10 +92,10 @@ const DashboardPoster = () => {
     } catch (err) {
       console.log(err);
       toast({ title: "Something went wrong!" });
+      setUploading(false);
     }
   };
 
-  // Delete poster
   const handleDelete = async () => {
     if (!poster) return;
     try {
@@ -139,6 +141,7 @@ const DashboardPoster = () => {
                   image: poster.image,
                   imageId: poster.imageId,
                 });
+                setFile(null);
                 setPopupOpen(true);
               }}
             >
@@ -170,45 +173,47 @@ const DashboardPoster = () => {
         <p className="text-gray-500">No poster for today.</p>
       )}
 
-      {/* Popup Form */}
       {popupOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
             <h3 className="text-lg font-semibold mb-4">Add / Edit Poster</h3>
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+              {file && (
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt="preview"
+                  className="w-full h-40 object-cover rounded"
+                />
+              )}
+              <Textarea
                 type="text"
                 placeholder="Caption"
                 value={formData.caption}
                 onChange={(e) =>
                   setFormData({ ...formData, caption: e.target.value })
                 }
+                className="h-36"
                 required
               />
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-              <Button
-                type="button"
-                onClick={handleImageUpload}
-                disabled={uploading}
-              >
-                {uploading ? "Uploading..." : "Upload Image"}
+              <Button type="submit" disabled={uploading}>
+                {uploading ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner className="w-4 h-4 animate-spin" />
+                    Uploading...
+                  </div>
+                ) : (
+                  "Save Poster"
+                )}
               </Button>
-              {formData.image && (
-                <img
-                  src={formData.image}
-                  alt="preview"
-                  className="w-full h-40 object-cover rounded"
-                />
-              )}
               <div className="flex justify-end gap-2 mt-4">
                 <Button type="button" onClick={() => setPopupOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Save</Button>
               </div>
             </form>
           </div>

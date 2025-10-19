@@ -177,7 +177,7 @@ const DashboardPosts = () => {
 
                   <TableCell className="text-center">
                     <Link
-                      to={`/update-post/${post._id}`}
+                      to={`/dashboard?tab=edit-news&id=${post._id}`}
                       className="font-medium text-blue-900 hover:underline"
                     >
                       Edit

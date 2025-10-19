@@ -29,7 +29,8 @@ const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const EditNews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { postId } = useParams();
+  const queryParams = new URLSearchParams(window.location.search);
+  const postId = queryParams.get("id");
   const { currentUser } = useSelector((state) => state.user);
 
   const [file, setFile] = useState(null);

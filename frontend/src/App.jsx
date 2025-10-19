@@ -9,9 +9,9 @@ import Header from "./components/shared/Header";
 import { Toaster } from "./components/ui/toaster";
 import Footer from "./components/shared/Footer";
 import PrivateRoute from "./components/shared/PrivateRoute";
-import CreateNews from "./pages/CreateNews";
+import CreateNews from "./components/shared/CreateNews";
 import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
-import EditNews from "./pages/EditNews";
+import EditNews from "./components/shared/EditNews";
 import NewsDetails from "./pages/NewsDetails";
 import CreateActivity from "./pages/CreateActivity";
 import EditActivity from "./pages/EditActivity";
@@ -65,7 +65,7 @@ const App = () => {
         <Route path="/news" element={<Search />}></Route>
         <Route path="/activities" element={<Activities />}></Route>
         <Route path="/post/:postSlug" element={<NewsDetails />}></Route>
-        
+
         <Route
           path="/dashboard/activity/:activityId"
           element={<ActivityDetails />}

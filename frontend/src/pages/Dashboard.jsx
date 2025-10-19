@@ -10,10 +10,13 @@ import DashboardVolunteers from "@/components/shared/DashboardVolunteers";
 import DashboardAttendance from "@/components/shared/DashboardAttendance";
 import DashboardCategory from "@/components/shared/DashboardCategory";
 import DashboardPoster from "@/components/shared/DashboardPoster";
+import CreateNews from "@/components/shared/CreateNews";
+import EditNews from "@/components/shared/EditNews";
 
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+
 
 const Dashboard = () => {
   const location = useLocation();
@@ -83,6 +86,8 @@ const Dashboard = () => {
 
         {/* news articles */}
         {tab === "posts" && <DashboardPosts />}
+        {tab === "create-news" && <CreateNews />}
+        {tab === "edit-news" && <EditNews />}
 
         {/* Users */}
         {tab === "users" && <DashboardUsers />}

@@ -164,13 +164,17 @@ const DashboardSidebar = ({ closeSidebar }) => {
           {/* Create News */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/create-post"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("create-news")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("create-news")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaPenSquare className="mr-3" />
                 <span>Create News</span>
-              </Link>
+              </button>
             </li>
           )}
 

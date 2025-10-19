@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaChartBar,
   FaComments,
@@ -15,15 +15,16 @@ import {
 import { IoDocuments } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutSuccess } from "@/redux/user/userSlice";
-import {
-  MdCategory,
-  MdDashboardCustomize,
-} from "react-icons/md";
+import { MdCategory, MdDashboardCustomize } from "react-icons/md";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
-const DashboardSidebar = () => {
+const DashboardSidebar = ({ closeSidebar }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const queryTab = new URLSearchParams(location.search).get("tab");
 
   const handleSignout = async () => {
     try {
@@ -38,11 +39,19 @@ const DashboardSidebar = () => {
         console.log(data.message);
       } else {
         dispatch(signOutSuccess());
+        navigate("/");
       }
     } catch (error) {
       console.log(error);
     }
   };
+
+  const handleLinkClick = (tab) => {
+    closeSidebar?.();
+    navigate(`/dashboard?tab=${tab}`);
+  };
+
+  const isActive = (tab) => queryTab === tab;
 
   return (
     <aside className="h-screen w-64 bg-slate-200 text-slate-800 flex flex-col">
@@ -56,75 +65,103 @@ const DashboardSidebar = () => {
         <ul className="space-y-2">
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=dashboard"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("dashboard")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("dashboard")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <MdDashboardCustomize className="mr-3" />
                 <span>Dashboard</span>
-              </Link>
+              </button>
             </li>
           )}
 
           <li>
-            <Link
-              to={"/dashboard?tab=profile"}
-              className="flex items-center p-2 hover:bg-slate-300 rounded"
+            <button
+              onClick={() => handleLinkClick("profile")}
+              className={`flex items-center p-2 w-full rounded ${
+                isActive("profile")
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-slate-300"
+              }`}
             >
               <FaUser className="mr-3" />
               <span>Profile</span>
-            </Link>
+            </button>
           </li>
 
+          {/* Poster of the Day */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=poster-of-the-day"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("poster-of-the-day")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("poster-of-the-day")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaImage className="mr-3" />
                 <span>Poster of the Day</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* Activities */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=activities"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("activities")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("activities")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaHandsHelping className="mr-3" />
-                {/* <FaPenSquare className="mr-3" /> */}
                 <span>Activities</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* Volunteers */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=volunteers"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("volunteers")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("volunteers")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaPeopleCarry className="mr-3" />
                 <span>Volunteers</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* Attendance */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=attendance"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("attendance")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("attendance")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaChartBar className="mr-3" />
                 <span>Attendance</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* Create News */}
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link
@@ -137,63 +174,88 @@ const DashboardSidebar = () => {
             </li>
           )}
 
+          {/* Categories */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=category-manager"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("category-manager")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("category-manager")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <MdCategory className="mr-3" />
                 <span>Categories</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* Your Articles */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=posts"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("posts")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("posts")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <IoDocuments className="mr-3" />
                 <span>Your Articles</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* All Users */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=users"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("users")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("users")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaUsers className="mr-3" />
                 <span>All Users</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* All Comments */}
           {currentUser && currentUser.isAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=comments"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("comments")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("comments")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaComments className="mr-3" />
                 <span>All Comments</span>
-              </Link>
+              </button>
             </li>
           )}
 
+          {/* Manage Admins */}
           {currentUser && currentUser.isSuperAdmin && (
             <li>
-              <Link
-                to={"/dashboard?tab=admins"}
-                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              <button
+                onClick={() => handleLinkClick("admins")}
+                className={`flex items-center p-2 w-full rounded ${
+                  isActive("admins")
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-slate-300"
+                }`}
               >
                 <FaUserShield className="mr-3" />
                 <span>Manage Admins</span>
-              </Link>
+              </button>
             </li>
           )}
         </ul>

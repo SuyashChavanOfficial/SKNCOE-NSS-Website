@@ -66,8 +66,8 @@ const DashboardSidebar = ({ closeSidebar }) => {
   };
 
   return (
-    <aside className="h-screen w-64 bg-slate-200 text-slate-800 flex flex-col">
-      <div className="p-4 flex items-center justify-center bg-slate-200">
+    <aside className="h-full w-64 bg-slate-200 text-slate-800 flex flex-col overflow-y-auto">
+      <div className="p-4 flex items-center justify-center bg-slate-200 sticky top-0 z-10">
         <h1 className="text-2xl font-bold">Dashboard</h1>
       </div>
 
@@ -237,7 +237,7 @@ const DashboardSidebar = ({ closeSidebar }) => {
           )}
         </ul>
 
-        <div className="p-4 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t border-slate-400">
           <button
             className="flex items-center w-full p-2 hover:bg-slate-300 rounded"
             onClick={handleSignout}

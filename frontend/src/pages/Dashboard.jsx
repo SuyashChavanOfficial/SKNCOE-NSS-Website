@@ -38,8 +38,9 @@ const Dashboard = () => {
   }, [tab]);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row w-full">
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 bg-white sticky top-0 z-50">
+    <div className="flex flex-col md:flex-row w-full h-screen overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 bg-white z-40">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="text-gray-700"
@@ -53,9 +54,10 @@ const Dashboard = () => {
         <h1 className="text-xl font-bold">Dashboard</h1>
       </div>
 
+      {/* Sidebar */}
       <aside
         className={`
-          fixed md:static top-0 left-0 h-full md:h-auto w-3/4 md:w-64
+          fixed md:relative left-0 top-0 h-full w-3/4 md:w-64
           bg-slate-200 text-slate-800 shadow-lg z-40 transform transition-transform duration-300
           ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -69,14 +71,16 @@ const Dashboard = () => {
         />
       </aside>
 
+      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      <div className="flex-1 w-full">
+      {/* Main Content */}
+      <div className="flex-1 w-full overflow-auto">
         {tab === "profile" && <DashboardProfile />}
 
         {/* Poster of the Day */}

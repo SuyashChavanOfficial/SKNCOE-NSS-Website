@@ -92,6 +92,7 @@ const Header = () => {
             className="focus:outline-none bg-transparent w-24 sm:w-64 text-blue-900 placeholder:text-blue-900"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            id="searchTerm"
           />
           <button>
             <FaSearch className="text-red-600 hover:text-blue-900 transition-colors duration-200" />

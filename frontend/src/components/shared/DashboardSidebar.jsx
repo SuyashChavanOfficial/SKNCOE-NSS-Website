@@ -71,6 +71,18 @@ const DashboardSidebar = () => {
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link
+                to={"/dashboard?tab=poster-of-the-day"}
+                className="flex items-center p-2 hover:bg-slate-300 rounded"
+              >
+                <FaPenSquare className="mr-3" />
+                <span>Poster of the Day</span>
+              </Link>
+            </li>
+          )}
+
+          {currentUser && currentUser.isAdmin && (
+            <li>
+              <Link
                 to={"/dashboard?tab=activities"}
                 className="flex items-center p-2 hover:bg-slate-300 rounded"
               >
@@ -91,7 +103,7 @@ const DashboardSidebar = () => {
               </Link>
             </li>
           )}
-          
+
           {currentUser && currentUser.isAdmin && (
             <li>
               <Link

@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  addPoster,
+  createPoster,
   deletePoster,
   getTodaysPoster,
   updatePoster,
@@ -13,7 +13,7 @@ const router = express.Router();
 router.get("/today", getTodaysPoster);
 
 // Admin routes
-router.post("/add", verifyToken, addPoster);
+router.post("/create", verifyToken, createPoster);
 router.put("/update/:posterId", verifyToken, updatePoster);
 router.delete("/delete/:posterId", verifyToken, deletePoster);
 

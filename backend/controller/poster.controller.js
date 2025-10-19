@@ -21,7 +21,7 @@ export const getTodaysPoster = async (req, res, next) => {
 };
 
 // Add new poster (Admin only)
-export const addPoster = async (req, res, next) => {
+export const createPoster = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {

@@ -125,7 +125,7 @@ const DashboardPoster = () => {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Poster of the Day</h2>
-        <Button onClick={() => setPopupOpen(true)}>Add / Edit Poster</Button>
+        <Button onClick={() => setPopupOpen(true)}>Add Poster</Button>
       </div>
 
       {poster ? (

@@ -12,11 +12,12 @@ import DashboardCategory from "@/components/shared/DashboardCategory";
 import DashboardPoster from "@/components/shared/DashboardPoster";
 import CreateNews from "@/components/shared/CreateNews";
 import EditNews from "@/components/shared/EditNews";
+import CreateActivity from "@/components/shared/CreateActivity";
+import EditActivity from "@/components/shared/EditActivity";
 
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-
 
 const Dashboard = () => {
   const location = useLocation();
@@ -83,6 +84,8 @@ const Dashboard = () => {
 
         {/* Activities */}
         {tab === "activities" && <DashboardActivities />}
+        {tab === "create-activity" && <CreateActivity />}
+        {tab === "edit-activity" && <EditActivity />}
 
         {/* news articles */}
         {tab === "posts" && <DashboardPosts />}

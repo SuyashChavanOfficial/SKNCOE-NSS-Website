@@ -1,35 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
+import { ArrowLeft } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const MAX_FILE_SIZE = 500 * 1024; // 500 KB
 
-const EditActivity = () => {
-  const { activityId } = useParams();
+const CreateActivity = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    startDate: "",
+    expectedDurationHours: "",
+    description: "",
+    poster: "",
+    posterId: "",
+  });
+
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-
-  // Fetch activity
-  useEffect(() => {
-    const fetchActivity = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/activity/get/${activityId}`);
-        const data = await res.json();
-        if (res.ok) setFormData(data.activity);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchActivity();
-  }, [activityId]);
 
   const handleUploadPoster = async () => {
     if (!file) {
@@ -46,14 +40,7 @@ const EditActivity = () => {
       setUploading(true);
       const uploadedFile = await uploadFile(file);
       const url = await getFileUrl(uploadedFile.$id);
-
-      const update = {
-        ...formData,
-        poster: url,
-        posterId: uploadedFile.$id,
-      };
-
-      setFormData(update);
+      setFormData({ ...formData, poster: url, posterId: uploadedFile.$id });
       toast({ title: "Poster uploaded successfully!" });
     } catch (err) {
       toast({ title: "Poster upload failed" });
@@ -66,8 +53,8 @@ const EditActivity = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_URL}/api/activity/update/${activityId}`, {
-        method: "PUT",
+      const res = await fetch(`${API_URL}/api/activity/create`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
@@ -78,11 +65,11 @@ const EditActivity = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: data.message || "Failed to update activity" });
+        toast({ title: data.message || "Failed to create activity" });
         return;
       }
 
-      toast({ title: "Activity updated successfully!" });
+      toast({ title: "Activity created successfully!" });
       navigate("/dashboard?tab=activities");
     } catch (err) {
       console.error(err);
@@ -90,11 +77,18 @@ const EditActivity = () => {
     }
   };
 
-  if (!formData) return <p className="p-6">Loading...</p>;
-
   return (
     <div className="p-6 max-w-3xl mx-auto flex items-center flex-col">
-      <h2 className="text-3xl font-bold mb-4">Edit Activity</h2>
+      <div className="w-full mb-3">
+        <button
+          onClick={() => navigate("/dashboard?tab=activities")}
+          className="flex items-center gap-2 text-blue-900 hover:text-blue-700 font-medium transition-all"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Activities
+        </button>
+      </div>
+
+      <h2 className="text-3xl font-bold mb-4">Create Activity</h2>
       <form
         onSubmit={handleSubmit}
         className="space-y-6 flex items-center flex-col w-full"
@@ -111,11 +105,7 @@ const EditActivity = () => {
         <Input
           type="datetime-local"
           className="w-full h-12 text-lg"
-          value={
-            formData.startDate
-              ? new Date(formData.startDate).toISOString().slice(0, 16)
-              : ""
-          }
+          value={formData.startDate}
           onChange={(e) =>
             setFormData({ ...formData, startDate: e.target.value })
           }
@@ -172,13 +162,13 @@ const EditActivity = () => {
 
         <Button
           type="submit"
-          className="bg-green-600 text-white h-12 w-full text-sm"
+          className="bg-blue-600 text-white h-12 w-full text-sm"
         >
-          Update Activity
+          Create Activity
         </Button>
       </form>
     </div>
   );
 };
 
-export default EditActivity;
+export default CreateActivity;

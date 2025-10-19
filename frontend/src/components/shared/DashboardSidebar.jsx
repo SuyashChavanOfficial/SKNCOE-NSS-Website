@@ -18,6 +18,7 @@ import { signOutSuccess } from "@/redux/user/userSlice";
 import { MdCategory, MdDashboardCustomize } from "react-icons/md";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const DashboardSidebar = ({ closeSidebar }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
@@ -51,19 +52,28 @@ const DashboardSidebar = ({ closeSidebar }) => {
     navigate(`/dashboard?tab=${tab}`);
   };
 
-  const isActive = (tab) => queryTab === tab;
+  // ✅ Updated isActive logic
+  const isActive = (tab) => {
+    if (tab === "activities") {
+      // highlight for activities, create-activity, or edit-activity
+      return (
+        queryTab === "activities" ||
+        queryTab === "create-activity" ||
+        queryTab === "edit-activity"
+      );
+    }
+    return queryTab === tab;
+  };
 
   return (
     <aside className="h-screen w-64 bg-slate-200 text-slate-800 flex flex-col">
-      {/* Logo/Header */}
       <div className="p-4 flex items-center justify-center bg-slate-200">
         <h1 className="text-2xl font-bold">Dashboard</h1>
       </div>
 
-      {/* Navigation Links */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {currentUser && currentUser.isAdmin && (
+          {currentUser?.isAdmin && (
             <li>
               <button
                 onClick={() => handleLinkClick("dashboard")}
@@ -93,161 +103,137 @@ const DashboardSidebar = ({ closeSidebar }) => {
             </button>
           </li>
 
-          {/* Poster of the Day */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("poster-of-the-day")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("poster-of-the-day")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaImage className="mr-3" />
-                <span>Poster of the Day</span>
-              </button>
-            </li>
+          {currentUser?.isAdmin && (
+            <>
+              <li>
+                <button
+                  onClick={() => handleLinkClick("poster-of-the-day")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("poster-of-the-day")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaImage className="mr-3" />
+                  <span>Poster of the Day</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("activities")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("activities")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaHandsHelping className="mr-3" />
+                  <span>Activities</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("volunteers")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("volunteers")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaPeopleCarry className="mr-3" />
+                  <span>Volunteers</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("attendance")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("attendance")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaChartBar className="mr-3" />
+                  <span>Attendance</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("create-news")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("create-news")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaPenSquare className="mr-3" />
+                  <span>Create News</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("category-manager")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("category-manager")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <MdCategory className="mr-3" />
+                  <span>Categories</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("posts")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("posts")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <IoDocuments className="mr-3" />
+                  <span>Your Articles</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("users")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("users")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaUsers className="mr-3" />
+                  <span>All Users</span>
+                </button>
+              </li>
+
+              <li>
+                <button
+                  onClick={() => handleLinkClick("comments")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("comments")
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaComments className="mr-3" />
+                  <span>All Comments</span>
+                </button>
+              </li>
+            </>
           )}
 
-          {/* Activities */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("activities")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("activities")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaHandsHelping className="mr-3" />
-                <span>Activities</span>
-              </button>
-            </li>
-          )}
-
-          {/* Volunteers */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("volunteers")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("volunteers")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaPeopleCarry className="mr-3" />
-                <span>Volunteers</span>
-              </button>
-            </li>
-          )}
-
-          {/* Attendance */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("attendance")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("attendance")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaChartBar className="mr-3" />
-                <span>Attendance</span>
-              </button>
-            </li>
-          )}
-
-          {/* Create News */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("create-news")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("create-news")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaPenSquare className="mr-3" />
-                <span>Create News</span>
-              </button>
-            </li>
-          )}
-
-          {/* Categories */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("category-manager")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("category-manager")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <MdCategory className="mr-3" />
-                <span>Categories</span>
-              </button>
-            </li>
-          )}
-
-          {/* Your Articles */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("posts")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("posts")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <IoDocuments className="mr-3" />
-                <span>Your Articles</span>
-              </button>
-            </li>
-          )}
-
-          {/* All Users */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("users")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("users")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaUsers className="mr-3" />
-                <span>All Users</span>
-              </button>
-            </li>
-          )}
-
-          {/* All Comments */}
-          {currentUser && currentUser.isAdmin && (
-            <li>
-              <button
-                onClick={() => handleLinkClick("comments")}
-                className={`flex items-center p-2 w-full rounded ${
-                  isActive("comments")
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-slate-300"
-                }`}
-              >
-                <FaComments className="mr-3" />
-                <span>All Comments</span>
-              </button>
-            </li>
-          )}
-
-          {/* Manage Admins */}
-          {currentUser && currentUser.isSuperAdmin && (
+          {currentUser?.isSuperAdmin && (
             <li>
               <button
                 onClick={() => handleLinkClick("admins")}

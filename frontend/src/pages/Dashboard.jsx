@@ -56,7 +56,7 @@ const Dashboard = () => {
       <aside
         className={`
           fixed md:static top-0 left-0 h-full md:h-auto w-3/4 md:w-64
-          bg-slate-200 text-slate-800 shadow-lg z-50 transform transition-transform duration-300
+          bg-slate-200 text-slate-800 shadow-lg z-40 transform transition-transform duration-300
           ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }

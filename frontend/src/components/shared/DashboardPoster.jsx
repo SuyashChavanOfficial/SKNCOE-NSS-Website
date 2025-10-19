@@ -68,20 +68,27 @@ const DashboardPoster = () => {
     if (!formData.caption || (!formData.media && !file))
       return toast({ title: "Fill all fields!" });
 
+    let uploadedFileId = null;
+
     try {
       let mediaUrl = formData.media;
       let mediaId = formData.mediaId;
       let mediaType = formData.mediaType;
 
+      // Upload file to Appwrite first
       if (file) {
         setUploading(true);
         const uploadedFile = await uploadFile(file);
+        if (!uploadedFile) throw new Error("File upload failed!");
+
         mediaUrl = await getFileUrl(uploadedFile.$id);
         mediaId = uploadedFile.$id;
+        uploadedFileId = uploadedFile.$id; // store it in case of failure
         mediaType = file.type.startsWith("video") ? "video" : "image";
         setUploading(false);
       }
 
+      // Try saving poster to your backend (MongoDB)
       const posterData = {
         caption: formData.caption,
         media: mediaUrl,
@@ -91,7 +98,6 @@ const DashboardPoster = () => {
 
       let res;
       if (editingPoster) {
-        // Update existing poster
         res = await fetch(`${API_URL}/api/poster/update/${editingPoster._id}`, {
           method: "PUT",
           credentials: "include",
@@ -99,7 +105,6 @@ const DashboardPoster = () => {
           body: JSON.stringify(posterData),
         });
       } else {
-        // Create new poster
         res = await fetch(`${API_URL}/api/poster/create`, {
           method: "POST",
           credentials: "include",
@@ -109,9 +114,11 @@ const DashboardPoster = () => {
       }
 
       const data = await res.json();
+
+      // If unauthorized or error → delete uploaded file
       if (!res.ok) {
-        if (file) {
-          await fetch(`${API_URL}/api/upload/delete/${mediaId}`, {
+        if (uploadedFileId) {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
             method: "DELETE",
             credentials: "include",
           });
@@ -119,6 +126,7 @@ const DashboardPoster = () => {
         return toast({ title: data.message || "Something went wrong!" });
       }
 
+      // Success case
       toast({
         title: editingPoster
           ? "Poster updated successfully!"
@@ -128,6 +136,13 @@ const DashboardPoster = () => {
       fetchPosters();
     } catch (err) {
       console.log(err);
+      // Also handle errors thrown before poster save
+      if (uploadedFileId) {
+        await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+      }
       toast({ title: "Something went wrong!" });
       setUploading(false);
     }

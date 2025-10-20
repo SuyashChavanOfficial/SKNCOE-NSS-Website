@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "./redux/user/userSlice";
 import { Toaster } from "./components/ui/toaster";
+import { useToast } from "./hooks/use-toast";
 
 import SignInForm from "./auth/forms/SignInForm";
 import SignUpForm from "./auth/forms/SignUpForm";
@@ -28,6 +29,7 @@ const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
 const App = () => {
   const dispatch = useDispatch();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -35,17 +37,37 @@ const App = () => {
         const res = await fetch(`${API_URL}/api/auth/current`, {
           credentials: "include",
         });
+
         const data = await res.json();
-        if (res.ok) {
+
+        if (res.ok && data?.user) {
+          // Valid token and user
           dispatch(signInSuccess(data.user));
+        } else {
+          // Only show toast if user has a token (i.e., previously logged in)
+          if (document.cookie.includes("access_token")) {
+            toast({
+              title: "Session Expired!",
+              description:
+                "Your session has expired. Please sign in again to access restricted features.",
+              variant: "destructive",
+            });
+          }
         }
       } catch (err) {
-        console.log("No user logged in");
+        console.log("Auth check failed:", err);
+        if (document.cookie.includes("access_token")) {
+          toast({
+            title: "Unable to verify session",
+            description: "Please sign in again if needed.",
+            variant: "destructive",
+          });
+        }
       }
     };
 
     fetchCurrentUser();
-  }, [dispatch]);
+  }, [dispatch, toast]);
 
   return (
     <BrowserRouter>

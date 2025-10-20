@@ -310,7 +310,7 @@ const Search = () => {
               src="https://lottie.host/56f5cd8e-3b11-4dff-8796-df29e53e7bff/S3GWuLfZ57.lottie"
               loop
               autoplay
-              height={75}
+              height={100}
             />
           )}
 

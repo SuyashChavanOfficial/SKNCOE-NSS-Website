@@ -88,20 +88,12 @@ const PosterOfTheDay = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <DotLottieReact
-        src="https://lottie.host/df4872e5-2ea2-4a61-abf9-23b960847fa2/gwTblBb7kZ.lottie"
-        loop
-        autoplay
-      />
-    );
-  }
-
   if (!posters || posters.length === 0) {
     return (
       <section className="mx-auto my-10 p-6 bg-blue-50 rounded-lg shadow-md flex flex-col items-center justify-center min-h-[400px]">
-        <p className="text-xl text-gray-500 font-medium">No poster for today.</p>
+        <p className="text-xl text-gray-500 font-medium">
+          No poster for today.
+        </p>
       </section>
     );
   }
@@ -118,6 +110,15 @@ const PosterOfTheDay = () => {
           {getFormattedDate(new Date(currentPoster.date))}
         </p>
       </div>
+
+      {loading && (
+        <DotLottieReact
+          src="https://lottie.host/df4872e5-2ea2-4a61-abf9-23b960847fa2/gwTblBb7kZ.lottie"
+          loop
+          autoplay
+          height={100}
+        />
+      )}
 
       <div className="w-full relative overflow-hidden">
         <div className="relative w-full md:w-2/3 mx-auto h-[500px] flex items-center justify-center">

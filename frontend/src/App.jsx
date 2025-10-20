@@ -1,27 +1,28 @@
 import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { signInSuccess, signOutSuccess } from "./redux/user/userSlice";
+import { signInSuccess } from "./redux/user/userSlice";
 import { Toaster } from "./components/ui/toaster";
-import Header from "./components/shared/Header";
-import Footer from "./components/shared/Footer";
-import ScrollToTop from "./components/shared/ScrollToTop";
-import PrivateRoute from "./components/shared/PrivateRoute";
-import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
+
+import SignInForm from "./auth/forms/SignInForm";
+import SignUpForm from "./auth/forms/SignUpForm";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
-import Activities from "./pages/Activities";
-import Search from "./pages/Search";
-import NewsDetails from "./pages/NewsDetails";
+import Header from "./components/shared/Header";
+import Footer from "./components/shared/Footer";
+import PrivateRoute from "./components/shared/PrivateRoute";
 import CreateNews from "./components/shared/CreateNews";
+import AdminPrivateRoute from "./components/shared/AdminPrivateRoute";
 import EditNews from "./components/shared/EditNews";
+import NewsDetails from "./pages/NewsDetails";
 import CreateActivity from "./components/shared/CreateActivity";
 import EditActivity from "./components/shared/EditActivity";
+import ScrollToTop from "./components/shared/ScrollToTop";
+import Search from "./pages/Search";
+import Activities from "./pages/Activities";
 import CategoryManager from "./components/shared/DashboardCategory";
 import ActivityDetails from "./pages/ActivityDetails";
-import SignInForm from "./auth/forms/SignInForm";
-import SignUpForm from "./auth/forms/SignUpForm";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -34,24 +35,12 @@ const App = () => {
         const res = await fetch(`${API_URL}/api/auth/current`, {
           credentials: "include",
         });
-
+        const data = await res.json();
         if (res.ok) {
-          const data = await res.json();
           dispatch(signInSuccess(data.user));
-        } else {
-          dispatch(signOutSuccess());
-          await fetch(`${API_URL}/api/user/signout`, {
-            method: "POST",
-            credentials: "include",
-          });
         }
       } catch (err) {
-        console.log("Auth check failed:", err);
-        dispatch(signOutSuccess());
-        await fetch(`${API_URL}/api/user/signout`, {
-          method: "POST",
-          credentials: "include",
-        });
+        console.log("No user logged in");
       }
     };
 

@@ -45,6 +45,20 @@ const DashboardProfile = () => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  const checkIsAuthorized = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/current`, {
+        credentials: "include",
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      return !!data.user?._id;
+    } catch (err) {
+      console.error("Authorization check failed:", err);
+      return false;
+    }
+  };
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -52,16 +66,33 @@ const DashboardProfile = () => {
     const maxSize = 500 * 1024;
     if (file.size > maxSize) {
       toast({
-        title: "File size exceeds 500 KB. Please select a smaller image.",
+        title: "File size exceeds 500 KB.",
+        description: "Please select a smaller image.",
+        variant: "destructive",
       });
       return;
     }
+
+    const isAuthorized = await checkIsAuthorized();
+    if (!isAuthorized) {
+      toast({
+        title: "You are not authorized to change profile photo.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let uploadedFileId = null;
 
     try {
       dispatch(updateStart());
       setUploading(true);
 
       const uploadedFile = await uploadFile(file);
+      if (!uploadedFile) throw new Error("File upload failed!");
+      uploadedFileId = uploadedFile.$id;
+
       const profilePictureUrl = await getFileUrl(uploadedFile.$id);
 
       const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
@@ -77,21 +108,48 @@ const DashboardProfile = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Profile photo update failed!" });
+        toast({
+          title: "Profile photo update failed!",
+          description: data.message || "Please try again.",
+          variant: "destructive",
+        });
         dispatch(updateFailure(data.message));
+
+        if (uploadedFileId) {
+          try {
+            await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+              method: "DELETE",
+              credentials: "include",
+            });
+          } catch (delErr) {
+            console.error("Failed to delete orphan file:", delErr);
+          }
+        }
       } else {
         dispatch(updateSuccess(data));
-
         setTimeout(() => {
           setUploading(false);
           toast({ title: "Profile photo updated successfully." });
         }, 1000);
       }
     } catch (error) {
-      console.log(error);
-      toast({ title: "Profile photo update failed!" });
+      console.error(error);
+      toast({
+        title: "Profile photo update failed!",
+      });
       dispatch(updateFailure(error.message));
       setUploading(false);
+
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        } catch (delErr) {
+          console.error("Failed to delete orphan file:", delErr);
+        }
+      }
     }
   };
 
@@ -216,7 +274,7 @@ const DashboardProfile = () => {
           className="h-12 border-slate-400 focus-visible:ring-0 disabled:bg-gray-100"
           onChange={handleChange}
         />
-        {/* Password */}{" "}
+        {/* Password */}
         <div className="relative">
           <Input
             type={showPassword ? "text" : "password"}

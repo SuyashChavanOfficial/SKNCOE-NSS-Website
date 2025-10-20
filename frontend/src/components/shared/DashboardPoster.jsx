@@ -83,12 +83,15 @@ const DashboardPoster = () => {
     if (!formData.caption || (!formData.media && !file))
       return toast({ title: "Fill all fields!" });
 
-    let uploadedFileId = null; 
+    let uploadedFileId = null;
 
     try {
       const isAdmin = await checkIsAdmin();
       if (!isAdmin) {
-        toast({ title: "You are not authorized to perform this action." });
+        toast({
+          title: "You are not authorized to perform this action.",
+          description: "Trying signing in again.",
+        });
         return;
       }
 

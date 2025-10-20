@@ -62,14 +62,44 @@ const CreateNews = () => {
     fetchCategories();
   }, []);
 
+  // Check if user is admin before upload
+  const checkIsAdmin = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/current`, {
+        credentials: "include",
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      return !!data.user?.isAdmin;
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      return false;
+    }
+  };
+
+  // Image Upload with admin verification and orphan cleanup
   const handleImageUpload = async () => {
     if (!file) return toast({ title: "Please select an image!" });
     if (file.size > 1 * 1024 * 1024)
       return toast({ title: "File size exceeds 1 MB" });
 
+    // Check authorization before uploading
+    const isAdmin = await checkIsAdmin();
+    if (!isAdmin) {
+      toast({
+        title: "You are not authorized to upload images.",
+        description: "Trying signing in again.",
+      });
+      return;
+    }
+
+    let uploadedFileId = null;
     try {
       setImageUploading(true);
       const uploadedFile = await uploadFile(file);
+      if (!uploadedFile) throw new Error("File upload failed!");
+      uploadedFileId = uploadedFile.$id;
+
       const postImageUrl = await getFileUrl(uploadedFile.$id);
       setFormData({
         ...formData,
@@ -78,9 +108,22 @@ const CreateNews = () => {
       });
       toast({ title: "Image Uploaded Successfully!" });
       setImageUploading(false);
-    } catch {
-      toast({ title: "Image Upload Failed!" });
+    } catch (error) {
+      console.error("Upload failed:", error);
       setImageUploading(false);
+      toast({ title: "Image Upload Failed!" });
+
+      // Delete orphan file if created
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        } catch (delErr) {
+          console.error("Failed to delete orphan file:", delErr);
+        }
+      }
     }
   };
 
@@ -104,13 +147,14 @@ const CreateNews = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Something went wrong!" });
+        toast({ title: data.message || "Something went wrong!" });
         setCreatePostError(data.message);
         return;
       }
       toast({ title: "News Published Successfully!" });
       navigate(`/post/${data.slug}`);
-    } catch {
+    } catch (error) {
+      console.error("Error creating news:", error);
       toast({ title: "Something went wrong!" });
     }
   };
@@ -228,6 +272,7 @@ const CreateNews = () => {
               type="button"
               className="bg-slate-700"
               onClick={handleImageUpload}
+              disabled={imageUploading}
             >
               {imageUploading ? "Uploading..." : "Upload Image"}
             </Button>

@@ -105,7 +105,7 @@ const PosterOfTheDay = () => {
     <section className="mx-auto my-10 p-6 bg-blue-50 rounded-lg shadow-md flex flex-col items-center gap-6 relative">
       <div className="flex-1 text-center z-10">
         <h2 className="text-4xl font-bold text-red-600 mb-2">
-          Poster of the Day
+          {posters.length > 1 ? "Posters of the Day" : "Poster of the Day"}
         </h2>
         <p className="italic mb-4">
           {getFormattedDate(new Date(currentPoster.date))}

@@ -44,25 +44,21 @@ const App = () => {
           // Valid token and user
           dispatch(signInSuccess(data.user));
         } else {
-          // Only show toast if user has a token (i.e., previously logged in)
-          if (document.cookie.includes("access_token")) {
-            toast({
-              title: "Session Expired!",
-              description:
-                "Your session has expired. Please sign in again to access restricted features.",
-              variant: "destructive",
-            });
-          }
-        }
-      } catch (err) {
-        console.log("Auth check failed:", err);
-        if (document.cookie.includes("access_token")) {
+          // Token invalid or expired
           toast({
-            title: "Unable to verify session",
-            description: "Please sign in again if needed.",
+            title: "Session Expired!",
+            description:
+              "Please sign in if you wish to continue using restricted features.",
             variant: "destructive",
           });
         }
+      } catch (err) {
+        console.log("Auth check failed:", err);
+        toast({
+          title: "Unable to verify session",
+          description: "Please sign in again if needed.",
+          variant: "destructive",
+        });
       }
     };
 

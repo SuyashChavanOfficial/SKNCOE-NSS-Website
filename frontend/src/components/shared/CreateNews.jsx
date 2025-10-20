@@ -88,7 +88,8 @@ const CreateNews = () => {
     if (!isAdmin) {
       toast({
         title: "You are not authorized to upload images.",
-        description: "Trying signing in again.",
+        description: "Try signing in again.",
+        variant: "destructive",
       });
       return;
     }

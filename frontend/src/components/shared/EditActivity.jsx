@@ -7,7 +7,7 @@ import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
 import { ArrowLeft } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
-const MAX_FILE_SIZE = 500 * 1024; // 500 KB
+const MAX_FILE_SIZE = 500 * 1024;
 
 const EditActivity = () => {
   const location = useLocation();
@@ -20,7 +20,20 @@ const EditActivity = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // Fetch activity
+  const checkIsAdmin = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/current`, {
+        credentials: "include",
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.user) return null;
+      return data.user?.isAdmin ? data.user : null;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     const fetchActivity = async () => {
       try {
@@ -39,21 +52,40 @@ const EditActivity = () => {
       toast({ title: "Please select an image first" });
       return;
     }
-
     if (file.size > MAX_FILE_SIZE) {
       toast({ title: "Poster must be less than 500 KB" });
       return;
     }
+    const user = await checkIsAdmin();
+    if (!user) {
+      toast({
+        title: "You are not authorized to perform this action.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    let uploadedFileId = null;
     try {
       setUploading(true);
       const uploadedFile = await uploadFile(file);
+      if (!uploadedFile) throw new Error("File upload failed!");
+      uploadedFileId = uploadedFile.$id;
       const url = await getFileUrl(uploadedFile.$id);
       setFormData({ ...formData, poster: url, posterId: uploadedFile.$id });
       toast({ title: "Poster uploaded successfully!" });
     } catch (err) {
-      toast({ title: "Poster upload failed" });
       console.error(err);
+      toast({ title: "Poster upload failed" });
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        } catch {}
+      }
     } finally {
       setUploading(false);
     }
@@ -61,6 +93,15 @@ const EditActivity = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const user = await checkIsAdmin();
+    if (!user) {
+      toast({
+        title: "You are not authorized to perform this action.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/api/activity/update/${activityId}`, {
         method: "PUT",
@@ -71,13 +112,11 @@ const EditActivity = () => {
           expectedDurationHours: Number(formData.expectedDurationHours),
         }),
       });
-
       const data = await res.json();
       if (!res.ok) {
         toast({ title: data.message || "Failed to update activity" });
         return;
       }
-
       toast({ title: "Activity updated successfully!" });
       navigate("/dashboard?tab=activities");
     } catch (err) {
@@ -90,7 +129,6 @@ const EditActivity = () => {
 
   return (
     <div className="p-6 max-w-3xl mx-auto flex flex-col">
-      {/* Back button */}
       <div className="mb-4 w-full">
         <button
           onClick={() => navigate("/dashboard?tab=activities")}
@@ -146,7 +184,6 @@ const EditActivity = () => {
           }
         />
 
-        {/* Poster Upload */}
         <div className="flex gap-4 items-center border-2 border-dashed p-3 rounded w-full">
           <Input
             type="file"
@@ -158,6 +195,7 @@ const EditActivity = () => {
             type="button"
             className="bg-slate-700 text-white h-12 px-6"
             onClick={handleUploadPoster}
+            disabled={uploading}
           >
             {uploading ? "Uploading..." : "Upload Poster"}
           </Button>

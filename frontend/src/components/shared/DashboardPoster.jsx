@@ -54,7 +54,6 @@ const DashboardPoster = () => {
     fetchPosters();
   }, []);
 
-  // Simple helper to confirm current user & admin status BEFORE uploading
   const checkIsAdmin = async () => {
     try {
       const res = await fetch(`${API_URL}/api/auth/current`, {
@@ -90,7 +89,8 @@ const DashboardPoster = () => {
       if (!isAdmin) {
         toast({
           title: "You are not authorized to perform this action.",
-          description: "Trying signing in again.",
+          description: "Try signing in again.",
+          variant: "destructive",
         });
         return;
       }

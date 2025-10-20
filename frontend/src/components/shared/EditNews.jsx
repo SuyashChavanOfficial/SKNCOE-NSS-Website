@@ -43,13 +43,12 @@ const EditNews = () => {
     image: "",
   });
   const [categories, setCategories] = useState(["uncategorised"]);
-  const [categoryMap, setCategoryMap] = useState({}); // map lowercase -> original
+  const [categoryMap, setCategoryMap] = useState({});
   const [imageUploading, setImageUploading] = useState(false);
   const [updatePostError, setUpdatePostError] = useState(null);
 
   const academicYears = ["2024-25", "2025-26", "2026-27", "2027-28", "2028-29"];
 
-  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -61,11 +60,8 @@ const EditNews = () => {
             .sort((a, b) =>
               a.name.localeCompare(b.name, "en", { sensitivity: "base" })
             );
-
           const allCategories = ["uncategorised", ...sorted.map((c) => c.name)];
           setCategories(allCategories);
-
-          // Map lowercase -> original
           const map = {};
           allCategories.forEach((cat) => (map[cat.toLowerCase()] = cat));
           setCategoryMap(map);
@@ -77,7 +73,6 @@ const EditNews = () => {
     fetchCategories();
   }, []);
 
-  // Fetch post details
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -87,12 +82,10 @@ const EditNews = () => {
           setUpdatePostError(data.message);
           return;
         }
-
         if (data.post) {
           const categoryLower = data.post.category
             ? data.post.category.toLowerCase()
             : "uncategorised";
-
           setFormData({
             title: data.post.title,
             category: categoryMap[categoryLower] || "uncategorised",
@@ -111,15 +104,40 @@ const EditNews = () => {
     fetchPost();
   }, [postId, categoryMap]);
 
-  // Image upload
+  const checkIsAdmin = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/current`, {
+        credentials: "include",
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.user) return null;
+      return data.user?.isAdmin ? data.user : null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleImageUpload = async () => {
     if (!file) return toast({ title: "Please select an image!" });
     if (file.size > 1 * 1024 * 1024)
       return toast({ title: "File size exceeds 1 MB!" });
 
+    const isAdmin = await checkIsAdmin();
+    if (!isAdmin) {
+      toast({
+        title: "You are not authorized to upload images.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let uploadedFileId = null;
     try {
       setImageUploading(true);
       const uploadedFile = await uploadFile(file);
+      uploadedFileId = uploadedFile.$id;
       const postImageUrl = await getFileUrl(uploadedFile.$id);
       setFormData({
         ...formData,
@@ -132,13 +150,30 @@ const EditNews = () => {
     } catch {
       toast({ title: "Image Upload Failed!" });
       setImageUploading(false);
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        } catch {}
+      }
     }
   };
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.date) return toast({ title: "Please select a date!" });
+
+    const isAdmin = await checkIsAdmin();
+    if (!isAdmin) {
+      toast({
+        title: "You are not authorized to perform this action.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const finalFormData = {
       ...formData,
@@ -195,7 +230,6 @@ const EditNews = () => {
         />
 
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Date */}
           <div className="w-full sm:w-1/3">
             <Popover>
               <PopoverTrigger asChild>
@@ -219,7 +253,6 @@ const EditNews = () => {
             </Popover>
           </div>
 
-          {/* Academic Year */}
           <div className="w-full sm:w-1/3">
             <Select
               value={formData.academicYear}
@@ -244,7 +277,6 @@ const EditNews = () => {
             </Select>
           </div>
 
-          {/* Category */}
           <div className="w-full sm:w-1/3">
             <Select
               value={formData.category}
@@ -270,19 +302,18 @@ const EditNews = () => {
           </div>
         </div>
 
-        {/* Image Upload */}
         <div className="border-4 border-slate-600 border-dotted p-3">
           <div className="flex gap-4 items-center">
             <Input
               type="file"
               accept="image/*"
-              placeholder="Choose image (Max 1 MB)"
               onChange={(e) => setFile(e.target.files[0])}
             />
             <Button
               type="button"
               className="bg-slate-700"
               onClick={handleImageUpload}
+              disabled={imageUploading}
             >
               {imageUploading ? "Uploading..." : "Upload Image"}
             </Button>

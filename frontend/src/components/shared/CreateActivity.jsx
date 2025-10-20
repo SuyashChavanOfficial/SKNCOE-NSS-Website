@@ -25,6 +25,23 @@ const CreateActivity = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
+  const checkIsAdmin = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/current`, {
+        credentials: "include",
+      });
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data?.user) return null;
+
+      return data.user?.isAdmin ? data.user : null;
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      return null;
+    }
+  };
+
   const handleUploadPoster = async () => {
     if (!file) {
       toast({ title: "Please select an image first" });
@@ -36,15 +53,42 @@ const CreateActivity = () => {
       return;
     }
 
+    // Check authorization before uploading
+    const user = await checkIsAdmin();
+    if (!user) {
+      toast({
+        title: "You are not authorized to perform this action.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let uploadedFileId = null;
+
     try {
       setUploading(true);
       const uploadedFile = await uploadFile(file);
+      if (!uploadedFile) throw new Error("File upload failed!");
+
+      uploadedFileId = uploadedFile.$id;
       const url = await getFileUrl(uploadedFile.$id);
       setFormData({ ...formData, poster: url, posterId: uploadedFile.$id });
       toast({ title: "Poster uploaded successfully!" });
     } catch (err) {
-      toast({ title: "Poster upload failed" });
       console.error(err);
+      toast({ title: "Poster upload failed" });
+
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+        } catch (delErr) {
+          console.error("Failed to delete orphan uploaded file:", delErr);
+        }
+      }
     } finally {
       setUploading(false);
     }
@@ -52,6 +96,17 @@ const CreateActivity = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const user = await checkIsAdmin();
+    if (!user) {
+      toast({
+        title: "You are not authorized to perform this action.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/activity/create`, {
         method: "POST",
@@ -143,6 +198,7 @@ const CreateActivity = () => {
             type="button"
             className="bg-slate-700 text-white h-12 px-6"
             onClick={handleUploadPoster}
+            disabled={uploading}
           >
             {uploading ? "Uploading..." : "Upload Poster"}
           </Button>

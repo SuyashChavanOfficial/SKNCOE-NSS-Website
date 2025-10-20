@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -33,15 +34,14 @@ const PosterOfTheDay = () => {
     if (posters.length <= 1) return;
 
     const currentPoster = posters[currentIndex];
-    let duration = 5000; // Default 5 seconds for images
+    let duration = 5000;
 
-    // If current poster is a video, get its duration
     if (currentPoster?.mediaType === "video") {
       const videoElement = document.querySelector(
         `video[data-poster-id="${currentPoster._id}"]`
       );
       if (videoElement && videoElement.duration) {
-        duration = (videoElement.duration + 1) * 1000; // video duration + 1 second, in milliseconds
+        duration = (videoElement.duration + 1) * 2000;
       }
     }
 
@@ -68,20 +68,9 @@ const PosterOfTheDay = () => {
     setCurrentIndex(index);
   };
 
-  if (loading) {
-    return (
-      <section className="mx-auto my-10 p-6 bg-blue-50 rounded-lg shadow-md flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-      </section>
-    );
-  }
-
-  if (!posters || posters.length === 0) return null;
-
   const getFormattedDate = (date) => {
     const day = format(date, "d");
     const monthYear = format(date, "MMMM, yyyy");
-
     const dayNum = parseInt(day, 10);
     let suffix = "th";
     if (dayNum % 10 === 1 && dayNum !== 11) suffix = "st";
@@ -99,6 +88,24 @@ const PosterOfTheDay = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <DotLottieReact
+        src="https://lottie.host/df4872e5-2ea2-4a61-abf9-23b960847fa2/gwTblBb7kZ.lottie"
+        loop
+        autoplay
+      />
+    );
+  }
+
+  if (!posters || posters.length === 0) {
+    return (
+      <section className="mx-auto my-10 p-6 bg-blue-50 rounded-lg shadow-md flex flex-col items-center justify-center min-h-[400px]">
+        <p className="text-xl text-gray-500 font-medium">No poster for today.</p>
+      </section>
+    );
+  }
+
   const currentPoster = posters[currentIndex];
 
   return (
@@ -112,7 +119,6 @@ const PosterOfTheDay = () => {
         </p>
       </div>
 
-      {/* Carousel Container */}
       <div className="w-full relative overflow-hidden">
         <div className="relative w-full md:w-2/3 mx-auto h-[500px] flex items-center justify-center">
           {posters.map((poster, index) => {
@@ -179,7 +185,6 @@ const PosterOfTheDay = () => {
           })}
         </div>
 
-        {/* Navigation Arrows */}
         {posters.length > 1 && (
           <>
             <button
@@ -204,7 +209,6 @@ const PosterOfTheDay = () => {
         <p className="text-gray-700 text-lg">{currentPoster.caption}</p>
       </div>
 
-      {/* Dot Indicators */}
       {posters.length > 1 && (
         <div className="flex gap-2 justify-center z-10">
           {posters.map((_, index) => (
@@ -222,7 +226,6 @@ const PosterOfTheDay = () => {
         </div>
       )}
 
-      {/* Counter */}
       {posters.length > 1 && (
         <div className="text-sm text-blue-900 font-medium z-10">
           {currentIndex + 1} / {posters.length}

@@ -34,14 +34,17 @@ const PosterOfTheDay = () => {
     if (posters.length <= 1) return;
 
     const currentPoster = posters[currentIndex];
-    let duration = 5000;
+    let duration = 7000;
 
     if (currentPoster?.mediaType === "video") {
       const videoElement = document.querySelector(
         `video[data-poster-id="${currentPoster._id}"]`
       );
-      if (videoElement && videoElement.duration) {
-        duration = (videoElement.duration + 1) * 2000;
+
+      if (videoElement && !isNaN(videoElement.duration)) {
+        duration = Math.max(7000, videoElement.duration * 1000);
+      } else {
+        duration = 7000;
       }
     }
 

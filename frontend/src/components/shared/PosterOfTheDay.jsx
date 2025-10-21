@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { noPosterMessages } from "@/utils/noPosterMessages";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -10,6 +11,7 @@ const PosterOfTheDay = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
     const fetchPosters = async () => {
@@ -19,6 +21,19 @@ const PosterOfTheDay = () => {
 
         if (res.ok && data.posters && data.posters.length > 0) {
           setPosters(data.posters.reverse());
+        } else {
+          const savedMessage = sessionStorage.getItem("noPosterMessage");
+
+          if (savedMessage) {
+            setRandomMessage(savedMessage);
+          } else {
+            const randomIndex = Math.floor(
+              Math.random() * noPosterMessages.length
+            );
+            const message = noPosterMessages[randomIndex];
+            setRandomMessage(message);
+            sessionStorage.setItem("noPosterMessage", message);
+          }
         }
       } catch (error) {
         console.log("Error fetching posters:", error);
@@ -89,6 +104,7 @@ const PosterOfTheDay = () => {
   };
 
   const currentPoster = posters[currentIndex];
+  const today = new Date();
 
   return (
     <section className="mx-auto my-10 p-6 bg-blue-50 rounded-lg shadow-md flex flex-col items-center gap-6 relative">
@@ -96,9 +112,7 @@ const PosterOfTheDay = () => {
         <h2 className="text-4xl font-bold text-red-600 mb-2">
           {posters.length > 1 ? "Posters of the Day" : "Poster of the Day"}
         </h2>
-        <p className="italic mb-4">
-          {currentPoster ? getFormattedDate(new Date(currentPoster.date)) : ""}
-        </p>
+        <p className="italic mb-4">{getFormattedDate(today)}</p>
       </div>
 
       {loading && (
@@ -110,122 +124,134 @@ const PosterOfTheDay = () => {
         />
       )}
 
-      {!loading && (!posters || posters.length === 0) && (
-        <p className="text-xl text-gray-500 font-medium">
-          No poster for today.
-        </p>
+      {!loading && posters.length === 0 && (
+        <div className="flex flex-col items-center text-center gap-4">
+          <DotLottieReact
+            src="https://lottie.host/55635087-d0cd-40fb-89c3-e7558a7f1ce2/o1ZDcBPl0s.lottie"
+            loop
+            autoplay
+            height={120}
+          />
+          <p className="text-md text-blue-900 font-medium max-w-md px-4 italic">
+            {randomMessage}
+          </p>
+        </div>
       )}
 
-      {!loading && posters && posters.length > 0 && (
-        <div className="w-full relative overflow-hidden">
-          <div className="relative w-full md:w-2/3 mx-auto h-[500px] flex items-center justify-center">
-            {posters.map((poster, index) => {
-              const isActive = index === currentIndex;
-              const isPrev =
-                index === (currentIndex - 1 + posters.length) % posters.length;
-              const isNext = index === (currentIndex + 1) % posters.length;
+      {!loading && posters.length > 0 && (
+        <>
+          {/* ✅ Carousel */}
+          <div className="w-full relative overflow-hidden">
+            <div className="relative w-full md:w-2/3 mx-auto h-[500px] flex items-center justify-center">
+              {posters.map((poster, index) => {
+                const isActive = index === currentIndex;
+                const isPrev =
+                  index ===
+                  (currentIndex - 1 + posters.length) % posters.length;
+                const isNext = index === (currentIndex + 1) % posters.length;
 
-              let transform = "translateX(0) scale(1)";
-              let opacity = 0;
-              let zIndex = 0;
+                let transform = "translateX(0) scale(1)";
+                let opacity = 0;
+                let zIndex = 0;
 
-              if (isActive) {
-                transform = "translateX(0) scale(1)";
-                opacity = 1;
-                zIndex = 10;
-              } else if (isPrev) {
-                transform = "translateX(-120%) scale(0.8)";
-                opacity = 0.4;
-                zIndex = 5;
-              } else if (isNext) {
-                transform = "translateX(120%) scale(0.8)";
-                opacity = 0.4;
-                zIndex = 5;
-              } else {
-                transform =
-                  direction === 1
-                    ? "translateX(200%) scale(0.8)"
-                    : "translateX(-200%) scale(0.8)";
-                opacity = 0;
-                zIndex = 1;
-              }
+                if (isActive) {
+                  transform = "translateX(0) scale(1)";
+                  opacity = 1;
+                  zIndex = 10;
+                } else if (isPrev) {
+                  transform = "translateX(-120%) scale(0.8)";
+                  opacity = 0.4;
+                  zIndex = 5;
+                } else if (isNext) {
+                  transform = "translateX(120%) scale(0.8)";
+                  opacity = 0.4;
+                  zIndex = 5;
+                } else {
+                  transform =
+                    direction === 1
+                      ? "translateX(200%) scale(0.8)"
+                      : "translateX(-200%) scale(0.8)";
+                  opacity = 0;
+                  zIndex = 1;
+                }
 
-              return (
-                <div
-                  key={poster._id}
-                  className="absolute top-0 left-0 w-full h-full transition-all duration-700 ease-in-out flex items-center justify-center"
-                  style={{ transform, opacity, zIndex }}
+                return (
+                  <div
+                    key={poster._id}
+                    className="absolute top-0 left-0 w-full h-full transition-all duration-700 ease-in-out flex items-center justify-center"
+                    style={{ transform, opacity, zIndex }}
+                  >
+                    {poster.mediaType === "video" ? (
+                      <video
+                        key={`video-${poster._id}-${isActive}`}
+                        data-poster-id={poster._id}
+                        src={poster.media}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
+                      />
+                    ) : (
+                      <img
+                        src={poster.media}
+                        alt="Poster"
+                        className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {posters.length > 1 && (
+              <>
+                <button
+                  onClick={goToPrevious}
+                  className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-20"
+                  aria-label="Previous poster"
                 >
-                  {poster.mediaType === "video" ? (
-                    <video
-                      key={`video-${poster._id}-${isActive}`}
-                      data-poster-id={poster._id}
-                      src={poster.media}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
-                    />
-                  ) : (
-                    <img
-                      src={poster.media}
-                      alt="Poster"
-                      className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
-                    />
-                  )}
-                </div>
-              );
-            })}
+                  <ChevronLeft className="w-6 h-6 text-blue-900" />
+                </button>
+                <button
+                  onClick={goToNext}
+                  className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-20"
+                  aria-label="Next poster"
+                >
+                  <ChevronRight className="w-6 h-6 text-blue-900" />
+                </button>
+              </>
+            )}
           </div>
 
+          {/* ✅ Caption */}
+          <div className="flex-1 text-center z-10 max-w-2xl">
+            <p className="text-gray-700 text-lg">{currentPoster.caption}</p>
+          </div>
+
+          {/* ✅ Dots & counter */}
           {posters.length > 1 && (
             <>
-              <button
-                onClick={goToPrevious}
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-20"
-                aria-label="Previous poster"
-              >
-                <ChevronLeft className="w-6 h-6 text-blue-900" />
-              </button>
-              <button
-                onClick={goToNext}
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all z-20"
-                aria-label="Next poster"
-              >
-                <ChevronRight className="w-6 h-6 text-blue-900" />
-              </button>
+              <div className="flex gap-2 justify-center z-10">
+                {posters.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`transition-all duration-300 rounded-full ${
+                      index === currentIndex
+                        ? "bg-red-600 w-8 h-2.5"
+                        : "bg-blue-300 hover:bg-blue-400 w-2.5 h-2.5"
+                    }`}
+                    aria-label={`Go to poster ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <div className="text-sm text-blue-900 font-medium z-10">
+                {currentIndex + 1} / {posters.length}
+              </div>
             </>
           )}
-        </div>
-      )}
-
-      {!loading && posters && posters.length > 0 && (
-        <div className="flex-1 text-center z-10 max-w-2xl">
-          <p className="text-gray-700 text-lg">{currentPoster.caption}</p>
-        </div>
-      )}
-
-      {!loading && posters.length > 1 && (
-        <>
-          <div className="flex gap-2 justify-center z-10">
-            {posters.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`transition-all duration-300 rounded-full ${
-                  index === currentIndex
-                    ? "bg-red-600 w-8 h-2.5"
-                    : "bg-blue-300 hover:bg-blue-400 w-2.5 h-2.5"
-                }`}
-                aria-label={`Go to poster ${index + 1}`}
-              />
-            ))}
-          </div>
-
-          <div className="text-sm text-blue-900 font-medium z-10">
-            {currentIndex + 1} / {posters.length}
-          </div>
         </>
       )}
     </section>

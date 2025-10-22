@@ -20,19 +20,29 @@ const PosterOfTheDay = () => {
         const data = await res.json();
 
         if (res.ok && data.posters && data.posters.length > 0) {
-          setPosters(data.posters.reverse());
-        } else {
-          const savedMessage = sessionStorage.getItem("noPosterMessage");
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
 
-          if (savedMessage) {
-            setRandomMessage(savedMessage);
+          const todaysPosters = data.posters.filter((poster) => {
+            const posterDate = new Date(poster.date);
+            posterDate.setHours(0, 0, 0, 0);
+            return posterDate.getTime() === today.getTime();
+          });
+
+          if (todaysPosters.length > 0) {
+            setPosters(todaysPosters.reverse());
           } else {
-            const randomIndex = Math.floor(
-              Math.random() * noPosterMessages.length
-            );
-            const message = noPosterMessages[randomIndex];
-            setRandomMessage(message);
-            sessionStorage.setItem("noPosterMessage", message);
+            const savedMessage = sessionStorage.getItem("noPosterMessage");
+            if (savedMessage) {
+              setRandomMessage(savedMessage);
+            } else {
+              const randomIndex = Math.floor(
+                Math.random() * noPosterMessages.length
+              );
+              const message = noPosterMessages[randomIndex];
+              setRandomMessage(message);
+              sessionStorage.setItem("noPosterMessage", message);
+            }
           }
         }
       } catch (error) {

@@ -12,24 +12,6 @@ export const getAllPosters = async (req, res, next) => {
   }
 };
 
-// Get today's poster (for backward compatibility)
-export const getTodaysPoster = async (req, res, next) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const poster = await Poster.findOne({
-      date: { $gte: today, $lt: tomorrow },
-    }).sort({ date: -1 });
-
-    res.status(200).json({ poster });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Create poster (Admin only)
 export const createPoster = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));

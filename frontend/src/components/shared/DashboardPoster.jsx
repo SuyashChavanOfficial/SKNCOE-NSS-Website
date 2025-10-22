@@ -274,6 +274,10 @@ const DashboardPoster = () => {
                       <AlertDialogTitle>
                         Are you sure you want to delete this poster?
                       </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. The poster will be
+                        permanently deleted.
+                      </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>

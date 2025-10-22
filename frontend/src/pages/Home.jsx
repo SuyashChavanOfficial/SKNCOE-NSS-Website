@@ -5,36 +5,48 @@ import { ArrowRight } from "lucide-react";
 import Advertise from "@/components/shared/Advertise";
 import PostCard from "@/components/shared/PostCard";
 import PosterOfTheDay from "@/components/shared/PosterOfTheDay";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+
 const Home = () => {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchPosts = async () => {
-      const res = await fetch(`${API_URL}/api/post/getPosts?limit=3&sort=desc`);
-      const data = await res.json();
+      try {
+        const res = await fetch(
+          `${API_URL}/api/post/getPosts?limit=3&sort=desc`
+        );
+        const data = await res.json();
 
-      if (res.ok) {
-        setPosts(data.posts);
+        if (res.ok) {
+          setPosts(data.posts);
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
       }
     };
 
     fetchPosts();
   }, []);
-  const FeatureCard = ({ icon, title, description }) => {
-    return (
-      <div className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
-        <div className="flex items-center flex-col">
-          <img src={icon} alt={title} className="text-5xl mb-4" />
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">{title}</h3>
-          <p className="text-gray-600">{description}</p>
-        </div>
+
+  const FeatureCard = ({ icon, title, description }) => (
+    <div className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
+      <div className="flex items-center flex-col">
+        <img src={icon} alt={title} className="text-5xl mb-4" />
+        <h3 className="text-2xl font-semibold text-gray-800 mb-2">{title}</h3>
+        <p className="text-gray-600">{description}</p>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div>
+      {/* Hero Section */}
       <div className="flex flex-col md:flex-row items-center gap-10 p-6 md:p-10 max-w-6xl mx-auto">
         {/* Left Section */}
         <div className="flex-1 text-center md:text-left">
@@ -65,8 +77,9 @@ const Home = () => {
       </div>
 
       {/* Poster of the Day */}
-      <PosterOfTheDay/>
+      <PosterOfTheDay />
 
+      {/* Why Join Section */}
       <section className="pb-16 bg-white">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-8 text-gray-800">
@@ -86,33 +99,45 @@ const Home = () => {
             <FeatureCard
               title="Volunteers Self-Development"
               icon="https://cdn-icons-png.flaticon.com/128/17367/17367155.png"
-              description="Everything is managed by Volunteers, imporving their skills and boosting confidence."
+              description="Everything is managed by Volunteers, improving their skills and boosting confidence."
             />
           </div>
         </div>
       </section>
 
-      <div className="p-3 bg-blue-50 ">
+      {/* Advertisement */}
+      <div className="p-3 bg-blue-50">
         <Advertise />
       </div>
 
-      <div className="max-w-6xl mx-auto p-3 flex flex-col gap-8 py-7 ">
-        {posts && posts.length > 0 && (
-          <div className="flex flex-col gap-6 md:items-center">
-            <h2 className="text-2xl font-bold text-slate-700">Recent News</h2>
-            <div className="flex flex-wrap gap-6 md:gap-10 md:justify-around">
-              {posts.map((post) => (
-                <PostCard key={post._id} post={post} />
-              ))}
-            </div>
-            <Link
-              to={"/search"}
-              className="text-lg hover:underline text-center font-semibold"
-            >
-              View All News
-            </Link>
-          </div>
-        )}
+      {/* Recent News */}
+      <div className="max-w-6xl mx-auto p-3 flex flex-col gap-8 py-7">
+        <div className="flex flex-col gap-6 md:items-center text-center">
+          <h2 className="text-2xl font-bold text-slate-700">Recent News</h2>
+
+          {loading ? (
+            <DotLottieReact
+              src="https://lottie.host/56f5cd8e-3b11-4dff-8796-df29e53e7bff/S3GWuLfZ57.lottie"
+              loop
+              autoplay
+              height={100}
+            />
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-6 md:gap-10 md:justify-around">
+                {posts.map((post) => (
+                  <PostCard key={post._id} post={post} />
+                ))}
+              </div>
+              <Link
+                to={"/search"}
+                className="text-lg hover:underline text-center font-semibold mt-4"
+              >
+                View All News
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

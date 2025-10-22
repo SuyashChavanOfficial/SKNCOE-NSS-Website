@@ -73,7 +73,6 @@ export const google = async (req, res, next) => {
 
   try {
     let user = await User.findOne({ email });
-
     if (!user) {
       const generatedPassword =
         Math.random().toString(36).slice(-8) +
@@ -92,20 +91,17 @@ export const google = async (req, res, next) => {
       await user.save();
     }
 
-    const token = createToken(user);
+    // ✅ Use generateTokens instead of createToken
+    const { accessToken, refreshToken } = generateTokens(user);
     const { password: pass, ...userData } = user._doc;
 
-    res
-      .status(200)
-      .cookie("access_token", token, {
-        httpOnly: true,
-        sameSite: "None",
-        secure: true,
-      })
-      .json({
-        success: true,
-        user: userData, // <-- always wrap user inside `user`
-      });
+    // ✅ Set cookies
+    setAuthCookies(res, accessToken, refreshToken);
+
+    res.status(200).json({
+      success: true,
+      user: userData,
+    });
   } catch (error) {
     next(error);
   }

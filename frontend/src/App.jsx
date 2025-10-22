@@ -37,28 +37,29 @@ const App = () => {
         const res = await fetch(`${API_URL}/api/auth/current`, {
           credentials: "include",
         });
-
         const data = await res.json();
 
         if (res.ok && data?.user) {
-          // Valid token and user
           dispatch(signInSuccess(data.user));
-        } else {
-          // Token invalid or expired
-          toast({
-            title: "Session Expired!",
-            description:
-              "Please sign in if you wish to continue using restricted features.",
-            variant: "destructive",
+        } else if (res.status === 401) {
+          // Try refreshing token silently
+          const refreshRes = await fetch(`${API_URL}/api/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
           });
+          if (refreshRes.ok) {
+            // retry user fetch after token rotation
+            const retry = await fetch(`${API_URL}/api/auth/current`, {
+              credentials: "include",
+            });
+            const retryData = await retry.json();
+            if (retry.ok && retryData.user) {
+              dispatch(signInSuccess(retryData.user));
+            }
+          }
         }
       } catch (err) {
         console.log("Auth check failed:", err);
-        toast({
-          title: "Unable to verify session",
-          description: "Please sign in again if needed.",
-          variant: "destructive",
-        });
       }
     };
 

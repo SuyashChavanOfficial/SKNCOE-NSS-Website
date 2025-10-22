@@ -13,7 +13,8 @@ export const updateUser = async (req, res, next) => {
 
     if (req.body.username) updateData.username = req.body.username;
     if (req.body.email) updateData.email = req.body.email;
-    if (req.body.password) updateData.password = bcryptjs.hashSync(req.body.password, 10);
+    if (req.body.password)
+      updateData.password = bcryptjs.hashSync(req.body.password, 10);
     if (req.body.profilePicture) {
       updateData.profilePicture = req.body.profilePicture;
       updateData.profilePictureId = req.body.profilePictureId;
@@ -22,7 +23,10 @@ export const updateUser = async (req, res, next) => {
     // 🗑️ Delete old picture if new one is uploaded
     if (req.body.deleteOldPictureId) {
       try {
-        await storage.deleteFile(process.env.APPWRITE_STORAGE_ID, req.body.deleteOldPictureId);
+        await storage.deleteFile(
+          process.env.APPWRITE_STORAGE_ID,
+          req.body.deleteOldPictureId
+        );
       } catch (err) {
         console.log("Failed to delete old profile picture:", err.message);
       }
@@ -60,9 +64,18 @@ export const deleteUser = async (req, res, next) => {
 export const signout = async (req, res, next) => {
   try {
     res
-      .clearCookie("access_token")
+      .clearCookie("access_token", {
+        httpOnly: true,
+        sameSite: "None",
+        secure: true,
+      })
+      .clearCookie("refresh_token", {
+        httpOnly: true,
+        sameSite: "None",
+        secure: true,
+      })
       .status(200)
-      .json("User has been logged out.");
+      .json({ success: true, message: "User logged out successfully." });
   } catch (error) {
     next(error);
   }

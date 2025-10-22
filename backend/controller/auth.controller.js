@@ -2,21 +2,26 @@ import bcryptjs from "bcryptjs";
 import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
+import { generateTokens } from "../utils/generateTokens.js";
 
-const createToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      isAdmin: user.isAdmin,
-      isSuperAdmin: user.isSuperAdmin,
-    },
-    process.env.JWT_SECRET
-  );
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  res.cookie("access_token", accessToken, {
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+    maxAge: 30 * 60 * 1000, // 15 min
+  });
+
+  res.cookie("refresh_token", refreshToken, {
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 15 days
+  });
 };
 
 export const signup = async (req, res, next) => {
   const { username, email, password } = req.body || {};
-
   if (!username?.trim() || !email?.trim() || !password?.trim()) {
     return next(errorHandler(400, "All fields are required"));
   }
@@ -26,29 +31,14 @@ export const signup = async (req, res, next) => {
     if (existingUser) return next(errorHandler(400, "Email already exists"));
 
     const hashedPassword = bcryptjs.hashSync(password, 10);
-
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
+    const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
 
-    const token = createToken(newUser);
+    const { accessToken, refreshToken } = generateTokens(newUser);
     const { password: pass, ...userData } = newUser._doc;
 
-    res
-      .status(201)
-      .cookie("access_token", token, {
-        httpOnly: true,
-        sameSite: "None",
-        secure: true,
-      })
-      .json({
-        success: true,
-        user: userData, // <-- always wrap user inside `user`
-      });
+    setAuthCookies(res, accessToken, refreshToken);
+    res.status(201).json({ success: true, user: userData });
   } catch (error) {
     next(error);
   }
@@ -56,7 +46,6 @@ export const signup = async (req, res, next) => {
 
 export const signin = async (req, res, next) => {
   const { email, password } = req.body || {};
-
   if (!email?.trim() || !password?.trim()) {
     return next(errorHandler(400, "All fields are required"));
   }
@@ -68,25 +57,17 @@ export const signin = async (req, res, next) => {
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(400, "Incorrect Password"));
 
-    const token = createToken(validUser);
+    const { accessToken, refreshToken } = generateTokens(validUser);
     const { password: pass, ...userData } = validUser._doc;
 
-    res
-      .status(200)
-      .cookie("access_token", token, {
-        httpOnly: true,
-        sameSite: "None",
-        secure: true,
-      })
-      .json({
-        success: true,
-        user: userData, // <-- always wrap user inside `user`
-      });
+    setAuthCookies(res, accessToken, refreshToken);
+    res.status(200).json({ success: true, user: userData });
   } catch (error) {
     next(error);
   }
 };
 
+// ✅ Google
 export const google = async (req, res, next) => {
   const { email, name, profilePicture } = req.body;
 
@@ -130,6 +111,28 @@ export const google = async (req, res, next) => {
   }
 };
 
+// Refresh token rotation
+export const refreshAccessToken = async (req, res, next) => {
+  try {
+    const refreshToken = req.cookies.refresh_token;
+    if (!refreshToken) return next(errorHandler(401, "No refresh token"));
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) return next(errorHandler(404, "User not found"));
+
+    // Rotate tokens
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+    setAuthCookies(res, accessToken, newRefreshToken);
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    return next(errorHandler(401, "Invalid or expired refresh token"));
+  }
+};
+
+// ✅ Get current user
 export const getCurrentUser = async (req, res, next) => {
   try {
     const token = req.cookies.access_token;
@@ -138,7 +141,6 @@ export const getCurrentUser = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
-
     if (!user)
       return res
         .status(404)

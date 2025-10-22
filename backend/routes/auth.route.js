@@ -4,6 +4,7 @@ import {
   google,
   signin,
   signup,
+  refreshAccessToken,
 } from "../controller/auth.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
@@ -13,5 +14,6 @@ router.post("/signup", signup);
 router.post("/signin", signin);
 router.post("/google", google);
 router.get("/current", verifyToken, getCurrentUser);
+router.post("/refresh", refreshAccessToken);
 
 export default router;

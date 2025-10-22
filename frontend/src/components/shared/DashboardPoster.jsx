@@ -16,6 +16,13 @@ import {
 } from "../ui/alert-dialog";
 import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
+import { Calendar as CalendarIcon } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // 🆕 calendar component
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -29,12 +36,12 @@ const DashboardPoster = () => {
     media: "",
     mediaId: "",
     mediaType: "image",
+    date: new Date(),
   });
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Fetch all posters
   const fetchPosters = async () => {
     try {
       setLoading(true);
@@ -68,15 +75,19 @@ const DashboardPoster = () => {
     }
   };
 
-  // Reset form
   const resetForm = () => {
-    setFormData({ caption: "", media: "", mediaId: "", mediaType: "image" });
+    setFormData({
+      caption: "",
+      media: "",
+      mediaId: "",
+      mediaType: "image",
+      date: new Date(),
+    });
     setFile(null);
     setEditingPoster(null);
     setPopupOpen(false);
   };
 
-  // Handle submit (create or update)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.caption || (!formData.media && !file))
@@ -116,6 +127,7 @@ const DashboardPoster = () => {
         media: mediaUrl,
         mediaId,
         mediaType,
+        date: formData.date,
       };
 
       let res;
@@ -176,7 +188,6 @@ const DashboardPoster = () => {
     }
   };
 
-  // Handle delete
   const handleDelete = async (posterId) => {
     try {
       const res = await fetch(`${API_URL}/api/poster/delete/${posterId}`, {
@@ -193,7 +204,6 @@ const DashboardPoster = () => {
     }
   };
 
-  // Handle edit
   const handleEdit = (poster) => {
     setEditingPoster(poster);
     setFormData({
@@ -201,6 +211,7 @@ const DashboardPoster = () => {
       media: poster.media,
       mediaId: poster.mediaId,
       mediaType: poster.mediaType,
+      date: new Date(poster.date),
     });
     setFile(null);
     setPopupOpen(true);
@@ -290,15 +301,15 @@ const DashboardPoster = () => {
             <h3 className="text-lg font-semibold mb-4">
               {editingPoster ? "Edit Poster" : "Add Poster"}
             </h3>
+
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              {/* File input */}
               <Input
                 type="file"
                 accept="image/*,video/*"
                 onChange={(e) => setFile(e.target.files[0])}
               />
 
-              {/* Preview: New file OR existing media */}
+              {/* Preview */}
               {file ? (
                 file.type.startsWith("video") ? (
                   <video
@@ -328,6 +339,31 @@ const DashboardPoster = () => {
                   />
                 )
               ) : null}
+
+              {/* Date Picker */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">Poster Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-between w-full border-gray-400 h-11 text-gray-800"
+                    >
+                      {formData.date
+                        ? format(new Date(formData.date), "dd MMM yyyy")
+                        : "Select Date"}
+                      <CalendarIcon className="ml-2 h-5 w-5 text-gray-500" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={new Date(formData.date)}
+                      onSelect={(date) => setFormData({ ...formData, date })}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
               {/* Caption */}
               <Textarea

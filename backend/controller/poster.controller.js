@@ -35,14 +35,20 @@ export const createPoster = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
-    const { media, mediaId, mediaType, caption } = req.body;
+    const { media, mediaId, mediaType, caption, date } = req.body;
 
     if (!media || !caption)
       return next(errorHandler(400, "Media and caption are required"));
 
-    const newPoster = new Poster({ media, mediaId, mediaType, caption });
-    const savedPoster = await newPoster.save();
+    const newPoster = new Poster({
+      media,
+      mediaId,
+      mediaType,
+      caption,
+      date: date ? new Date(date) : new Date(),
+    });
 
+    const savedPoster = await newPoster.save();
     res.status(201).json(savedPoster);
   } catch (error) {
     next(error);
@@ -54,7 +60,7 @@ export const updatePoster = async (req, res, next) => {
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
-    const { media, mediaId, mediaType, caption } = req.body;
+    const { media, mediaId, mediaType, caption, date } = req.body;
     const poster = await Poster.findById(req.params.posterId);
     if (!poster) return next(errorHandler(404, "Poster not found"));
 
@@ -74,6 +80,7 @@ export const updatePoster = async (req, res, next) => {
     poster.mediaId = mediaId || poster.mediaId;
     poster.mediaType = mediaType || poster.mediaType;
     poster.caption = caption || poster.caption;
+    poster.date = date ? new Date(date) : poster.date;
 
     const updatedPoster = await poster.save();
     res.status(200).json(updatedPoster);

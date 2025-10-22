@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogFooter,
   AlertDialogTrigger,
+  AlertDialogDescription,
 } from "../ui/alert-dialog";
 import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
@@ -22,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // 🆕 calendar component
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 

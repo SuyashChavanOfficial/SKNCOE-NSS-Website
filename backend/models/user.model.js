@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema(
     },
 
     // Volunteer-specific fields
+    nssID: {
+      type: String,
+      default: null,
+    },
     batch: {
       type: String,
       default: null,

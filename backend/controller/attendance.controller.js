@@ -1,5 +1,4 @@
 import Attendance from "../models/attendance.model.js";
-import Volunteer from "../models/volunteer.model.js";
 import Activity from "../models/activity.model.js";
 import { errorHandler } from "../utils/error.js";
 

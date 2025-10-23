@@ -1,16 +1,93 @@
 import User from "../models/user.model.js";
-import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
+import { errorHandler } from "../utils/error.js";
 import { storage } from "../lib/appwrite.js";
 
-export const updateUser = async (req, res, next) => {
-  if (req.user.id !== req.params.userId) {
-    return next(errorHandler(403, "You can only update your own account!"));
-  }
+// ----------------------------
+// CREATE VOLUNTEER (ADMIN ONLY)
+// ----------------------------
+export const createVolunteer = async (req, res, next) => {
+  if (!req.user.isAdmin)
+    return next(errorHandler(403, "Only admins can add volunteers"));
 
   try {
+    const { username, batch, email, password, dob, picture, pictureId } =
+      req.body;
+
+    const hashed = bcryptjs.hashSync(password, 8);
+
+    const volunteer = new User({
+      username,
+      batch,
+      email,
+      dob,
+      profilePicture: picture,
+      profilePictureId: pictureId,
+      password: hashed,
+      isVolunteer: true,
+      isAdmin: false,
+      isSuperAdmin: false,
+      status: "active",
+    });
+
+    const saved = await volunteer.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ----------------------------
+// GET ALL VOLUNTEERS (ADMIN ONLY)
+// ----------------------------
+export const getVolunteers = async (req, res, next) => {
+  if (!req.user.isAdmin)
+    return next(errorHandler(403, "Only admins can view volunteers"));
+
+  try {
+    const volunteers = await User.find({ isVolunteer: true }).sort({
+      createdAt: -1,
+    });
+    res.status(200).json(volunteers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ----------------------------
+// GET SINGLE USER / VOLUNTEER
+// ----------------------------
+export const getUserById = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.userId);
+
+    if (!user) return next(errorHandler(404, "User not found!"));
+
+    // Only admin or the user themselves can fetch
+    if (!req.user.isAdmin && req.user.id !== req.params.userId)
+      return next(errorHandler(403, "Not authorized"));
+
+    const { password, ...rest } = user._doc;
+    res.status(200).json(rest);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ----------------------------
+// UPDATE USER / VOLUNTEER
+// ----------------------------
+export const updateUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    // Volunteer can only update themselves, Admin can update anyone
+    if (!req.user.isAdmin && req.user.id !== userId)
+      return next(errorHandler(403, "Not authorized"));
+
     const updateData = {};
 
+    // Common fields
     if (req.body.username) updateData.username = req.body.username;
     if (req.body.email) updateData.email = req.body.email;
     if (req.body.password)
@@ -20,7 +97,20 @@ export const updateUser = async (req, res, next) => {
       updateData.profilePictureId = req.body.profilePictureId;
     }
 
-    // 🗑️ Delete old picture if new one is uploaded
+    // Volunteer-specific fields
+    if (req.body.batch) updateData.batch = req.body.batch;
+    if (req.body.dob) updateData.dob = req.body.dob;
+    if (
+      req.body.status &&
+      ["active", "retired", "banned", "blacklisted", "notListed"].includes(
+        req.body.status
+      )
+    )
+      updateData.status = req.body.status;
+    if (req.body.isVolunteer !== undefined)
+      updateData.isVolunteer = req.body.isVolunteer;
+
+    // Delete old profile picture
     if (req.body.deleteOldPictureId) {
       try {
         await storage.deleteFile(
@@ -33,34 +123,41 @@ export const updateUser = async (req, res, next) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.params.userId,
+      userId,
       { $set: updateData },
       { new: true }
     );
 
     if (!updatedUser) return next(errorHandler(404, "User not found!"));
-    const { password, ...rest } = updatedUser._doc;
 
+    const { password, ...rest } = updatedUser._doc;
     res.status(200).json(rest);
   } catch (error) {
     next(error);
   }
 };
 
+// ----------------------------
+// DELETE USER / VOLUNTEER
+// ----------------------------
 export const deleteUser = async (req, res, next) => {
-  if (!req.user.isAdmin && req.user.id !== req.params.userId) {
-    return next(errorHandler(403, "You can only delete your own account!"));
-  }
+  const { userId } = req.params;
+
+  // Admin can delete anyone, user can delete themselves
+  if (!req.user.isAdmin && req.user.id !== userId)
+    return next(errorHandler(403, "Not authorized"));
 
   try {
-    await User.findByIdAndDelete(req.params.userId);
-
-    res.status(200).json("User has been deleted.");
+    await User.findByIdAndDelete(userId);
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     next(error);
   }
 };
 
+// ----------------------------
+// SIGN OUT
+// ----------------------------
 export const signout = async (req, res, next) => {
   try {
     res
@@ -81,12 +178,11 @@ export const signout = async (req, res, next) => {
   }
 };
 
+// ----------------------------
+// GET ALL USERS (ADMIN ONLY)
+// ----------------------------
 export const getUsers = async (req, res, next) => {
-  if (!req.user.isAdmin) {
-    return next(
-      errorHandler(403, "You are not authorized to access this resource.")
-    );
-  }
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {
     const startIndex = parseInt(req.query.startIndex) || 0;
@@ -98,28 +194,21 @@ export const getUsers = async (req, res, next) => {
       .skip(startIndex)
       .limit(limit);
 
-    const getUsersWithoutPassword = users.map((user) => {
-      const { password: pass, ...rest } = user._doc;
-
+    const usersWithoutPassword = users.map((u) => {
+      const { password, ...rest } = u._doc;
       return rest;
     });
 
     const totalUsers = await User.countDocuments();
-
-    const now = new Date();
-
     const oneMonthAgo = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      now.getDate()
+      new Date().setMonth(new Date().getMonth() - 1)
     );
-
     const lastMonthUsers = await User.countDocuments({
       createdAt: { $gte: oneMonthAgo },
     });
 
     res.status(200).json({
-      users: getUsersWithoutPassword,
+      users: usersWithoutPassword,
       totalUsers,
       lastMonthUsers,
     });
@@ -128,62 +217,23 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
-export const getUserById = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.params.userId);
-
-    if (!user) {
-      return next(errorHandler(404, "User not found!"));
-    }
-
-    const { password, ...rest } = user._doc;
-
-    res.status(200).json(rest);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getUsersInPeriod = async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-    if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ message: "startDate and endDate are required" });
-    }
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-
-    const total = await User.countDocuments({
-      createdAt: { $gte: start, $lte: end },
-    });
-
-    res.status(200).json({ total }); // 🔥 don’t return full users array
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+// ----------------------------
+// UPDATE ADMINS (SUPER ADMIN ONLY)
+// ----------------------------
 export const updateAdmins = async (req, res, next) => {
-  if (!req.user.isSuperAdmin) {
+  if (!req.user.isSuperAdmin)
     return next(errorHandler(403, "Only Super Admin can update admins!"));
-  }
 
   try {
     const { updates } = req.body; // [{ userId, isAdmin }]
-    if (!Array.isArray(updates)) {
+    if (!Array.isArray(updates))
       return next(errorHandler(400, "Invalid data format"));
-    }
 
     const updatePromises = updates.map((u) =>
       User.findByIdAndUpdate(u.userId, { isAdmin: u.isAdmin }, { new: true })
     );
 
     await Promise.all(updatePromises);
-
     res.status(200).json({ message: "Admins updated successfully" });
   } catch (error) {
     next(error);

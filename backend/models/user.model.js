@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    // Roles
+    isVolunteer: {
+      type: Boolean,
+      default: false,
+    },
     isAdmin: {
       type: Boolean,
       default: false,
@@ -32,10 +38,24 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // Volunteer-specific fields
+    batch: {
+      type: String,
+      default: null,
+    },
+    dob: {
+      type: Date,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["active", "retired", "banned", "blacklisted", "notListed"],
+      default: "notListed",
+    },
   },
   { timestamps: true }
 );
 
 const User = mongoose.model("User", userSchema);
-
 export default User;

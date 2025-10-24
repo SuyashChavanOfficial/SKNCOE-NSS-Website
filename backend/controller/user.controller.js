@@ -13,8 +13,18 @@ export const createVolunteer = async (req, res, next) => {
     return next(errorHandler(403, "Only admins can add volunteers"));
 
   try {
-    const { username, batch, email, password, dob, picture, pictureId } =
-      req.body;
+    const {
+      username,
+      batch,
+      email,
+      password,
+      dob,
+      picture,
+      pictureId,
+      nssID,
+      prnNumber,
+      eligibilityNumber,
+    } = req.body;
 
     const hashed = bcryptjs.hashSync(password, BCRYPT_SALT_ROUNDS);
 
@@ -30,6 +40,9 @@ export const createVolunteer = async (req, res, next) => {
       isAdmin: false,
       isSuperAdmin: false,
       status: "active",
+      nssID: nssID || null,
+      prnNumber: prnNumber || null,
+      eligibilityNumber: eligibilityNumber || null,
     });
 
     const saved = await volunteer.save();
@@ -47,11 +60,29 @@ export const getVolunteers = async (req, res, next) => {
     return next(errorHandler(403, "Only admins can view volunteers"));
 
   try {
-    const volunteers = await User.find({ isVolunteer: true }).sort({
-      createdAt: -1,
+    const startIndex = parseInt(req.query.startIndex) || 0;
+    const limit = parseInt(req.query.limit) || 9;
+    const sortDirection = req.query.sort === "asc" ? 1 : -1;
+
+    const query = { isVolunteer: true };
+
+    const volunteers = await User.find(query)
+      .sort({ createdAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit);
+
+    // Remove passwords before sending
+    const volunteersWithoutPassword = volunteers.map((v) => {
+      const { password, ...rest } = v._doc;
+      return rest;
     });
 
-    res.status(200).json(volunteers);
+    const totalVolunteers = await User.countDocuments(query);
+
+    res.status(200).json({
+      volunteers: volunteersWithoutPassword,
+      totalVolunteers,
+    });
   } catch (error) {
     next(error);
   }
@@ -115,6 +146,11 @@ export const updateUser = async (req, res, next) => {
       updateData.status = req.body.status;
     if (req.body.isVolunteer !== undefined)
       updateData.isVolunteer = req.body.isVolunteer;
+
+    if (req.body.nssID) updateData.nssID = req.body.nssID;
+    if (req.body.prnNumber) updateData.prnNumber = req.body.prnNumber;
+    if (req.body.eligibilityNumber)
+      updateData.eligibilityNumber = req.body.eligibilityNumber;
 
     // Delete old profile picture
     if (req.body.deleteOldPictureId) {

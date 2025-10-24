@@ -17,6 +17,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import GoogleAuth from "@/components/shared/GoogleAuth.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from "@/redux/user/userSlice.js";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const formSchema = z.object({
@@ -31,10 +37,10 @@ const formSchema = z.object({
 });
 
 const SignUpForm = () => {
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const dispatch = useDispatch();
+  const { loading, error: errorMessage } = useSelector((state) => state.user);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -49,11 +55,11 @@ const SignUpForm = () => {
 
   async function onSubmit(values) {
     try {
-      setLoading(true);
-      setErrorMessage(null);
+      dispatch(signInStart());
 
       const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
@@ -61,20 +67,18 @@ const SignUpForm = () => {
       const data = await res.json();
 
       if (data.success === false) {
-        setLoading(false);
         toast({ title: "Sign up Failed! Please try again." });
-        return setErrorMessage(data.message);
+        dispatch(signInFailure(data.message));
+        return;
       }
-
-      setLoading(false);
 
       if (res.ok) {
-        toast({ title: "Sign up Succcessful!" });
-        navigate("/sign-in");
+        dispatch(signInSuccess(data.user));
+        toast({ title: "Sign up Successful!" });
+        navigate("/");
       }
     } catch (error) {
-      setErrorMessage(error);
-      setLoading(false);
+      dispatch(signInFailure(error.message));
       toast({ title: "Something went wrong!" });
     }
   }

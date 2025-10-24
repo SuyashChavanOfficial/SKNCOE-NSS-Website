@@ -9,14 +9,13 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     httpOnly: true,
     sameSite: "None",
     secure: true,
-    maxAge: 30 * 60 * 1000, // 15 min
   });
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
     sameSite: "None",
     secure: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 15 days
+    maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
 
@@ -128,15 +127,19 @@ export const refreshAccessToken = async (req, res, next) => {
   }
 };
 
-// ✅ Get current user
+// Get current user
 export const getCurrentUser = async (req, res, next) => {
   try {
-    const token = req.cookies.access_token;
-    if (!token)
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+    if (!req.user || !req.user.id) {
+      return next(
+        errorHandler(
+          401,
+          "Unauthorized - User data missing after token verification"
+        )
+      );
+    }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password");
     if (!user)
       return res
         .status(404)

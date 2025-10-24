@@ -57,6 +57,20 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "retired", "banned", "blacklisted", "notListed"],
       default: "notListed",
     },
+
+    // College-related Details
+    prnNumber: {
+      type: String,
+      default: null,
+    },
+    eligibilityNumber: {
+      type: Number,
+      default: null,
+    },
+    rollNumber: {
+      type: Number,
+      default: null,
+    },
   },
   { timestamps: true }
 );

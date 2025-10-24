@@ -103,17 +103,18 @@ const DashboardSidebar = ({ closeSidebar }) => {
             </button>
           </li>
 
+          {/* ✅ "My Attendance" link for EVERYONE */}
           <li>
             <button
-              onClick={() => handleLinkClick("attendance")}
+              onClick={() => handleLinkClick("my-attendance")}
               className={`flex items-center p-2 w-full rounded ${
-                isActive("attendance")
+                isActive("my-attendance")
                   ? "bg-blue-900 text-white"
                   : "hover:bg-slate-300"
               }`}
             >
               <FaChartBar className="mr-3" />
-              <span>Attendance</span>
+              <span>My Attendance</span>
             </button>
           </li>
 
@@ -158,6 +159,21 @@ const DashboardSidebar = ({ closeSidebar }) => {
                 >
                   <FaPeopleCarry className="mr-3" />
                   <span>Volunteers</span>
+                </button>
+              </li>
+
+              {/* ✅ "Manage Attendance" link for ADMIN ONLY */}
+              <li>
+                <button
+                  onClick={() => handleLinkClick("attendance")}
+                  className={`flex items-center p-2 w-full rounded ${
+                    isActive("attendance")
+                      ? "bg-blue-900 text-white"
+                      : "hover:bg-slate-300"
+                  }`}
+                >
+                  <FaPenSquare className="mr-3" />
+                  <span>Manage Attendance</span>
                 </button>
               </li>
 

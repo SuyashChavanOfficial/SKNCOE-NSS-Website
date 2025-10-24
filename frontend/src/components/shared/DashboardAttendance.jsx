@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux"; // Import useSelector
 import { Button } from "../ui/button";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -19,19 +17,17 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
 const DashboardAttendance = () => {
-  const { currentUser } = useSelector((state) => state.user); // Get current user
   const [view, setView] = useState("activity");
   const [activities, setActivities] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
   const [allAttendance, setAllAttendance] = useState([]);
-  const [myAttendance, setMyAttendance] = useState([]); // For volunteer view
   const [loading, setLoading] = useState(true);
   const [loadingActivity, setLoadingActivity] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [activityAttendance, setActivityAttendance] = useState({});
   const { toast } = useToast();
 
-  // Fetch data based on user role
+  // Fetch data for the admin dashboard
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
@@ -63,80 +59,13 @@ const DashboardAttendance = () => {
         });
       }
     };
+    fetchAdminData();
+  }, [toast]);
 
-    // ✅ FIX: This function now fetches ALL activities and merges them with the user's records.
-    const fetchMyAttendance = async () => {
-      try {
-        setLoading(true);
-        // 1. Fetch ALL activities
-        const activityRes = await fetch(`${API_URL}/api/activity/get`, {
-          credentials: "include",
-        });
-        const activityData = await activityRes.json();
-        if (!activityRes.ok)
-          throw new Error(activityData.message || "Failed to fetch activities");
-
-        const allActivities = [
-          ...activityData.upcoming,
-          ...activityData.completed,
-        ];
-
-        // 2. Fetch ONLY the volunteer's attendance records
-        const attendanceRes = await fetch(
-          `${API_URL}/api/attendance/volunteer/${currentUser._id}`,
-          { credentials: "include" }
-        );
-        const attendanceData = await attendanceRes.json();
-        if (!attendanceRes.ok)
-          throw new Error(
-            attendanceData.message || "Failed to fetch attendance"
-          );
-
-        // 3. Merge the two lists
-        const mergedAttendance = allActivities.map((activity) => {
-          const record = attendanceData.find(
-            (rec) => rec.activity?._id === activity._id
-          );
-          return {
-            // We use the activity._id as the key for the React map
-            _id: activity._id,
-            activity: activity, // Pass the full activity object
-            status: record ? record.status : "absent", // Default to "absent" if no record exists
-          };
-        });
-
-        // 4. Sort by activity date, newest first
-        const sortedData = mergedAttendance.sort(
-          (a, b) =>
-            new Date(b.activity.startDate) - new Date(a.activity.startDate)
-        );
-
-        setMyAttendance(sortedData);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-        toast({
-          title: "Error",
-          description: err.message || "Failed to fetch your attendance.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    if (currentUser?.isAdmin) {
-      fetchAdminData();
-    } else if (currentUser?.isVolunteer) {
-      fetchMyAttendance();
-    } else {
-      setLoading(false); // No data to load for this user
-    }
-  }, [currentUser, toast]); // Added toast to dependency array
-
-  // Fetch all attendance records *only* if admin and table view is selected
+  // Fetch all attendance records *only* if table view is selected
   useEffect(() => {
     const fetchAllAttendance = async () => {
-      if (currentUser?.isAdmin && view === "table") {
+      if (view === "table") {
         try {
           setLoading(true);
           const res = await fetch(`${API_URL}/api/attendance`, {
@@ -154,7 +83,7 @@ const DashboardAttendance = () => {
       }
     };
     fetchAllAttendance();
-  }, [view, currentUser?.isAdmin]);
+  }, [view]);
 
   // --- Admin-Specific Functions ---
 
@@ -253,208 +182,151 @@ const DashboardAttendance = () => {
   return (
     <div className="p-4">
       {/* ---------------- RENDER ADMIN VIEW ---------------- */}
-      {currentUser?.isAdmin ? (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Attendance</h1>
-            <Toggle
-              pressed={view === "activity"}
-              onPressedChange={() =>
-                setView(view === "table" ? "activity" : "table")
-              }
-            >
-              {view === "table" ? "Activity View" : "Table View"}
-            </Toggle>
-          </div>
+      <>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Attendance</h1>
+          <Toggle
+            pressed={view === "activity"}
+            onPressedChange={() =>
+              setView(view === "table" ? "activity" : "table")
+            }
+          >
+            {view === "table" ? "Activity View" : "Table View"}
+          </Toggle>
+        </div>
 
-          {view === "table" ? (
-            <ScrollArea className="border rounded-md">
-              <Table className="min-w-[1000px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Volunteer</TableHead>
-                    {activities.map((a) => (
-                      <TableHead key={a._id} className="text-center">
-                        {a.title}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {volunteers.map((v) => (
-                    <TableRow key={v._id}>
-                      <TableCell className="font-medium">
-                        {v.username}
-                      </TableCell>
-                      {activities.map((a) => {
-                        const record = allAttendance.find(
-                          (rec) =>
-                            rec.volunteer?._id === v._id &&
-                            rec.activity?._id === a._id
-                        );
-                        return (
-                          <TableCell key={a._id} className="text-center">
-                            {record?.status === "present" ? (
-                              <Check className="w-5 h-5 text-green-600 mx-auto" />
-                            ) : (
-                              <X className="w-5 h-5 text-red-600 mx-auto" />
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          ) : (
-            <div className="mt-4 space-y-4">
-              {!selectedActivity ? (
-                // Activity List
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {activities.map((a) => (
-                    <div
-                      key={a._id}
-                      className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                      onClick={() => openActivity(a)}
-                    >
-                      <h2 className="font-semibold text-lg">{a.title}</h2>
-                      <p className="text-sm text-gray-600">
-                        {formatDate(a.startDate)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // Attendance Table for Selected Activity
-                <div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mb-4"
-                    onClick={() => setSelectedActivity(null)}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Activities
-                  </Button>
-
-                  {loadingActivity ? (
-                    <div className="flex justify-center items-center p-10">
-                      <DotLottieReact
-                        src="https://lottie.host/8e929f18-c53a-4d1e-94f0-9bc6cf21fbaf/8qmvB7P8wA.lottie"
-                        loop
-                        autoplay
-                        style={{ width: "100px", height: "100px" }}
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <h2 className="font-semibold text-xl mb-2">
-                        {selectedActivity.title}
-                      </h2>
-                      <div className="border rounded-md">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Volunteer</TableHead>
-                              <TableHead className="text-center">
-                                Present
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {volunteers.map((v) => (
-                              <TableRow key={v._id}>
-                                <TableCell className="font-medium">
-                                  {v.username}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Toggle
-                                    pressed={!!activityAttendance[v._id]}
-                                    onPressedChange={() =>
-                                      handleToggleChange(v._id)
-                                    }
-                                    aria-label="Toggle attendance"
-                                  >
-                                    {!!activityAttendance[v._id] ? (
-                                      <Check className="w-5 h-5" />
-                                    ) : (
-                                      <X className="w-5 h-5" />
-                                    )}
-                                  </Toggle>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      <Button
-                        onClick={handleSaveAttendance}
-                        className="mt-4 w-full"
-                      >
-                        Save Attendance
-                      </Button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      ) : /* ---------------- RENDER VOLUNTEER VIEW ---------------- */
-      currentUser?.isVolunteer ? (
-        <>
-          <h1 className="text-2xl font-bold mb-4">My Attendance</h1>
+        {view === "table" ? (
           <ScrollArea className="border rounded-md">
-            <Table>
-              <TableCaption>
-                Your attendance record for all activities.
-              </TableCaption>
+            <Table className="min-w-[1000px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Volunteer</TableHead>
+                  {activities.map((a) => (
+                    <TableHead key={a._id} className="text-center">
+                      {a.title}
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {myAttendance.length > 0 ? (
-                  myAttendance.map((record) => (
-                    <TableRow key={record._id}>
-                      <TableCell className="font-medium">
-                        {record.activity?.title || "Deleted Activity"}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(record.activity?.startDate)}
-                      </TableCell>
-                      <TableCell>
-                        {record.status === "present" ? (
-                          <span className="flex items-center gap-2 text-green-600 font-medium">
-                            <Check className="w-5 h-5" /> Present
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2 text-red-600 font-medium">
-                            <X className="w-5 h-5" /> Absent
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center">
-                      No activities found.
-                    </TableCell>
+                {volunteers.map((v) => (
+                  <TableRow key={v._id}>
+                    <TableCell className="font-medium">{v.username}</TableCell>
+                    {activities.map((a) => {
+                      const record = allAttendance.find(
+                        (rec) =>
+                          rec.volunteer?._id === v._id &&
+                          rec.activity?._id === a._id
+                      );
+                      return (
+                        <TableCell key={a._id} className="text-center">
+                          {record?.status === "present" ? (
+                            <Check className="w-5 h-5 text-green-600 mx-auto" />
+                          ) : (
+                            <X className="w-5 h-5 text-red-600 mx-auto" />
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </ScrollArea>
-        </>
-      ) : (
-        /* ---------------- RENDER DEFAULT VIEW (e.g., regular user) ---------------- */
-        <p>You do not have permission to view attendance.</p>
-      )}
+        ) : (
+          <div className="mt-4 space-y-4">
+            {!selectedActivity ? (
+              // Activity List
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activities.map((a) => (
+                  <div
+                    key={a._id}
+                    className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => openActivity(a)}
+                  >
+                    <h2 className="font-semibold text-lg">{a.title}</h2>
+                    <p className="text-sm text-gray-600">
+                      {formatDate(a.startDate)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Attendance Table for Selected Activity
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mb-4"
+                  onClick={() => setSelectedActivity(null)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Activities
+                </Button>
+
+                {loadingActivity ? (
+                  <div className="flex justify-center items-center p-10">
+                    <DotLottieReact
+                      src="https://lottie.host/8e929f18-c53a-4d1e-94f0-9bc6cf21fbaf/8qmvB7P8wA.lottie"
+                      loop
+                      autoplay
+                      style={{ width: "100px", height: "100px" }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="font-semibold text-xl mb-2">
+                      {selectedActivity.title}
+                    </h2>
+                    <div className="border rounded-md">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Volunteer</TableHead>
+                            <TableHead className="text-center">
+                              Present
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {volunteers.map((v) => (
+                            <TableRow key={v._id}>
+                              <TableCell className="font-medium">
+                                {v.username}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Toggle
+                                  pressed={!!activityAttendance[v._id]}
+                                  onPressedChange={() =>
+                                    handleToggleChange(v._id)
+                                  }
+                                  aria-label="Toggle attendance"
+                                >
+                                  {!!activityAttendance[v._id] ? (
+                                    <Check className="w-5 h-5" />
+                                  ) : (
+                                    <X className="w-5 h-5" />
+                                  )}
+                                </Toggle>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <Button
+                      onClick={handleSaveAttendance}
+                      className="mt-4 w-full"
+                    >
+                      Save Attendance
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </>
     </div>
   );
 };

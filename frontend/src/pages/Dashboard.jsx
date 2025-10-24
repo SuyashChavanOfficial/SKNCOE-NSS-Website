@@ -14,6 +14,7 @@ import CreateNews from "@/components/shared/CreateNews";
 import EditNews from "@/components/shared/EditNews";
 import CreateActivity from "@/components/shared/CreateActivity";
 import EditActivity from "@/components/shared/EditActivity";
+import Attendance from "@/components/shared/Attendance"; // ✅ Added import
 
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -109,7 +110,12 @@ const Dashboard = () => {
         {tab === "admins" && <DashboardAdmins />}
         {tab === "category-manager" && <DashboardCategory />}
         {tab === "volunteers" && <DashboardVolunteers />}
+
+        {/* ✅ "Manage Attendance" for Admins */}
         {tab === "attendance" && <DashboardAttendance />}
+
+        {/* ✅ "My Attendance" for Everyone */}
+        {tab === "my-attendance" && <Attendance />}
       </div>
     </div>
   );

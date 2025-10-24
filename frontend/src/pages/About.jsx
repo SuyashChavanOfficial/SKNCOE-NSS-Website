@@ -168,7 +168,7 @@ const About = () => {
               className="w-32 h-32 rounded-full mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold text-gray-700">
-              Vedika Chougle
+              Vedika Chogale
             </h3>
             <p className="text-gray-500">Social Media Head</p>
           </div>

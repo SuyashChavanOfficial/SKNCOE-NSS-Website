@@ -103,6 +103,20 @@ const DashboardSidebar = ({ closeSidebar }) => {
             </button>
           </li>
 
+          <li>
+            <button
+              onClick={() => handleLinkClick("attendance")}
+              className={`flex items-center p-2 w-full rounded ${
+                isActive("attendance")
+                  ? "bg-blue-900 text-white"
+                  : "hover:bg-slate-300"
+              }`}
+            >
+              <FaChartBar className="mr-3" />
+              <span>Attendance</span>
+            </button>
+          </li>
+
           {currentUser?.isAdmin && (
             <>
               <li>
@@ -147,21 +161,6 @@ const DashboardSidebar = ({ closeSidebar }) => {
                 </button>
               </li>
 
-              <li>
-                <button
-                  onClick={() => handleLinkClick("attendance")}
-                  className={`flex items-center p-2 w-full rounded ${
-                    isActive("attendance")
-                      ? "bg-blue-900 text-white"
-                      : "hover:bg-slate-300"
-                  }`}
-                >
-                  <FaChartBar className="mr-3" />
-                  <span>Attendance</span>
-                </button>
-              </li>
-
-              {/* Removed Create News (moved to DashboardPosts button) */}
               <li>
                 <button
                   onClick={() => handleLinkClick("category-manager")}

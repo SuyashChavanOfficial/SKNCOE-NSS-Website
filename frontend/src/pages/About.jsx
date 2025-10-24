@@ -136,10 +136,10 @@ const About = () => {
             </h3>
             <p className="text-gray-500">Documentation Head</p>
           </div>
-          
+
           <div className="text-center w-[45%] md:w-[30%]">
             <img
-              src="https://cdn-icons-png.flaticon.com/128/4140/4140051.png"
+              src="https://cdn-icons-png.flaticon.com/128/2347/2347320.png"
               alt="Documentation Head"
               className="w-32 h-32 rounded-full mx-auto mb-4"
             />
@@ -163,6 +163,18 @@ const About = () => {
 
           <div className="text-center w-[45%] md:w-[30%]">
             <img
+              src="https://cdn-icons-png.flaticon.com/128/6997/6997662.png"
+              alt="Team Member"
+              className="w-32 h-32 rounded-full mx-auto mb-4"
+            />
+            <h3 className="text-xl font-semibold text-gray-700">
+              Vedika Chougle
+            </h3>
+            <p className="text-gray-500">Social Media Head</p>
+          </div>
+
+          <div className="text-center w-[45%] md:w-[30%]">
+            <img
               src="https://cdn-icons-png.flaticon.com/128/18269/18269822.png"
               alt="Team Member"
               className="w-32 h-32 rounded-full mx-auto mb-4"
@@ -172,7 +184,7 @@ const About = () => {
             </h3>
             <p className="text-gray-500">Finance & Goods Head</p>
           </div>
-          
+
           <div className="text-center w-[45%] md:w-[30%]">
             <img
               src="https://cdn-icons-png.flaticon.com/128/18269/18269822.png"

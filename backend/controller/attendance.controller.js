@@ -1,10 +1,17 @@
 import Attendance from "../models/attendance.model.js";
 import Activity from "../models/activity.model.js";
+import User from "../models/user.model.js"; // ✅ FIX: Import the User model
 import { errorHandler } from "../utils/error.js";
 
 // Create attendance records when new activity is added
 export const initializeAttendanceForActivity = async (activityId) => {
-  const volunteers = await Volunteer.find();
+  const volunteers = await User.find({ isVolunteer: true });
+
+  if (volunteers.length === 0) {
+    console.log("No volunteers found to initialize attendance for.");
+    return;
+  }
+
   const attendanceRecords = volunteers.map((v) => ({
     volunteer: v._id,
     activity: activityId,
@@ -43,7 +50,7 @@ export const markAttendance = async (req, res, next) => {
 export const getAttendanceByActivity = async (req, res, next) => {
   try {
     const records = await Attendance.find({ activity: req.params.activityId })
-      .populate("volunteer", "name batch email")
+      .populate("volunteer", "username batch email nssID profilePicture")
       .populate("activity", "title startDate");
 
     res.status(200).json(records);
@@ -56,7 +63,7 @@ export const getAttendanceByActivity = async (req, res, next) => {
 export const getAttendanceByVolunteer = async (req, res, next) => {
   try {
     const records = await Attendance.find({ volunteer: req.params.volunteerId })
-      .populate("volunteer", "name batch email")
+      .populate("volunteer", "username batch email")
       .populate("activity", "title startDate");
 
     res.status(200).json(records);
@@ -71,7 +78,7 @@ export const getAllAttendance = async (req, res, next) => {
     if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
     const allRecords = await Attendance.find()
-      .populate("volunteer", "name batch email")
+      .populate("volunteer", "username batch email")
       .populate("activity", "title startDate");
 
     res.status(200).json(allRecords);

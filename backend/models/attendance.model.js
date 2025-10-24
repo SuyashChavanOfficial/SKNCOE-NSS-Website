@@ -4,7 +4,7 @@ const attendanceSchema = new mongoose.Schema(
   {
     volunteer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Volunteer",
+      ref: "User",
       required: true,
     },
     activity: {

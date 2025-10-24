@@ -42,6 +42,8 @@ const userSchema = new mongoose.Schema(
     nssID: {
       type: String,
       default: null,
+      unique: true,
+      sparse: true,
     },
     batch: {
       type: String,

@@ -24,6 +24,7 @@ export const createVolunteer = async (req, res, next) => {
       nssID,
       prnNumber,
       eligibilityNumber,
+      rollNumber,
     } = req.body;
 
     const hashed = bcryptjs.hashSync(password, BCRYPT_SALT_ROUNDS);
@@ -43,6 +44,7 @@ export const createVolunteer = async (req, res, next) => {
       nssID: nssID || null,
       prnNumber: prnNumber || null,
       eligibilityNumber: eligibilityNumber || null,
+      rollNumber: rollNumber || null,
     });
 
     const saved = await volunteer.save();
@@ -122,21 +124,22 @@ export const updateUser = async (req, res, next) => {
     const updateData = {};
 
     // Common fields
-    if (req.body.username) updateData.username = req.body.username;
-    if (req.body.email) updateData.email = req.body.email;
+    if (req.body.username !== undefined)
+      updateData.username = req.body.username;
+    if (req.body.email !== undefined) updateData.email = req.body.email;
     if (req.body.password)
       updateData.password = bcryptjs.hashSync(
         req.body.password,
         BCRYPT_SALT_ROUNDS
       );
-    if (req.body.profilePicture) {
+    if (req.body.profilePicture !== undefined) {
       updateData.profilePicture = req.body.profilePicture;
       updateData.profilePictureId = req.body.profilePictureId;
     }
 
     // Volunteer-specific fields
-    if (req.body.batch) updateData.batch = req.body.batch;
-    if (req.body.dob) updateData.dob = req.body.dob;
+    if (req.body.batch !== undefined) updateData.batch = req.body.batch;
+    if (req.body.dob !== undefined) updateData.dob = req.body.dob;
     if (
       req.body.status &&
       ["active", "retired", "banned", "blacklisted", "notListed"].includes(
@@ -147,10 +150,13 @@ export const updateUser = async (req, res, next) => {
     if (req.body.isVolunteer !== undefined)
       updateData.isVolunteer = req.body.isVolunteer;
 
-    if (req.body.nssID) updateData.nssID = req.body.nssID;
-    if (req.body.prnNumber) updateData.prnNumber = req.body.prnNumber;
-    if (req.body.eligibilityNumber)
-      updateData.eligibilityNumber = req.body.eligibilityNumber;
+    if (req.body.nssID !== undefined) updateData.nssID = req.body.nssID || null;
+    if (req.body.prnNumber !== undefined)
+      updateData.prnNumber = req.body.prnNumber || null;
+    if (req.body.eligibilityNumber !== undefined)
+      updateData.eligibilityNumber = req.body.eligibilityNumber || null;
+    if (req.body.rollNumber !== undefined)
+      updateData.rollNumber = req.body.rollNumber || null;
 
     // Delete old profile picture
     if (req.body.deleteOldPictureId) {
@@ -184,10 +190,7 @@ export const updateUser = async (req, res, next) => {
 // ----------------------------
 export const deleteUser = async (req, res, next) => {
   const { userId } = req.params;
-
-  // Admin can delete anyone, user can delete themselves
-  if (!req.user.isAdmin && req.user.id !== userId)
-    return next(errorHandler(403, "Not authorized"));
+  const loggedInUser = req.user;
 
   try {
     const userToDelete = await User.findById(userId);
@@ -195,6 +198,29 @@ export const deleteUser = async (req, res, next) => {
       return next(errorHandler(404, "User not found!"));
     }
 
+    // Case 1: The user to delete is a VOLUNTEER
+    if (userToDelete.isVolunteer) {
+      // Only an admin can delete a volunteer
+      if (!loggedInUser.isAdmin) {
+        return next(
+          errorHandler(403, "Not authorized to delete this volunteer")
+        );
+      }
+    }
+    // Case 2: The user to delete is a REGULAR USER
+    else {
+      // An admin or the user themselves can delete
+      if (!loggedInUser.isAdmin && loggedInUser.id !== userId) {
+        return next(
+          errorHandler(
+            403,
+            "You are only authorized to delete your own account"
+          )
+        );
+      }
+    }
+
+    // If authorization passed, proceed with deletion
     if (userToDelete.profilePictureId) {
       try {
         await storage.deleteFile(
@@ -279,7 +305,6 @@ export const getUsers = async (req, res, next) => {
 // GET USERS IN PERIOD (ADMIN ONLY)
 // ----------------------------
 export const getUsersInPeriod = async (req, res, next) => {
-  // --- FIX: Added authorization check ---
   if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
 
   try {

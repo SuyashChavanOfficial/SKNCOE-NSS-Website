@@ -45,18 +45,133 @@ export const createVolunteer = async (req, res, next) => {
       isAdmin: false,
       isSuperAdmin: false,
       status: "active",
-      nssID: nssID || null,
+      nssID: nssID || null, // Ensure nssID is null if empty
       prnNumber: prnNumber || null,
       eligibilityNumber: eligibilityNumber || null,
       rollNumber: rollNumber || null,
     });
 
-    const saved = await volunteer.save();
+    const saved = await volunteer.save({ validateBeforeSave: true });
     const { password: _, ...volunteerData } = saved._doc;
     res.status(201).json(volunteerData);
   } catch (error) {
     if (error.code === 11000) {
-      return next(errorHandler(400, "Email already exists."));
+      if (error.keyPattern?.nssID) {
+        return next(errorHandler(400, "NSS ID already exists."));
+      } else if (error.keyPattern?.email) {
+        return next(errorHandler(400, "Email already exists."));
+      } else {
+        return next(
+          errorHandler(400, "A unique field value conflict occurred.")
+        );
+      }
+    }
+    if (error.name === "ValidationError") {
+      return next(
+        errorHandler(
+          400,
+          Object.values(error.errors)
+            .map((e) => e.message)
+            .join(", ")
+        )
+      );
+    }
+    next(error);
+  }
+};
+
+// ----------------------------
+// UPDATE USER / VOLUNTEER
+// ----------------------------
+export const updateUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!req.user.isAdmin && req.user.id !== userId)
+      return next(errorHandler(403, "Not authorized"));
+
+    const updateData = {};
+
+    // Common fields
+    if (req.body.username !== undefined)
+      updateData.username = req.body.username;
+    if (req.body.email !== undefined) updateData.email = req.body.email;
+    if (req.body.password)
+      updateData.password = bcryptjs.hashSync(
+        req.body.password,
+        BCRYPT_SALT_ROUNDS
+      );
+    if (req.body.profilePicture !== undefined) {
+      updateData.profilePicture = req.body.profilePicture;
+      updateData.profilePictureId = req.body.profilePictureId;
+    }
+
+    // Volunteer-specific fields
+    if (req.body.batch !== undefined) updateData.batch = req.body.batch;
+    if (req.body.dob !== undefined) updateData.dob = req.body.dob || null;
+    if (
+      req.body.status &&
+      ["active", "retired", "banned", "blacklisted", "notListed"].includes(
+        req.body.status
+      )
+    )
+      updateData.status = req.body.status;
+    if (req.body.isVolunteer !== undefined)
+      updateData.isVolunteer = req.body.isVolunteer;
+
+    if (req.body.nssID !== undefined) updateData.nssID = req.body.nssID || null; // Ensure nssID is null if empty
+    if (req.body.prnNumber !== undefined)
+      updateData.prnNumber = req.body.prnNumber || null;
+    if (req.body.eligibilityNumber !== undefined)
+      updateData.eligibilityNumber = req.body.eligibilityNumber || null;
+    if (req.body.rollNumber !== undefined)
+      updateData.rollNumber = req.body.rollNumber || null;
+
+    if (req.body.deleteOldPictureId) {
+      try {
+        await storage.deleteFile(
+          process.env.APPWRITE_STORAGE_ID,
+          req.body.deleteOldPictureId
+        );
+      } catch (err) {
+        console.log(
+          `⚠️ Failed to delete old profile picture ${req.body.deleteOldPictureId}:`,
+          err.message
+        );
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) return next(errorHandler(404, "User not found!"));
+
+    const { password, ...rest } = updatedUser._doc;
+    res.status(200).json(rest);
+  } catch (error) {
+    if (error.code === 11000) {
+      if (error.keyPattern?.nssID) {
+        return next(errorHandler(400, "NSS ID already exists."));
+      } else if (error.keyPattern?.email) {
+        return next(errorHandler(400, "Email already exists."));
+      } else {
+        return next(
+          errorHandler(400, "A unique field value conflict occurred.")
+        );
+      }
+    }
+    if (error.name === "ValidationError") {
+      return next(
+        errorHandler(
+          400,
+          Object.values(error.errors)
+            .map((e) => e.message)
+            .join(", ")
+        )
+      );
     }
     next(error);
   }
@@ -114,85 +229,6 @@ export const getUserById = async (req, res, next) => {
     const { password, ...rest } = user._doc;
     res.status(200).json(rest);
   } catch (error) {
-    next(error);
-  }
-};
-
-// ----------------------------
-// UPDATE USER / VOLUNTEER
-// ----------------------------
-export const updateUser = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-
-    if (!req.user.isAdmin && req.user.id !== userId)
-      return next(errorHandler(403, "Not authorized"));
-
-    const updateData = {};
-
-    // Common fields
-    if (req.body.username !== undefined)
-      updateData.username = req.body.username;
-    if (req.body.email !== undefined) updateData.email = req.body.email;
-    if (req.body.password)
-      updateData.password = bcryptjs.hashSync(
-        req.body.password,
-        BCRYPT_SALT_ROUNDS
-      );
-    if (req.body.profilePicture !== undefined) {
-      updateData.profilePicture = req.body.profilePicture;
-      updateData.profilePictureId = req.body.profilePictureId;
-    }
-
-    // Volunteer-specific fields
-    if (req.body.batch !== undefined) updateData.batch = req.body.batch;
-    if (req.body.dob !== undefined) updateData.dob = req.body.dob || null;
-    if (
-      req.body.status &&
-      ["active", "retired", "banned", "blacklisted", "notListed"].includes(
-        req.body.status
-      )
-    )
-      updateData.status = req.body.status;
-    if (req.body.isVolunteer !== undefined)
-      updateData.isVolunteer = req.body.isVolunteer;
-
-    if (req.body.nssID !== undefined) updateData.nssID = req.body.nssID || null;
-    if (req.body.prnNumber !== undefined)
-      updateData.prnNumber = req.body.prnNumber || null;
-    if (req.body.eligibilityNumber !== undefined)
-      updateData.eligibilityNumber = req.body.eligibilityNumber || null;
-    if (req.body.rollNumber !== undefined)
-      updateData.rollNumber = req.body.rollNumber || null;
-
-    if (req.body.deleteOldPictureId) {
-      try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          req.body.deleteOldPictureId
-        );
-      } catch (err) {
-        console.log(
-          `Failed to delete old profile picture ${req.body.deleteOldPictureId}:`,
-          err.message
-        );
-      }
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true }
-    );
-
-    if (!updatedUser) return next(errorHandler(404, "User not found!"));
-
-    const { password, ...rest } = updatedUser._doc;
-    res.status(200).json(rest);
-  } catch (error) {
-    if (error.code === 11000) {
-      return next(errorHandler(400, "Email already exists."));
-    }
     next(error);
   }
 };

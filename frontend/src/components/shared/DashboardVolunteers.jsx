@@ -40,8 +40,8 @@ import { useToast } from "../../hooks/use-toast";
 import { ScrollArea } from "../ui/scroll-area";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { useLocation, useNavigate } from "react-router-dom"; // For Pagination
-import Pagination from "@/components/shared/Pagination"; // Import Pagination
+import { useLocation, useNavigate } from "react-router-dom";
+import Pagination from "@/components/shared/Pagination";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const VOLUNTEERS_PER_PAGE = 10; // Define how many volunteers to show per page
@@ -151,11 +151,11 @@ const DashboardVolunteers = () => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
-    const maxSize = 500 * 1024; // 500 KB limit
+    const maxSize = 250 * 1024; // 250 KB limit
     if (selectedFile.size > maxSize) {
       return toast({
         title: "File too large",
-        description: "Profile picture must be under 500 KB.",
+        description: "Profile picture must be under 250 KB.",
         variant: "destructive",
       });
     }
@@ -358,7 +358,7 @@ const DashboardVolunteers = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
               {/* --- Profile Picture Upload --- */}
               <div className="sm:col-span-2 space-y-2">
-                <Label>Profile Picture (Max 500KB)</Label>
+                <Label>Profile Picture (Max 250KB)</Label>
                 <div className="flex items-center gap-4">
                   <div className="relative w-24 h-24 rounded-full border bg-gray-100 flex items-center justify-center">
                     {uploading ? (

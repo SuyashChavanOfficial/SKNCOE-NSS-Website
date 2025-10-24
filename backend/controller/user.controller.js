@@ -19,13 +19,17 @@ export const createVolunteer = async (req, res, next) => {
       email,
       password,
       dob,
-      picture,
-      pictureId,
+      profilePicture,
+      profilePictureId,
       nssID,
       prnNumber,
       eligibilityNumber,
       rollNumber,
     } = req.body;
+
+    if (!username || !batch || !email || !password || !nssID) {
+      return next(errorHandler(400, "Required fields are missing."));
+    }
 
     const hashed = bcryptjs.hashSync(password, BCRYPT_SALT_ROUNDS);
 
@@ -33,9 +37,9 @@ export const createVolunteer = async (req, res, next) => {
       username,
       batch,
       email,
-      dob,
-      profilePicture: picture,
-      profilePictureId: pictureId,
+      dob: dob || null,
+      profilePicture: profilePicture || undefined,
+      profilePictureId: profilePictureId || null,
       password: hashed,
       isVolunteer: true,
       isAdmin: false,
@@ -48,8 +52,12 @@ export const createVolunteer = async (req, res, next) => {
     });
 
     const saved = await volunteer.save();
-    res.status(201).json(saved);
+    const { password: _, ...volunteerData } = saved._doc;
+    res.status(201).json(volunteerData);
   } catch (error) {
+    if (error.code === 11000) {
+      return next(errorHandler(400, "Email already exists."));
+    }
     next(error);
   }
 };
@@ -117,7 +125,6 @@ export const updateUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    // Volunteer can only update themselves, Admin can update anyone
     if (!req.user.isAdmin && req.user.id !== userId)
       return next(errorHandler(403, "Not authorized"));
 
@@ -139,7 +146,7 @@ export const updateUser = async (req, res, next) => {
 
     // Volunteer-specific fields
     if (req.body.batch !== undefined) updateData.batch = req.body.batch;
-    if (req.body.dob !== undefined) updateData.dob = req.body.dob;
+    if (req.body.dob !== undefined) updateData.dob = req.body.dob || null;
     if (
       req.body.status &&
       ["active", "retired", "banned", "blacklisted", "notListed"].includes(
@@ -158,7 +165,6 @@ export const updateUser = async (req, res, next) => {
     if (req.body.rollNumber !== undefined)
       updateData.rollNumber = req.body.rollNumber || null;
 
-    // Delete old profile picture
     if (req.body.deleteOldPictureId) {
       try {
         await storage.deleteFile(
@@ -166,7 +172,10 @@ export const updateUser = async (req, res, next) => {
           req.body.deleteOldPictureId
         );
       } catch (err) {
-        console.log("Failed to delete old profile picture:", err.message);
+        console.log(
+          `Failed to delete old profile picture ${req.body.deleteOldPictureId}:`,
+          err.message
+        );
       }
     }
 
@@ -181,6 +190,9 @@ export const updateUser = async (req, res, next) => {
     const { password, ...rest } = updatedUser._doc;
     res.status(200).json(rest);
   } catch (error) {
+    if (error.code === 11000) {
+      return next(errorHandler(400, "Email already exists."));
+    }
     next(error);
   }
 };
@@ -200,16 +212,12 @@ export const deleteUser = async (req, res, next) => {
 
     // Case 1: The user to delete is a VOLUNTEER
     if (userToDelete.isVolunteer) {
-      // Only an admin can delete a volunteer
       if (!loggedInUser.isAdmin) {
         return next(
           errorHandler(403, "Not authorized to delete this volunteer")
         );
       }
-    }
-    // Case 2: The user to delete is a REGULAR USER
-    else {
-      // An admin or the user themselves can delete
+    } else {
       if (!loggedInUser.isAdmin && loggedInUser.id !== userId) {
         return next(
           errorHandler(
@@ -228,7 +236,10 @@ export const deleteUser = async (req, res, next) => {
           userToDelete.profilePictureId
         );
       } catch (err) {
-        console.log("Failed to delete profile picture:", err.message);
+        console.log(
+          `Failed to delete profile picture ${userToDelete.profilePictureId}:`,
+          err.message
+        );
       }
     }
 
@@ -338,6 +349,18 @@ export const updateAdmins = async (req, res, next) => {
     const { updates } = req.body; // [{ userId, isAdmin }]
     if (!Array.isArray(updates))
       return next(errorHandler(400, "Invalid data format"));
+
+    // Basic validation for each update object
+    for (const u of updates) {
+      if (!u.userId || typeof u.isAdmin !== "boolean") {
+        return next(
+          errorHandler(
+            400,
+            "Invalid update format: Each item must have userId and isAdmin (boolean)."
+          )
+        );
+      }
+    }
 
     const updatePromises = updates.map((u) =>
       User.findByIdAndUpdate(u.userId, { isAdmin: u.isAdmin }, { new: true })

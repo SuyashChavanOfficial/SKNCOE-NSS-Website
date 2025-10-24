@@ -131,6 +131,7 @@ const DashboardUsers = () => {
                       src={user.profilePicture}
                       alt={user.username}
                       className="w-12 h-12 rounded-full object-cover bg-gray-500"
+                      loading="lazy"
                     />
                   </TableCell>
 

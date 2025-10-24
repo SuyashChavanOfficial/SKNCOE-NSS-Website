@@ -3,6 +3,8 @@ import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import { storage } from "../lib/appwrite.js";
 
+const BCRYPT_SALT_ROUNDS = 8;
+
 // ----------------------------
 // CREATE VOLUNTEER (ADMIN ONLY)
 // ----------------------------
@@ -14,7 +16,7 @@ export const createVolunteer = async (req, res, next) => {
     const { username, batch, email, password, dob, picture, pictureId } =
       req.body;
 
-    const hashed = bcryptjs.hashSync(password, 8);
+    const hashed = bcryptjs.hashSync(password, BCRYPT_SALT_ROUNDS);
 
     const volunteer = new User({
       username,
@@ -48,6 +50,7 @@ export const getVolunteers = async (req, res, next) => {
     const volunteers = await User.find({ isVolunteer: true }).sort({
       createdAt: -1,
     });
+
     res.status(200).json(volunteers);
   } catch (error) {
     next(error);
@@ -91,7 +94,10 @@ export const updateUser = async (req, res, next) => {
     if (req.body.username) updateData.username = req.body.username;
     if (req.body.email) updateData.email = req.body.email;
     if (req.body.password)
-      updateData.password = bcryptjs.hashSync(req.body.password, 10);
+      updateData.password = bcryptjs.hashSync(
+        req.body.password,
+        BCRYPT_SALT_ROUNDS
+      );
     if (req.body.profilePicture) {
       updateData.profilePicture = req.body.profilePicture;
       updateData.profilePictureId = req.body.profilePictureId;
@@ -148,6 +154,22 @@ export const deleteUser = async (req, res, next) => {
     return next(errorHandler(403, "Not authorized"));
 
   try {
+    const userToDelete = await User.findById(userId);
+    if (!userToDelete) {
+      return next(errorHandler(404, "User not found!"));
+    }
+
+    if (userToDelete.profilePictureId) {
+      try {
+        await storage.deleteFile(
+          process.env.APPWRITE_STORAGE_ID,
+          userToDelete.profilePictureId
+        );
+      } catch (err) {
+        console.log("Failed to delete profile picture:", err.message);
+      }
+    }
+
     await User.findByIdAndDelete(userId);
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
@@ -217,13 +239,17 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
-export const getUsersInPeriod = async (req, res) => {
+// ----------------------------
+// GET USERS IN PERIOD (ADMIN ONLY)
+// ----------------------------
+export const getUsersInPeriod = async (req, res, next) => {
+  // --- FIX: Added authorization check ---
+  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+
   try {
     const { startDate, endDate } = req.query;
     if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ message: "startDate and endDate are required" });
+      return next(errorHandler(400, "startDate and endDate are required"));
     }
 
     const start = new Date(startDate);
@@ -236,7 +262,7 @@ export const getUsersInPeriod = async (req, res) => {
 
     res.status(200).json({ total });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

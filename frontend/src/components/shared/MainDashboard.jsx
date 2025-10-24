@@ -225,6 +225,7 @@ const MainDashboard = () => {
                         src={user.profilePicture}
                         alt={user.username}
                         className="w-10 h-10 object-cover bg-gray-200 rounded-full"
+                        loading="lazy"
                       />
                     </TableCell>
                     <TableCell className="w-32">{user.username}</TableCell>
@@ -296,6 +297,7 @@ const MainDashboard = () => {
                         src={post.image}
                         alt={post.title}
                         className="w-10 h-10 object-cover bg-gray-200 rounded-full"
+                        loading="lazy"
                       />
                     </TableCell>
                     <TableCell className="w-80 line-clamp-2">

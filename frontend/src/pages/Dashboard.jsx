@@ -14,7 +14,7 @@ import CreateNews from "@/components/shared/CreateNews";
 import EditNews from "@/components/shared/EditNews";
 import CreateActivity from "@/components/shared/CreateActivity";
 import EditActivity from "@/components/shared/EditActivity";
-import Attendance from "@/components/shared/Attendance"; // ✅ Added import
+import Attendance from "@/components/shared/Attendance";
 
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -29,9 +29,7 @@ const Dashboard = () => {
     const urlParams = new URLSearchParams(location.search);
     const tabFromUrl = urlParams.get("tab");
 
-    if (tabFromUrl) {
-      setTab(tabFromUrl);
-    }
+    setTab(tabFromUrl || "profile");
   }, [location.search]);
 
   useEffect(() => {
@@ -39,9 +37,9 @@ const Dashboard = () => {
   }, [tab]);
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full">
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 bg-white z-40">
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 bg-white sticky top-0 z-40">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="text-gray-700"
@@ -53,13 +51,16 @@ const Dashboard = () => {
           )}
         </button>
         <h1 className="text-xl font-bold">Dashboard</h1>
+        <div className="w-6 h-6"></div>
       </div>
 
       {/* Sidebar */}
       <aside
         className={`
-          fixed md:relative left-0 top-0 h-full w-3/4 md:w-64
+          fixed md:sticky md:top-0 left-0 top-0 h-screen md:h-auto md:min-h-[calc(100vh-theme(spacing.16))] /* Adjust based on header height if needed */
+          w-3/4 md:w-64
           bg-slate-200 text-slate-800 shadow-lg z-40 transform transition-transform duration-300
+          flex-shrink-0 /* Prevent sidebar from shrinking */
           ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }
@@ -68,7 +69,6 @@ const Dashboard = () => {
         <DashboardSidebar
           closeSidebar={() => setSidebarOpen(false)}
           activeTab={tab}
-          setTab={setTab}
         />
       </aside>
 
@@ -81,7 +81,7 @@ const Dashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 w-full overflow-auto">
+      <div className="flex-1 w-full min-w-0">
         {tab === "profile" && <DashboardProfile />}
 
         {/* Poster of the Day */}
@@ -111,10 +111,10 @@ const Dashboard = () => {
         {tab === "category-manager" && <DashboardCategory />}
         {tab === "volunteers" && <DashboardVolunteers />}
 
-        {/* ✅ "Manage Attendance" for Admins */}
+        {/* "Manage Attendance" for Admins */}
         {tab === "attendance" && <DashboardAttendance />}
 
-        {/* ✅ "My Attendance" for Everyone */}
+        {/* "My Attendance" for Everyone */}
         {tab === "my-attendance" && <Attendance />}
       </div>
     </div>

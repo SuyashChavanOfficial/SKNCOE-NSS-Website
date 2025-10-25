@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import ActivityCard from "@/components/shared/ActivityCard"; // ✅ Import the new component
+import { Button } from "@/components/ui/button";
+import { Heart, BookOpen, Clock } from "lucide-react";
+import ActivityCard from "@/components/shared/ActivityCard";
+import Pagination from "@/components/shared/Pagination";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+const COMPLETED_ACTIVITIES_PER_PAGE = 9;
 
 const Activities = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [upcoming, setUpcoming] = useState([]);
   const [completed, setCompleted] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalPagesCompleted, setTotalPagesCompleted] = useState(1);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const queryParams = new URLSearchParams(location.search);
+  const currentPage = parseInt(queryParams.get("page")) || 1;
+
+  const isInterested = (activity) => {
+    return activity.interestedUsers?.some(
+      (user) => user === currentUser?._id || user?._id === currentUser?._id
+    );
+  };
 
   const fetchActivities = async () => {
     try {
@@ -21,8 +36,14 @@ const Activities = () => {
       const data = await res.json();
       if (res.ok) {
         const sortFn = (a, b) => new Date(b.startDate) - new Date(a.startDate);
+        const allCompleted = (data.completed || []).sort(sortFn);
+
         setUpcoming((data.upcoming || []).sort(sortFn));
-        setCompleted((data.completed || []).sort(sortFn));
+        setCompleted(allCompleted); 
+
+        setTotalPagesCompleted(
+          Math.ceil(allCompleted.length / COMPLETED_ACTIVITIES_PER_PAGE)
+        );
       } else {
         toast({
           title: "Error fetching activities",
@@ -115,6 +136,10 @@ const Activities = () => {
     }
   };
 
+  const startIndex = (currentPage - 1) * COMPLETED_ACTIVITIES_PER_PAGE;
+  const endIndex = startIndex + COMPLETED_ACTIVITIES_PER_PAGE;
+  const currentCompletedActivities = completed.slice(startIndex, endIndex);
+
   if (loading)
     return (
       <p className="text-center p-10 text-gray-600">Loading activities...</p>
@@ -146,22 +171,28 @@ const Activities = () => {
         Completed Activities
       </h2>
       <div className="flex flex-col items-center gap-6">
-        {completed.length > 0 ? (
-          completed.map((activity) => (
-            <ActivityCard
-              key={activity._id}
-              activity={activity}
-              isActivityCompleted={true}
-              onToggleInterest={handleToggleInterest}
-              currentUser={currentUser}
-            />
-          ))
-        ) : (
-          <p className="text-gray-600 p-4 border rounded-lg bg-gray-50 w-full max-w-xl text-center">
-            No activities completed yet.
-          </p>
-        )}
+        {currentCompletedActivities.length > 0
+          ? currentCompletedActivities.map((activity) => (
+              <ActivityCard
+                key={activity._id}
+                activity={activity}
+                isActivityCompleted={true}
+                onToggleInterest={handleToggleInterest}
+                currentUser={currentUser}
+              />
+            ))
+          :
+            currentPage === 1 &&
+            completed.length === 0 && (
+              <p className="text-gray-600 p-4 border rounded-lg bg-gray-50 w-full max-w-xl text-center">
+                No activities completed yet.
+              </p>
+            )}
       </div>
+
+      {completed.length > 0 && totalPagesCompleted > 1 && (
+        <Pagination totalPages={totalPagesCompleted} />
+      )}
     </div>
   );
 };

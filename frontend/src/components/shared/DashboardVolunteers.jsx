@@ -511,7 +511,7 @@ const DashboardVolunteers = () => {
                 <Label htmlFor="rollNumber">Roll Number</Label>
                 <Input
                   id="rollNumber"
-                  type="number"
+                  type="text"
                   placeholder="Roll Number"
                   value={formData.rollNumber}
                   onChange={(e) =>

@@ -69,7 +69,7 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     rollNumber: {
-      type: Number,
+      type: String,
       default: null,
     },
   },

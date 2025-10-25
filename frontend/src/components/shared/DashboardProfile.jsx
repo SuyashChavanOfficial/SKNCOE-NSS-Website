@@ -538,7 +538,7 @@ const DashboardProfile = () => {
                 Roll Number
               </Label>
               <Input
-                type="number"
+                type="text"
                 id="rollNumber"
                 placeholder="Roll Number"
                 value={formData.rollNumber}

@@ -7,12 +7,12 @@ export const generateTokens = (user) => {
     isSuperAdmin: user.isSuperAdmin,
   };
 
-  // Short-lived access token (30 min)
+  // Short-lived access token (1 Hour)
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "30m",
+    expiresIn: "1h",
   });
 
-  // Long-lived refresh token (30 days)
+  // Long-lived refresh token (30 Days)
   const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: "30d",
   });

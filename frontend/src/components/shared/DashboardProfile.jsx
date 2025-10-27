@@ -332,6 +332,23 @@ const DashboardProfile = () => {
     }
   };
 
+  const getDisabledState = (fieldId) => {
+    if (!isEditing) return true;
+    if (currentUser?.isVolunteer) {
+      const nonAllowedFields = ["username", "email", "nssID", "batch"];
+      return nonAllowedFields.includes(fieldId);
+    }
+    return false;
+  };
+
+  const getInputClasses = (fieldId) => {
+    let baseClasses = "h-12 border-slate-400 focus-visible:ring-0";
+    if (getDisabledState(fieldId)) {
+      baseClasses += " bg-gray-100 opacity-75 cursor-not-allowed";
+    }
+    return baseClasses;
+  };
+
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7 text-center font-semibold text-3xl">
@@ -391,6 +408,7 @@ const DashboardProfile = () => {
             />
           </div>
         )}
+        
         {/* --- Always Visible & Non-Editable Fields for Volunteers --- */}
         <div className="space-y-1">
           <Label
@@ -404,10 +422,9 @@ const DashboardProfile = () => {
             id="username"
             placeholder="Username"
             value={formData.username}
-            disabled={!isEditing || currentUser?.isVolunteer}
-            className="h-12 border-slate-400 focus-visible:ring-0 disabled:opacity-75 disabled:cursor-not-allowed"
+            disabled={getDisabledState("username")} 
+            className={getInputClasses("username")}
             onChange={handleChange}
-            readOnly={currentUser?.isVolunteer && !isEditing}
           />
         </div>
         <div className="space-y-1">
@@ -419,12 +436,12 @@ const DashboardProfile = () => {
             id="email"
             placeholder="Email"
             value={formData.email}
-            disabled={!isEditing || currentUser?.isVolunteer}
-            className="h-12 border-slate-400 focus-visible:ring-0 disabled:opacity-75 disabled:cursor-not-allowed"
+            disabled={getDisabledState("email")}
+            className={getInputClasses("email")} 
             onChange={handleChange}
-            readOnly={currentUser?.isVolunteer && !isEditing}
           />
         </div>
+
         {currentUser?.isVolunteer && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -438,8 +455,8 @@ const DashboardProfile = () => {
                 type="text"
                 id="nssID"
                 value={formData.nssID}
-                disabled
-                className="h-12 border-slate-400 focus-visible:ring-0 bg-gray-100 opacity-75 cursor-not-allowed"
+                disabled={getDisabledState("nssID")} 
+                className={getInputClasses("nssID")} 
                 readOnly
               />
             </div>
@@ -454,8 +471,8 @@ const DashboardProfile = () => {
                 type="text"
                 id="batch"
                 value={formData.batch}
-                disabled
-                className="h-12 border-slate-400 focus-visible:ring-0 bg-gray-100 opacity-75 cursor-not-allowed"
+                disabled={getDisabledState("batch")} 
+                className={getInputClasses("batch")} 
                 readOnly
               />
             </div>
@@ -464,7 +481,6 @@ const DashboardProfile = () => {
 
         {currentUser?.isVolunteer && <Separator className="my-4" />}
 
-        {/* --- Password (Only for Non-Volunteers) --- */}
         {!currentUser?.isVolunteer && (
           <div className="relative space-y-1">
             <Label
@@ -478,8 +494,8 @@ const DashboardProfile = () => {
               id="password"
               placeholder="Enter new password to change"
               value={formData.password || ""}
-              disabled={!isEditing}
-              className="h-12 border-slate-400 focus-visible:ring-0 pr-10 disabled:opacity-75 disabled:cursor-not-allowed"
+              disabled={getDisabledState("password")} 
+              className={`${getInputClasses("password")} pr-10`} 
               onChange={handleChange}
             />
             {isEditing && formData.password && (
@@ -494,7 +510,7 @@ const DashboardProfile = () => {
         )}
         
         {/* --- Editable Volunteer Fields (Shown in Grid) --- */}
-        
+
         {currentUser?.isVolunteer && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -508,8 +524,8 @@ const DashboardProfile = () => {
                 type="date"
                 id="dob"
                 value={formData.dob}
-                disabled={!isEditing}
-                className="h-12 border-slate-400 focus-visible:ring-0 disabled:opacity-75 disabled:cursor-not-allowed"
+                disabled={getDisabledState("dob")} 
+                className={getInputClasses("dob")} 
                 onChange={handleChange}
               />
             </div>
@@ -525,8 +541,8 @@ const DashboardProfile = () => {
                 id="prnNumber"
                 placeholder="PRN Number"
                 value={formData.prnNumber}
-                disabled={!isEditing}
-                className="h-12 border-slate-400 focus-visible:ring-0 disabled:opacity-75 disabled:cursor-not-allowed"
+                disabled={getDisabledState("prnNumber")} 
+                className={getInputClasses("prnNumber")} 
                 onChange={handleChange}
               />
             </div>
@@ -542,8 +558,8 @@ const DashboardProfile = () => {
                 id="rollNumber"
                 placeholder="Roll Number"
                 value={formData.rollNumber}
-                disabled={!isEditing}
-                className="h-12 border-slate-400 focus-visible:ring-0 disabled:opacity-75 disabled:cursor-not-allowed"
+                disabled={getDisabledState("rollNumber")} 
+                className={getInputClasses("rollNumber")} 
                 onChange={handleChange}
               />
             </div>
@@ -559,8 +575,8 @@ const DashboardProfile = () => {
                 id="eligibilityNumber"
                 placeholder="Eligibility Number"
                 value={formData.eligibilityNumber}
-                disabled={!isEditing}
-                className="h-12 border-slate-400 focus-visible:ring-0 disabled:opacity-75 disabled:cursor-not-allowed"
+                disabled={getDisabledState("eligibilityNumber")} 
+                className={getInputClasses("eligibilityNumber")} 
                 onChange={handleChange}
               />
             </div>
@@ -580,8 +596,11 @@ const DashboardProfile = () => {
         </Button>
       </form>
 
-      {/* Delete & Signout */}
-      <div className="text-red-500 flex justify-between mt-5">
+      <div
+        className={`text-red-500 flex mt-5 ${
+          currentUser?.isVolunteer ? "justify-center" : "justify-between"
+        }`}
+      >
         {!currentUser?.isVolunteer ? (
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -611,9 +630,7 @@ const DashboardProfile = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        ) : (
-          <div></div>
-        )}
+        ) : null}
         <Button
           variant="ghost"
           className="cursor-pointer text-red-600 hover:text-red-700"

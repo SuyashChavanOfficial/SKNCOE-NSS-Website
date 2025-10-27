@@ -41,7 +41,6 @@ const userSchema = new mongoose.Schema(
     // Volunteer-specific fields
     nssID: {
       type: String,
-      default: null,
       unique: true,
       sparse: true,
     },

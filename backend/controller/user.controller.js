@@ -37,18 +37,18 @@ export const createVolunteer = async (req, res, next) => {
       username,
       batch,
       email,
-      dob: dob || null,
+      dob: dob || undefined,
       profilePicture: profilePicture || undefined,
-      profilePictureId: profilePictureId || null,
+      profilePictureId: profilePictureId || undefined,
       password: hashed,
       isVolunteer: true,
       isAdmin: false,
       isSuperAdmin: false,
       status: "active",
-      nssID: nssID || null, // Ensure nssID is null if empty
-      prnNumber: prnNumber || null,
-      eligibilityNumber: eligibilityNumber || null,
-      rollNumber: rollNumber || null,
+      nssID: nssID,
+      prnNumber: prnNumber || undefined,
+      eligibilityNumber: eligibilityNumber || undefined,
+      rollNumber: rollNumber || undefined,
     });
 
     const saved = await volunteer.save({ validateBeforeSave: true });
@@ -108,7 +108,10 @@ export const updateUser = async (req, res, next) => {
 
     // Volunteer-specific fields
     if (req.body.batch !== undefined) updateData.batch = req.body.batch;
-    if (req.body.dob !== undefined) updateData.dob = req.body.dob || null;
+
+    if (req.body.dob !== undefined)
+      updateData.dob = req.body.dob ? req.body.dob : undefined;
+
     if (
       req.body.status &&
       ["active", "retired", "banned", "blacklisted", "notListed"].includes(
@@ -116,16 +119,27 @@ export const updateUser = async (req, res, next) => {
       )
     )
       updateData.status = req.body.status;
+
     if (req.body.isVolunteer !== undefined)
       updateData.isVolunteer = req.body.isVolunteer;
 
-    if (req.body.nssID !== undefined) updateData.nssID = req.body.nssID || null; // Ensure nssID is null if empty
+    if (req.body.nssID !== undefined)
+      updateData.nssID = req.body.nssID ? req.body.nssID : undefined;
+
     if (req.body.prnNumber !== undefined)
-      updateData.prnNumber = req.body.prnNumber || null;
+      updateData.prnNumber = req.body.prnNumber
+        ? req.body.prnNumber
+        : undefined;
+
     if (req.body.eligibilityNumber !== undefined)
-      updateData.eligibilityNumber = req.body.eligibilityNumber || null;
+      updateData.eligibilityNumber = req.body.eligibilityNumber
+        ? req.body.eligibilityNumber
+        : undefined;
+
     if (req.body.rollNumber !== undefined)
-      updateData.rollNumber = req.body.rollNumber || null;
+      updateData.rollNumber = req.body.rollNumber
+        ? req.body.rollNumber
+        : undefined;
 
     if (req.body.deleteOldPictureId) {
       try {

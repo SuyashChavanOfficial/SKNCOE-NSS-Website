@@ -24,7 +24,6 @@ export const signup = async (req, res, next) => {
   if (!username?.trim() || !email?.trim() || !password?.trim()) {
     return next(errorHandler(400, "All fields are required"));
   }
-
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return next(errorHandler(400, "Email already exists"));
@@ -35,10 +34,16 @@ export const signup = async (req, res, next) => {
 
     const { accessToken, refreshToken } = generateTokens(newUser);
     const { password: pass, ...userData } = newUser._doc;
-
     setAuthCookies(res, accessToken, refreshToken);
     res.status(201).json({ success: true, user: userData });
   } catch (error) {
+    if (error.code === 11000) {
+      if (error.keyPattern?.email) {
+        return next(errorHandler(400, "Email already exists."));
+      } else if (error.keyPattern?.nssID) {
+        return next(errorHandler(400, "NSS ID already exists."));
+      }
+    }
     next(error);
   }
 };
@@ -48,17 +53,13 @@ export const signin = async (req, res, next) => {
   if (!email?.trim() || !password?.trim()) {
     return next(errorHandler(400, "All fields are required"));
   }
-
   try {
     const validUser = await User.findOne({ email });
     if (!validUser) return next(errorHandler(404, "User not Found"));
-
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(400, "Incorrect Password"));
-
     const { accessToken, refreshToken } = generateTokens(validUser);
     const { password: pass, ...userData } = validUser._doc;
-
     setAuthCookies(res, accessToken, refreshToken);
     res.status(200).json({ success: true, user: userData });
   } catch (error) {
@@ -90,11 +91,9 @@ export const google = async (req, res, next) => {
       await user.save();
     }
 
-    // ✅ Use generateTokens instead of createToken
     const { accessToken, refreshToken } = generateTokens(user);
     const { password: pass, ...userData } = user._doc;
 
-    // ✅ Set cookies
     setAuthCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
@@ -102,11 +101,31 @@ export const google = async (req, res, next) => {
       user: userData,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      if (error.keyPattern?.email) {
+        return next(errorHandler(400, "Email already exists."));
+      } else if (error.keyPattern?.nssID) {
+        return next(errorHandler(400, "NSS ID already exists."));
+      } else {
+        return next(
+          errorHandler(400, "A unique field value conflict occurred.")
+        );
+      }
+    }
+    if (error.name === "ValidationError") {
+      return next(
+        errorHandler(
+          400,
+          Object.values(error.errors)
+            .map((e) => e.message)
+            .join(", ")
+        )
+      );
+    }
     next(error);
   }
 };
 
-// Refresh token rotation
 export const refreshAccessToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refresh_token;
@@ -120,14 +139,13 @@ export const refreshAccessToken = async (req, res, next) => {
     // Rotate tokens
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
     setAuthCookies(res, accessToken, newRefreshToken);
-
     res.status(200).json({ success: true });
   } catch (error) {
+    console.error("Refresh token error:", error.message);
     return next(errorHandler(401, "Invalid or expired refresh token"));
   }
 };
 
-// Get current user
 export const getCurrentUser = async (req, res, next) => {
   try {
     if (!req.user || !req.user.id) {
@@ -138,13 +156,11 @@ export const getCurrentUser = async (req, res, next) => {
         )
       );
     }
-
     const user = await User.findById(req.user.id).select("-password");
     if (!user)
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
-
     res.status(200).json({ success: true, user });
   } catch (error) {
     next(error);

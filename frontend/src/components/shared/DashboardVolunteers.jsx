@@ -16,6 +16,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogTrigger,
 } from "../ui/dialog";
 import {
   Select,
@@ -24,8 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -36,16 +45,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
+// Removed Toggle import
 import { useToast } from "../../hooks/use-toast";
 import { ScrollArea } from "../ui/scroll-area";
 import { uploadFile, getFileUrl } from "@/lib/appwrite/uploadImage";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "@/components/shared/Pagination";
+import { Trash2, Edit, List, LayoutGrid, MoreVertical } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
-const VOLUNTEERS_PER_PAGE = 10; // Define how many volunteers to show per page
+const VOLUNTEERS_PER_PAGE = 10; // This might need adjustment based on card layout density
 
+// ... (initialFormData, batchOptions, statusOptions, getStatusClass remain the same) ...
 const initialFormData = {
   username: "",
   email: "",
@@ -60,7 +72,6 @@ const initialFormData = {
   profilePicture: "",
   profilePictureId: "",
 };
-
 const batchOptions = ["24-26", "25-27", "26-28"];
 const statusOptions = [
   "active",
@@ -69,8 +80,6 @@ const statusOptions = [
   "blacklisted",
   "notListed",
 ];
-
-// Helper for status colors
 const getStatusClass = (status) => {
   switch (status) {
     case "active":
@@ -87,52 +96,65 @@ const getStatusClass = (status) => {
 };
 
 const DashboardVolunteers = () => {
+  // ... (useState hooks remain the same) ...
   const { currentUser } = useSelector((state) => state.user);
   const [volunteers, setVolunteers] = useState([]);
-  const [totalPages, setTotalPages] = useState(1); // For Pagination
+  const [totalPages, setTotalPages] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [editingVolunteer, setEditingVolunteer] = useState(null);
+  const [isViewingOnly, setIsViewingOnly] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedVolunteerIds, setSelectedVolunteerIds] = useState([]);
+  const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
+  const [targetStatus, setTargetStatus] = useState("");
+  const [view, setView] = useState("table");
   const { toast } = useToast();
   const fileInputRef = useRef(null);
 
-  // Get current page from URL for pagination
+  // ... (location, navigate, queryParams, currentPage remain the same) ...
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const currentPage = parseInt(queryParams.get("page")) || 1;
 
+  // --- Fetching Logic (no changes needed) ---
   const fetchVolunteers = async () => {
+    /* ... */
     try {
-      // Calculate startIndex based on current page
       const startIndex = (currentPage - 1) * VOLUNTEERS_PER_PAGE;
       const res = await fetch(
         `${API_URL}/api/user/getVolunteers?startIndex=${startIndex}&limit=${VOLUNTEERS_PER_PAGE}`,
-        {
-          credentials: "include",
-        }
+        { credentials: "include" }
       );
       const data = await res.json();
       if (res.ok) {
         setVolunteers(data.volunteers);
-        // Calculate total pages
         setTotalPages(Math.ceil(data.totalVolunteers / VOLUNTEERS_PER_PAGE));
       } else {
-        toast({ title: "Error", description: data.message });
+        toast({
+          title: "Error",
+          description: data.message,
+          variant: "destructive",
+        });
       }
     } catch (err) {
-      console.log(err);
-      toast({ title: "Error", description: "Failed to fetch volunteers" });
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch volunteers",
+        variant: "destructive",
+      });
     }
   };
-
-  // Re-fetch volunteers when page changes (location.search)
   useEffect(() => {
     if (currentUser?.isAdmin) fetchVolunteers();
-  }, [currentUser._id, location.search]);
+    setSelectedVolunteerIds([]);
+  }, [currentUser?.isAdmin, location.search]);
 
+  // --- Image Upload Logic (no changes needed) ---
   const checkIsAdmin = async () => {
+    /* ... */
     try {
       const res = await fetch(`${API_URL}/api/auth/current`, {
         credentials: "include",
@@ -145,9 +167,8 @@ const DashboardVolunteers = () => {
       return false;
     }
   };
-
-  // Combined file selection and upload
   const handleFileChangeAndUpload = async (e) => {
+    /* ... */
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
@@ -159,8 +180,6 @@ const DashboardVolunteers = () => {
         variant: "destructive",
       });
     }
-
-    // --- Start immediate upload ---
     const isAdmin = await checkIsAdmin();
     if (!isAdmin) {
       return toast({
@@ -169,28 +188,22 @@ const DashboardVolunteers = () => {
         variant: "destructive",
       });
     }
-
     let uploadedFileId = null;
     try {
       setUploading(true);
       const uploadedFile = await uploadFile(selectedFile);
       if (!uploadedFile) throw new Error("File upload failed!");
       uploadedFileId = uploadedFile.$id;
-
       const profilePictureUrl = await getFileUrl(uploadedFile.$id);
-
-      // Set the new picture info into the form state for preview
       setFormData((prevFormData) => ({
         ...prevFormData,
         profilePicture: profilePictureUrl,
         profilePictureId: uploadedFile.$id,
       }));
-
       toast({ title: "Image Uploaded Successfully!" });
     } catch (error) {
       console.error("Upload failed:", error);
       toast({ title: "Image Upload Failed!", variant: "destructive" });
-
       if (uploadedFileId) {
         try {
           await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
@@ -203,20 +216,22 @@ const DashboardVolunteers = () => {
       }
     } finally {
       setUploading(false);
-      // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     }
   };
 
-  const openDialog = (volunteer = null) => {
+  // --- Dialog and Save Logic (no changes needed) ---
+  const openDialog = (volunteer = null, viewOnly = true) => {
+    /* ... */
     setEditingVolunteer(volunteer);
+    setIsViewingOnly(viewOnly); // Set mode
     if (volunteer) {
       setFormData({
         username: volunteer.username || "",
         email: volunteer.email || "",
-        password: "",
+        password: "", // Always clear password field on open
         nssID: volunteer.nssID || "",
         batch: volunteer.batch || "",
         status: volunteer.status || "active",
@@ -228,13 +243,15 @@ const DashboardVolunteers = () => {
         profilePictureId: volunteer.profilePictureId || "",
       });
     } else {
+      // Add mode (always editable)
       setFormData(initialFormData);
+      setIsViewingOnly(false);
     }
-    setUploading(false);
+    setUploading(false); // Reset upload state
     setDialogOpen(true);
   };
-
   const handleSave = async () => {
+    /* ... */
     if (
       !formData.username ||
       !formData.email ||
@@ -247,7 +264,6 @@ const DashboardVolunteers = () => {
         variant: "destructive",
       });
     }
-
     if (!editingVolunteer && !formData.password) {
       return toast({
         title: "Missing Fields",
@@ -264,11 +280,7 @@ const DashboardVolunteers = () => {
       if (editingVolunteer) {
         url = `${API_URL}/api/user/update/${editingVolunteer._id}`;
         method = "PUT";
-
-        if (!body.password) {
-          delete body.password;
-        }
-
+        if (!body.password) delete body.password;
         if (
           editingVolunteer.profilePictureId &&
           formData.profilePictureId !== editingVolunteer.profilePictureId
@@ -286,134 +298,475 @@ const DashboardVolunteers = () => {
         credentials: "include",
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
       if (res.ok) {
-        if (editingVolunteer) {
-          setVolunteers((prev) =>
-            prev.map((v) => (v._id === data._id ? data : v))
-          );
-          toast({ title: "Success", description: "Volunteer updated." });
-        } else {
-          setVolunteers((prev) => [data, ...prev]);
-          toast({ title: "Success", description: "Volunteer created." });
-        }
+        toast({
+          title: "Success",
+          description: editingVolunteer
+            ? "Volunteer updated."
+            : "Volunteer created.",
+        });
         setDialogOpen(false);
         setEditingVolunteer(null);
-        fetchVolunteers(); // Re-fetch to ensure pagination is correct
-      } else {
-        toast({ title: "Error", description: data.message });
-      }
-    } catch (err) {
-      console.log(err);
-      toast({ title: "Error", description: "Operation failed." });
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      const res = await fetch(`${API_URL}/api/user/delete/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast({ title: "Success", description: "Volunteer deleted." });
-        // After deletion, re-fetch volunteers for the current page
         fetchVolunteers();
       } else {
-        toast({ title: "Error", description: data.message });
+        toast({
+          title: "Error",
+          description: data.message,
+          variant: "destructive",
+        });
       }
     } catch (err) {
-      console.log(err);
-      toast({ title: "Error", description: "Failed to delete volunteer." });
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "Operation failed.",
+        variant: "destructive",
+      });
     }
   };
 
+  // --- Bulk Action Handlers (no changes needed) ---
+  const handleSelectAll = (checked) => {
+    /* ... */
+    if (checked) {
+      setSelectedVolunteerIds(volunteers.map((v) => v._id));
+    } else {
+      setSelectedVolunteerIds([]);
+    }
+  };
+  const handleSelectOne = (volunteerId, checked) => {
+    /* ... */
+    if (checked) {
+      setSelectedVolunteerIds((prev) => [...prev, volunteerId]);
+    } else {
+      setSelectedVolunteerIds((prev) =>
+        prev.filter((id) => id !== volunteerId)
+      );
+    }
+  };
+  const handleBulkDelete = async () => {
+    /* ... */
+    if (selectedVolunteerIds.length === 0) return;
+    try {
+      const deletePromises = selectedVolunteerIds.map((id) =>
+        fetch(`${API_URL}/api/user/delete/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        })
+      );
+      const results = await Promise.all(deletePromises);
+      const allOk = results.every((res) => res.ok);
+      if (allOk) {
+        toast({
+          title: "Success",
+          description: `${selectedVolunteerIds.length} volunteer(s) deleted.`,
+        });
+        setSelectedVolunteerIds([]);
+        fetchVolunteers();
+      } else {
+        const errorMessages = await Promise.all(
+          results
+            .filter((res) => !res.ok)
+            .map((res) =>
+              res
+                .json()
+                .then(
+                  (data) =>
+                    data.message || `Failed for ID ${res.url.split("/").pop()}`
+                )
+            )
+        );
+        throw new Error(`Some deletions failed: ${errorMessages.join(", ")}`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Bulk Delete Error",
+        description: err.message || "Could not delete all selected volunteers.",
+        variant: "destructive",
+      });
+    }
+  };
+  const handleBulkStatusSave = async () => {
+    /* ... */
+    if (selectedVolunteerIds.length === 0 || !targetStatus) return;
+    try {
+      const updatePromises = selectedVolunteerIds.map((id) =>
+        fetch(`${API_URL}/api/user/update/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ status: targetStatus }),
+        })
+      );
+      const results = await Promise.all(updatePromises);
+      const allOk = results.every((res) => res.ok);
+      if (allOk) {
+        toast({
+          title: "Success",
+          description: `Status updated for ${selectedVolunteerIds.length} volunteer(s).`,
+        });
+        setSelectedVolunteerIds([]);
+        setBulkStatusDialogOpen(false);
+        setTargetStatus("");
+        fetchVolunteers();
+      } else {
+        const errorMessages = await Promise.all(
+          results
+            .filter((res) => !res.ok)
+            .map((res) =>
+              res
+                .json()
+                .then(
+                  (data) =>
+                    data.message || `Failed for ID ${res.url.split("/").pop()}`
+                )
+            )
+        );
+        throw new Error(
+          `Some status updates failed: ${errorMessages.join(", ")}`
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Bulk Status Error",
+        description:
+          err.message || "Could not update status for all selected volunteers.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // --- Helper function (no changes needed) ---
   const formatDate = (dateString) => {
+    /* ... */
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
+  const isAllSelected =
+    volunteers.length > 0 && selectedVolunteerIds.length === volunteers.length;
+  const isAnySelected = selectedVolunteerIds.length > 0;
+
+  const toggleView = () => {
+    setView((prev) => (prev === "table" ? "card" : "table"));
+  };
+
   return (
     <div className="p-4">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Volunteers</h1>
-        <Button onClick={() => openDialog()}>Add Volunteer</Button>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+        <h1 className="text-2xl font-bold order-1 sm:order-1">Volunteers</h1>
+        <div className="flex items-center gap-2 w-full sm:w-auto order-2 sm:order-2">
+          <div className="sm:hidden">
+            {" "}
+            {/* Mobile Actions Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreVertical className="h-4 w-4 mr-1" /> Actions (
+                  {selectedVolunteerIds.length})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {/* Delete Action */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      disabled={!isAnySelected}
+                      className="text-red-600 focus:bg-red-50 focus:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete Selected
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    {" "}
+                    {/* ... */}
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Bulk Deletion</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to permanently delete the selected{" "}
+                        {selectedVolunteerIds.length} volunteer(s)? This action
+                        cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <Button variant="destructive" onClick={handleBulkDelete}>
+                        Delete
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                {/* Status Action */}
+                <Dialog
+                  open={bulkStatusDialogOpen}
+                  onOpenChange={setBulkStatusDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      disabled={!isAnySelected}
+                      className="disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Edit className="w-4 h-4 mr-2" /> Change Status
+                    </DropdownMenuItem>
+                  </DialogTrigger>
+                  <DialogContent>
+                    {" "}
+                    {/* ... */}
+                    <DialogHeader>
+                      <DialogTitle>
+                        Change Status for Selected Volunteers
+                      </DialogTitle>
+                      <DialogDescription>
+                        Select the new status for the{" "}
+                        {selectedVolunteerIds.length} selected volunteer(s).
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="bulkStatusMobile">New Status *</Label>
+                      <Select
+                        value={targetStatus}
+                        onValueChange={setTargetStatus}
+                      >
+                        <SelectTrigger id="bulkStatusMobile">
+                          <SelectValue placeholder="Select new status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statusOptions.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setBulkStatusDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleBulkStatusSave}
+                        disabled={!targetStatus}
+                      >
+                        Apply Status Change
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="hidden sm:flex gap-2">
+            {" "}
+            {/* Desktop Actions */}
+            {/* ... Desktop bulk action buttons ... */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={!isAnySelected}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete (
+                  {selectedVolunteerIds.length})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Bulk Deletion</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to permanently delete the selected{" "}
+                    {selectedVolunteerIds.length} volunteer(s)? This action
+                    cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <Button variant="destructive" onClick={handleBulkDelete}>
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Dialog
+              open={bulkStatusDialogOpen}
+              onOpenChange={setBulkStatusDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={!isAnySelected}>
+                  <Edit className="w-4 h-4 mr-2" /> Change Status (
+                  {selectedVolunteerIds.length})
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    Change Status for Selected Volunteers
+                  </DialogTitle>
+                  <DialogDescription>
+                    Select the new status for the {selectedVolunteerIds.length}{" "}
+                    selected volunteer(s).
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Label htmlFor="bulkStatusDesktop">New Status *</Label>
+                  <Select value={targetStatus} onValueChange={setTargetStatus}>
+                    <SelectTrigger id="bulkStatusDesktop">
+                      <SelectValue placeholder="Select new status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setBulkStatusDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleBulkStatusSave}
+                    disabled={!targetStatus}
+                  >
+                    Apply Status Change
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => openDialog(null, false)}
+            className="w-full sm:w-auto"
+          >
+            Add Volunteer
+          </Button>
+          <div className="flex border rounded-md p-0.5 bg-muted">
+            {" "}
+            {/* View Toggle */}
+            <Button
+              variant={view === "table" ? "secondary" : "ghost"}
+              size="icon"
+              onClick={toggleView}
+              className="px-2 py-1 h-auto transition-colors duration-200" // Added transition
+              aria-label="Table View"
+            >
+              {" "}
+              <List className="h-4 w-4" />{" "}
+            </Button>
+            <Button
+              variant={view === "card" ? "secondary" : "ghost"}
+              size="icon"
+              onClick={toggleView}
+              className="px-2 py-1 h-auto transition-colors duration-200" // Added transition
+              aria-label="Card View"
+            >
+              {" "}
+              <LayoutGrid className="h-4 w-4" />{" "}
+            </Button>
+          </div>
+        </div>
       </div>
 
+      {/* View/Edit Volunteer Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
+          {/* ... Dialog Content ... */}
           <DialogHeader>
             <DialogTitle>
-              {editingVolunteer ? "Edit Volunteer" : "Add New Volunteer"}
+              {editingVolunteer
+                ? isViewingOnly
+                  ? "View Volunteer"
+                  : "Edit Volunteer"
+                : "Add New Volunteer"}
             </DialogTitle>
             <DialogDescription>
-              Fill in the details for the volunteer. Required fields are marked
-              with *.
+              {isViewingOnly
+                ? "Viewing volunteer details."
+                : "Fill in the details for the volunteer. Required fields are marked with *."}
             </DialogDescription>
           </DialogHeader>
-          {/* Removed p-4 from ScrollArea, DialogContent p-6 will handle spacing */}
-          <ScrollArea className="max-h-[70vh]">
+          <ScrollArea className="max-h-[70vh] -mx-6 px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-              {/* --- Profile Picture Upload --- */}
-              <div className="sm:col-span-2 space-y-2">
-                <Label>Profile Picture (Max 250KB)</Label>
-                <div className="flex items-center gap-4">
-                  <div className="relative w-24 h-24 rounded-full border bg-gray-100 flex items-center justify-center">
-                    {uploading ? (
-                      <DotLottieReact
-                        src="https://lottie.host/8e929f18-c53a-4d1e-94f0-9bc6cf21fbaf/8qmvB7P8wA.lottie"
-                        loop
-                        autoplay
-                        style={{ width: "80%", height: "80%" }}
+              {!isViewingOnly && (
+                <div className="sm:col-span-2 space-y-2">
+                  <Label>Profile Picture (Max 250KB)</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-24 h-24 rounded-full border bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {uploading ? (
+                        <DotLottieReact
+                          src="https://lottie.host/8e929f18-c53a-4d1e-94f0-9bc6cf21fbaf/8qmvB7P8wA.lottie"
+                          loop
+                          autoplay
+                          style={{ width: "80%", height: "80%" }}
+                        />
+                      ) : (
+                        <img
+                          src={
+                            formData.profilePicture ||
+                            "https://cdn-icons-png.flaticon.com/128/149/149071.png"
+                          }
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleFileChangeAndUpload}
+                        className="file:text-xs"
+                        disabled={uploading}
                       />
-                    ) : (
-                      <img
-                        src={
-                          formData.profilePicture ||
-                          "https://cdn-icons-png.flaticon.com/128/149/149071.png"
-                        }
-                        alt="Profile"
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      onChange={handleFileChangeAndUpload} // Changed handler
-                      className="file:text-xs"
-                      disabled={uploading}
-                    />
-                    {/* Removed the separate upload button */}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* --- Required Fields --- */}
+              )}
+              {isViewingOnly && editingVolunteer?.profilePicture && (
+                <div className="sm:col-span-2 space-y-2">
+                  <Label>Profile Picture</Label>
+                  <img
+                    src={editingVolunteer.profilePicture}
+                    alt="Profile"
+                    className="w-24 h-24 object-cover rounded-full border"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="username">Username *</Label>
                 <Input
                   id="username"
-                  placeholder="Username"
                   value={formData.username}
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nssID">NSS ID *</Label>
                 <Input
                   id="nssID"
-                  placeholder="e.g., SKNCOE/NSS/24/001"
                   value={formData.nssID}
                   onChange={(e) =>
                     setFormData({ ...formData, nssID: e.target.value })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -421,11 +774,11 @@ const DashboardVolunteers = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Email"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -435,6 +788,7 @@ const DashboardVolunteers = () => {
                   onValueChange={(value) =>
                     setFormData({ ...formData, batch: value })
                   }
+                  disabled={isViewingOnly}
                 >
                   <SelectTrigger id="batch">
                     <SelectValue placeholder="Select batch" />
@@ -455,6 +809,7 @@ const DashboardVolunteers = () => {
                   onValueChange={(value) =>
                     setFormData({ ...formData, status: value })
                   }
+                  disabled={isViewingOnly}
                 >
                   <SelectTrigger id="status">
                     <SelectValue placeholder="Select status" />
@@ -468,23 +823,33 @@ const DashboardVolunteers = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">
-                  Password{" "}
-                  {editingVolunteer ? "(Leave blank to keep same)" : "*"}
-                </Label>
-                <Input
-                  id="password"
-                  placeholder="Password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* --- Optional Fields --- */}
+              {!editingVolunteer && !isViewingOnly && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              {editingVolunteer && !isViewingOnly && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">New Password (Optional)</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Leave blank to keep same"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="dob">Date of Birth</Label>
                 <Input
@@ -494,17 +859,18 @@ const DashboardVolunteers = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, dob: e.target.value })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="prnNumber">PRN Number</Label>
                 <Input
                   id="prnNumber"
-                  placeholder="PRN Number"
                   value={formData.prnNumber}
                   onChange={(e) =>
                     setFormData({ ...formData, prnNumber: e.target.value })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -512,11 +878,11 @@ const DashboardVolunteers = () => {
                 <Input
                   id="rollNumber"
                   type="text"
-                  placeholder="Roll Number"
                   value={formData.rollNumber}
                   onChange={(e) =>
                     setFormData({ ...formData, rollNumber: e.target.value })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -524,7 +890,6 @@ const DashboardVolunteers = () => {
                 <Input
                   id="eligibilityNumber"
                   type="number"
-                  placeholder="Eligibility Number"
                   value={formData.eligibilityNumber}
                   onChange={(e) =>
                     setFormData({
@@ -532,221 +897,212 @@ const DashboardVolunteers = () => {
                       eligibilityNumber: e.target.value,
                     })
                   }
+                  disabled={isViewingOnly}
                 />
               </div>
             </div>
           </ScrollArea>
-          <div className="pt-4">
-            <Button
-              onClick={handleSave}
-              className="w-full"
-              disabled={uploading}
-            >
-              {uploading
-                ? "Waiting for image..."
-                : editingVolunteer
-                ? "Update Volunteer"
-                : "Save Volunteer"}
-            </Button>
-          </div>
+          <DialogFooter className="pt-4 flex-col sm:flex-row sm:justify-end gap-2">
+            {isViewingOnly ? (
+              <>
+                <Button
+                  onClick={() => setIsViewingOnly(false)}
+                  className="w-full sm:w-auto order-1 sm:order-2"
+                >
+                  Edit Details
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  className="w-full sm:w-auto order-2 sm:order-1"
+                >
+                  Close
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={handleSave}
+                  disabled={uploading}
+                  className="w-full sm:w-auto"
+                >
+                  {uploading
+                    ? "Waiting..."
+                    : editingVolunteer
+                    ? "Save Changes"
+                    : "Save Volunteer"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* --- Volunteers Table (Desktop View) --- */}
-      <ScrollArea className="border rounded-md hidden md:block">
-        <Table className="min-w-[1200px]">
-          <TableCaption>
-            {volunteers.length > 0
-              ? "List of all volunteers"
-              : "No volunteers found."}
-          </TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Picture</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>NSS ID</TableHead>
-              <TableHead>Batch</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>DOB</TableHead>
-              <TableHead>PRN No.</TableHead>
-              <TableHead>Roll No.</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {volunteers.map((v) => (
-              <TableRow key={v._id}>
-                <TableCell>
+      {/* --- Conditional Rendering based on view state --- */}
+      {view === "table" ? (
+        /* --- Volunteers Table --- */
+        <div className="border rounded-md overflow-x-auto">
+          <Table className="min-w-[1200px]">
+            {/* ... Table Content ... */}
+            <TableCaption>
+              {volunteers.length > 0
+                ? "List of all volunteers"
+                : "No volunteers found."}
+            </TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all rows"
+                  />
+                </TableHead>
+                <TableHead>Picture</TableHead>
+                <TableHead>Username</TableHead>
+                <TableHead>NSS ID</TableHead>
+                <TableHead>Batch</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>DOB</TableHead>
+                <TableHead>PRN No.</TableHead>
+                <TableHead>Roll No.</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {volunteers.map((v) => (
+                <TableRow
+                  key={v._id}
+                  data-state={
+                    selectedVolunteerIds.includes(v._id) ? "selected" : ""
+                  }
+                >
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedVolunteerIds.includes(v._id)}
+                      onCheckedChange={(checked) =>
+                        handleSelectOne(v._id, checked)
+                      }
+                      aria-label={`Select row for ${v.username}`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <img
+                      src={
+                        v.profilePicture ||
+                        "https://cdn-icons-png.flaticon.com/128/149/149071.png"
+                      }
+                      alt={v.username}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  </TableCell>
+                  <TableCell
+                    className="font-medium cursor-pointer hover:underline"
+                    onClick={() => openDialog(v, true)}
+                  >
+                    {v.username}
+                  </TableCell>
+                  <TableCell>{v.nssID || "N/A"}</TableCell>
+                  <TableCell>{v.batch || "N/A"}</TableCell>
+                  <TableCell>{v.email}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(
+                        v.status
+                      )}`}
+                    >
+                      {v.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>{formatDate(v.dob)}</TableCell>
+                  <TableCell>{v.prnNumber || "N/A"}</TableCell>
+                  <TableCell>{v.rollNumber || "N/A"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        /* --- Volunteers Card List --- */
+        <div className="space-y-4">
+          {/* Card rendering logic */}
+          {volunteers.length > 0 ? (
+            volunteers.map((v) => (
+              <div
+                key={v._id}
+                className="border rounded-lg p-4 bg-white shadow-sm flex gap-4 items-start"
+              >
+                <div className="flex-shrink-0 pt-1">
+                  <Checkbox
+                    checked={selectedVolunteerIds.includes(v._id)}
+                    onCheckedChange={(checked) =>
+                      handleSelectOne(v._id, checked)
+                    }
+                    aria-label={`Select ${v.username}`}
+                  />
+                </div>
+                <div className="flex-1 flex items-center gap-4">
                   <img
                     src={
                       v.profilePicture ||
                       "https://cdn-icons-png.flaticon.com/128/149/149071.png"
                     }
                     alt={v.username}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                   />
-                </TableCell>
-                <TableCell className="font-medium">{v.username}</TableCell>
-                <TableCell>{v.nssID || "N/A"}</TableCell>
-                <TableCell>{v.batch || "N/A"}</TableCell>
-                <TableCell>{v.email}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusClass(
-                      v.status
-                    )}`}
-                  >
-                    {v.status}
-                  </span>
-                </TableCell>
-                <TableCell>{formatDate(v.dob)}</TableCell>
-                <TableCell>{v.prnNumber || "N/A"}</TableCell>
-                <TableCell>{v.rollNumber || "N/A"}</TableCell>
-                <TableCell className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openDialog(v)}
-                  >
-                    Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="destructive">
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Are you absolutely sure?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete the volunteer account for "{v.username}".
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <Button
-                          variant="destructive"
-                          onClick={() => handleDelete(v._id)}
-                        >
-                          Delete
-                        </Button>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
-
-      {/* --- Volunteers List (Mobile View) --- */}
-      <div className="md:hidden space-y-4">
-        {volunteers.length > 0 ? (
-          volunteers.map((v) => (
-            <div
-              key={v._id}
-              className="border rounded-lg p-4 bg-white shadow-sm"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={
-                    v.profilePicture ||
-                    "https://cdn-icons-png.flaticon.com/128/149/149071.png"
-                  }
-                  alt={v.username}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold">{v.username}</h3>
-                  <p className="text-sm text-gray-600">{v.nssID || "N/A"}</p>
-                  <p className="text-sm text-gray-600">
-                    Batch: {v.batch || "N/A"}
-                  </p>
-                </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium capitalize self-start ${getStatusClass(
-                    v.status
-                  )}`}
-                >
-                  {v.status}
-                </span>
-              </div>
-              <div className="mt-4 border-t pt-4 space-y-2">
-                <p className="text-sm">
-                  <strong>Email:</strong> {v.email}
-                </p>
-                <p className="text-sm">
-                  <strong>DOB:</strong> {formatDate(v.dob)}
-                </p>
-                <p className="text-sm">
-                  <strong>PRN:</strong> {v.prnNumber || "N/A"}
-                </p>
-                <p className="text-sm">
-                  <strong>Roll No:</strong> {v.rollNumber || "N/A"}
-                </p>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => openDialog(v)}
-                >
-                  Edit
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="destructive" className="w-full">
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete the volunteer account for "{v.username}".
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleDelete(v._id)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <h3
+                        className="text-lg font-bold cursor-pointer hover:underline truncate"
+                        onClick={() => openDialog(v, true)}
+                        title={v.username}
                       >
-                        Delete
-                      </Button>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        {v.username}
+                      </h3>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium capitalize self-start flex-shrink-0 ${getStatusClass(
+                          v.status
+                        )}`}
+                      >
+                        {v.status}
+                      </span>
+                    </div>
+                    <p
+                      className="text-sm text-gray-600 truncate"
+                      title={v.nssID}
+                    >
+                      {v.nssID || "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Batch: {v.batch || "N/A"}
+                    </p>
+                    <div className="mt-2 pt-2 border-t space-y-1 text-sm text-gray-500">
+                      <p className="truncate" title={v.email}>
+                        <strong>Email:</strong> {v.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-500 mt-10">
-            No volunteers found.
-          </p>
-        )}
-      </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500 mt-10">
+              No volunteers found.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* --- Pagination Controls --- */}
       {totalPages > 1 && (
-        <Pagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={(page) => {
-            queryParams.set("page", page);
-            navigate(`${location.pathname}?${queryParams.toString()}`);
-          }}
-        />
+        <Pagination totalPages={totalPages} currentPage={currentPage} />
       )}
     </div>
   );

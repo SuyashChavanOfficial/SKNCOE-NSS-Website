@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, BookOpen, Clock } from "lucide-react";
 
+// Helper function to format date and time (kept local to the card)
 const formatDateTime = (dateString) => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString("en-IN", {
@@ -15,6 +16,7 @@ const formatDateTime = (dateString) => {
   });
 };
 
+// Helper function to calculate end time (kept local)
 const getEndTime = (startDateStr, durationHours) => {
   if (!startDateStr || durationHours == null) return null;
   const start = new Date(startDateStr);
@@ -44,11 +46,13 @@ const ActivityCard = ({
   );
 
   return (
-    <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 transition-shadow hover:shadow-lg w-full max-w-xl">
+    <div
+      className="flex flex-col md:flex-row bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 transition-shadow hover:shadow-lg w-full"
+    >
       {/* Left Side: Image */}
       <div className="w-full md:w-[160px] flex-shrink-0 p-2 md:p-3 bg-gray-50">
         <img
-          src={activity.poster || "https://via.placeholder.com/400x500"} // Use default placeholder if needed
+          src={activity.poster || "https://via.placeholder.com/400x500"}
           alt={activity.title}
           className="object-cover w-full h-full aspect-[1587/2245] rounded"
         />
@@ -81,7 +85,6 @@ const ActivityCard = ({
               variant={userIsInterested ? "destructive" : "outline"}
               size="sm"
               className="flex items-center justify-center gap-2 w-full sm:w-auto text-xs px-3 py-1.5"
-              // Pass activity ID and event back up to the parent handler
               onClick={(e) => onToggleInterest(activity._id, e)}
             >
               <Heart

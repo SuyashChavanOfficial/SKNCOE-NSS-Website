@@ -63,3 +63,25 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+// Keep-alive route
+app.get("/api/keepalive", (req, res) => {
+  res.status(200).json({ message: "Server is alive" });
+});
+
+// Self-ping every 14 minutes to prevent Render from sleeping
+setInterval(async () => {
+  const url = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL;
+  if (url) {
+    try {
+      const res = await fetch(`${url}/api/keepalive`);
+      if (res.ok) {
+        console.log("Keep-alive ping successful");
+      } else {
+        console.log(`Keep-alive ping failed with status code: ${res.status}`);
+      }
+    } catch (err) {
+      console.error("Keep-alive ping error:", err.message);
+    }
+  }
+}, 14 * 60 * 1000);

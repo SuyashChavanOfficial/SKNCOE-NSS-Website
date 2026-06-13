@@ -17,7 +17,7 @@ const Home = () => {
     const fetchPosts = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/post/getPosts?limit=3&sort=desc`
+          `${API_URL}/api/post/get-posts?limit=3&sort=desc`
         );
         const data = await res.json();
 
@@ -35,11 +35,11 @@ const Home = () => {
   }, []);
 
   const FeatureCard = ({ icon, title, description }) => (
-    <div className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
+    <div className="p-6 bg-gray-100 dark:bg-[#1e293b] dark:border dark:border-[#334155] rounded-lg shadow-md dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:shadow-lg dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300 text-center">
       <div className="flex items-center flex-col">
         <img src={icon} alt={title} className="text-5xl mb-4" />
-        <h3 className="text-2xl font-semibold text-gray-800 mb-2">{title}</h3>
-        <p className="text-gray-600">{description}</p>
+        <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
+        <p className="text-gray-600 dark:text-gray-400">{description}</p>
       </div>
     </div>
   );
@@ -52,15 +52,15 @@ const Home = () => {
         <div className="flex-1 text-center md:text-left">
           <h1 className="text-3xl md:text-4xl font-bold">
             Welcome to <span className="text-red-600">SKNCOE</span>
-            <span className="text-blue-800"> NSS</span>
+            <span className="text-blue-800 dark:text-blue-400"> NSS</span>
           </h1>
-          <p className="text-gray-600 mt-3 text-base md:text-lg">
+          <p className="text-gray-600 dark:text-gray-400 mt-3 text-base md:text-lg">
             Working for society with utter dedication and taking big challenges
             to solve problems.
           </p>
-          <p className="text-gray-500 italic mt-1">सेवा परमो धर्म:</p>
+          <p className="text-gray-500 dark:text-gray-500 italic mt-1">सेवा परमो धर्म:</p>
           <Link to={"/search"}>
-            <Button className="bg-yellow-400 hover:bg-yellow-500 text-black py-3 px-6 rounded-full font-semibold shadow-lg flex items-center gap-2 w-fit mt-4 mx-auto md:mx-0">
+            <Button className="bg-yellow-400 hover:bg-yellow-500 dark:bg-yellow-500 dark:hover:bg-yellow-400 text-black py-3 px-6 rounded-full font-semibold shadow-lg flex items-center gap-2 w-fit mt-4 mx-auto md:mx-0 transition-colors duration-200">
               View all News. <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
@@ -80,9 +80,9 @@ const Home = () => {
       <PosterOfTheDay />
 
       {/* Why Join Section */}
-      <section className="pb-16 bg-white">
+      <section className="pb-16 bg-white dark:bg-[#0b1120] transition-colors duration-300">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-8 text-gray-800">
+          <h2 className="text-4xl font-bold mb-8 text-gray-800 dark:text-gray-100">
             Why you should join SKNCOE NSS?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
@@ -106,14 +106,14 @@ const Home = () => {
       </section>
 
       {/* Advertisement */}
-      <div className="p-3 bg-blue-50">
+      <div className="p-3 bg-blue-50 dark:bg-[#111827] transition-colors duration-300">
         <Advertise />
       </div>
 
       {/* Recent News */}
       <div className="max-w-6xl mx-auto p-3 flex flex-col gap-8 py-7">
         <div className="flex flex-col gap-6 md:items-center text-center">
-          <h2 className="text-2xl font-bold text-slate-700">Recent News</h2>
+          <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Recent News</h2>
 
           {loading ? (
             <DotLottieReact
@@ -131,7 +131,7 @@ const Home = () => {
               </div>
               <Link
                 to={"/search"}
-                className="text-lg hover:underline text-center font-semibold mt-4"
+                className="text-lg hover:underline text-center font-semibold mt-4 text-blue-700 dark:text-blue-400"
               >
                 View All News
               </Link>

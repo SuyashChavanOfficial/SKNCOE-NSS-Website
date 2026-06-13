@@ -22,7 +22,7 @@ const NewsDetails = () => {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
 
-  // ✅ Fetch single post by slug
+  // Fetch single post by slug
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -50,10 +50,10 @@ const NewsDetails = () => {
     fetchPost();
   }, [postSlug]);
 
-  // ✅ fetch recent posts but exclude current post
+  // fetch recent posts but exclude current post
   useEffect(() => {
     const fetchRecentPosts = async () => {
-      if (!post?._id) return; // wait until post is loaded
+      if (!post?._id) return;
 
       try {
         const res = await fetch(
@@ -124,14 +124,14 @@ const NewsDetails = () => {
 
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 underline">
+      <h1 className="news-title text-3xl mt-10 p-3 text-center font-bold max-w-3xl mx-auto lg:text-4xl text-slate-700 dark:text-slate-200 underline">
         {post && post.title}
       </h1>
       <Link
         to={`/search?category=${post && post.category}`}
         className="self-center mt-5"
       >
-        <Button variant="outline" className="border border-slate-500">
+        <Button variant="outline" className="border border-slate-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
           {post && post.category}
         </Button>
       </Link>
@@ -142,17 +142,17 @@ const NewsDetails = () => {
         className="mt-10 p-3 max-h-[500px] w-full object-cover"
       />
 
-      <div className="flex justify-between p-3 mx-auto w-full max-w-2xl text-xs">
+      <div className="flex justify-between p-3 mx-auto w-full max-w-2xl text-xs text-gray-600 dark:text-gray-400">
         <span>
           Published on - {post && new Date(post.newsDate).toLocaleDateString()}
         </span>
         <span className="italic">{readingTime(post?.content)}</span>
       </div>
 
-      <Separator className="bg-slate-300" />
+      <Separator className="bg-slate-300 dark:bg-slate-700" />
 
       <div
-        className="p-3 max-w-3xl mx-auto w-full news-content"
+        className="p-3 max-w-3xl mx-auto w-full news-content dark:text-gray-300"
         dangerouslySetInnerHTML={{ __html: post && post.content }}
       ></div>
 
@@ -177,7 +177,7 @@ const NewsDetails = () => {
       <CommentSection postId={post._id} />
 
       <div className="flex flex-col justify-center items-center mb-5">
-        <h1 className="text-xl font-semibold mt-5 text-slate-700">
+        <h1 className="text-xl font-semibold mt-5 text-slate-700 dark:text-slate-300">
           Recently Published Articles
         </h1>
 

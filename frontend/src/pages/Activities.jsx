@@ -75,10 +75,12 @@ const Activities = () => {
     }
     try {
       const res = await fetch(
-        `${API_URL}/api/activity/toggleInterest/${activityId}`,
+        `${API_URL}/api/activity/toggle-interest`,
         {
           method: "PUT",
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
+          body: JSON.stringify({ activityId }),
         }
       );
       const data = await res.json();
@@ -145,7 +147,7 @@ const Activities = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto min-h-[calc(100vh-200px)]">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-slate-700 text-center">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-slate-700 dark:text-slate-200 text-center">
         Upcoming Activities
       </h2>
 
@@ -163,13 +165,13 @@ const Activities = () => {
             </div>
           ))
         ) : (
-          <p className="text-gray-600 p-4 border rounded-lg bg-gray-50 w-full max-w-xl text-center">
+          <p className="text-gray-600 dark:text-gray-400 p-4 border border-gray-200 dark:border-[#1e3a5f] rounded-lg bg-gray-50 dark:bg-[#1e293b] w-full max-w-xl text-center">
             No upcoming activities scheduled.
           </p>
         )}
       </div>
 
-      <h2 className="text-2xl md:text-3xl font-bold mt-12 mb-6 text-slate-700 text-center">
+      <h2 className="text-2xl md:text-3xl font-bold mt-12 mb-6 text-slate-700 dark:text-slate-200 text-center">
         Completed Activities
       </h2>
 
@@ -187,14 +189,14 @@ const Activities = () => {
             ))
           : currentPage === 1 &&
             completed.length === 0 && (
-              <p className="md:col-span-2 text-gray-600 p-4 border rounded-lg bg-gray-50 w-full max-w-xl text-center">
+              <p className="md:col-span-2 text-gray-600 dark:text-gray-400 p-4 border border-gray-200 dark:border-[#1e3a5f] rounded-lg bg-gray-50 dark:bg-[#1e293b] w-full max-w-xl text-center">
                 No activities completed yet.
               </p>
             )}
         {currentCompletedActivities.length === 0 &&
           completed.length > 0 &&
           currentPage > 1 && (
-            <p className="md:col-span-2 text-gray-500 p-4 w-full text-center">
+            <p className="md:col-span-2 text-gray-500 dark:text-gray-400 p-4 w-full text-center">
               No more completed activities on this page.
             </p>
           )}

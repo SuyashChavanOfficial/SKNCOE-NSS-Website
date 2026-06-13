@@ -1,6 +1,6 @@
 import Activity from "../models/activity.model.js";
 import { errorHandler } from "../utils/error.js";
-import { storage } from "../lib/appwrite.js";
+import { deleteFileFromR2 } from "../lib/r2.js";
 import { initializeAttendanceForActivity } from "./attendance.controller.js";
 
 // helper to decide if activity is completed
@@ -111,10 +111,7 @@ export const updateActivity = async (req, res, next) => {
       req.body.posterId !== existing.posterId
     ) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          existing.posterId
-        );
+        await deleteFileFromR2(existing.posterId);
       } catch (err) {
         console.log("⚠️ Failed to delete old activity poster:", err.message);
       }
@@ -142,10 +139,7 @@ export const deleteActivity = async (req, res, next) => {
     // delete poster in storage if present
     if (activity.posterId) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          activity.posterId
-        );
+        await deleteFileFromR2(activity.posterId);
       } catch (err) {
         console.log("Failed to delete activity poster:", err.message);
       }

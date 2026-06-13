@@ -15,31 +15,10 @@ import uploadRoutes from "./routes/upload.route.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { healDatabase } from "./utils/healDatabase.js";
 import { runR2CleanupJob } from "./utils/cleanupJob.js";
 
 dotenv.config();
 const app = express();
-
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(async () => {
-    console.log("Database is Connected");
-    
-    // Run DB self-healing / migrations
-    await healDatabase();
-
-    // Schedule R2 background cleanup job (once on startup, then every 24 hours)
-    setTimeout(runR2CleanupJob, 5000);
-    setInterval(runR2CleanupJob, 24 * 60 * 60 * 1000);
-
-    app.listen(3000, () => {
-      console.log("Server is running on Port 3000");
-    });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
 
 app.use(
   cors({
@@ -92,6 +71,23 @@ app.use((err, req, res, next) => {
 app.get("/api/keepalive", (req, res) => {
   res.status(200).json({ message: "Server is alive" });
 });
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("Database is Connected");
+
+    // Schedule R2 background cleanup job (once on startup, then every 24 hours)
+    setTimeout(runR2CleanupJob, 5000);
+    setInterval(runR2CleanupJob, 24 * 60 * 60 * 1000);
+
+    app.listen(3000, () => {
+      console.log("Server is running on Port 3000");
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
 
 // Self-ping every 14 minutes to prevent Render from sleeping
 setInterval(async () => {

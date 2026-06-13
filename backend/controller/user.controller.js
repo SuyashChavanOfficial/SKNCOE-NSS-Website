@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
-import { storage } from "../lib/appwrite.js";
+import { deleteFileFromR2 } from "../lib/r2.js";
 
 const BCRYPT_SALT_ROUNDS = 8;
 
@@ -143,10 +143,7 @@ export const updateUser = async (req, res, next) => {
 
     if (req.body.deleteOldPictureId) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          req.body.deleteOldPictureId
-        );
+        await deleteFileFromR2(req.body.deleteOldPictureId);
       } catch (err) {
         console.log(
           `⚠️ Failed to delete old profile picture ${req.body.deleteOldPictureId}:`,
@@ -281,10 +278,7 @@ export const deleteUser = async (req, res, next) => {
     // If authorization passed, proceed with deletion
     if (userToDelete.profilePictureId) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          userToDelete.profilePictureId
-        );
+        await deleteFileFromR2(userToDelete.profilePictureId);
       } catch (err) {
         console.log(
           `Failed to delete profile picture ${userToDelete.profilePictureId}:`,

@@ -1,6 +1,6 @@
 import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js";
-import { storage } from "../lib/appwrite.js";
+import { deleteFileFromR2 } from "../lib/r2.js";
 
 // ✅ Create Post
 export const create = async (req, res, next) => {
@@ -92,7 +92,7 @@ export const deletepost = async (req, res, next) => {
     // 🗑️ delete file if exists
     if (post.imageId) {
       try {
-        await storage.deleteFile(process.env.APPWRITE_STORAGE_ID, post.imageId);
+        await deleteFileFromR2(post.imageId);
       } catch (err) {
         console.log("Failed to delete news image:", err.message);
       }
@@ -121,10 +121,7 @@ export const updatepost = async (req, res, next) => {
 
     if (req.body.deleteOldImageId) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          req.body.deleteOldImageId
-        );
+        await deleteFileFromR2(req.body.deleteOldImageId);
       } catch (err) {
         console.log("Failed to delete old news image:", err.message);
       }

@@ -1,5 +1,5 @@
 import Poster from "../models/poster.model.js";
-import { storage } from "../lib/appwrite.js";
+import { deleteFileFromR2 } from "../lib/r2.js";
 import { errorHandler } from "../utils/error.js";
 
 // Get all posters (sorted by date, newest first)
@@ -49,10 +49,7 @@ export const updatePoster = async (req, res, next) => {
     // Delete old media if new one uploaded
     if (mediaId && poster.mediaId && mediaId !== poster.mediaId) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          poster.mediaId
-        );
+        await deleteFileFromR2(poster.mediaId);
       } catch (err) {
         console.log("Failed to delete old media:", err.message);
       }
@@ -79,13 +76,10 @@ export const deletePoster = async (req, res, next) => {
     const poster = await Poster.findById(req.params.posterId);
     if (!poster) return next(errorHandler(404, "Poster not found"));
 
-    // Delete media from Appwrite storage
+    // Delete media from Cloudflare R2 storage
     if (poster.mediaId) {
       try {
-        await storage.deleteFile(
-          process.env.APPWRITE_STORAGE_ID,
-          poster.mediaId
-        );
+        await deleteFileFromR2(poster.mediaId);
       } catch (err) {
         console.log("Failed to delete poster media:", err.message);
       }

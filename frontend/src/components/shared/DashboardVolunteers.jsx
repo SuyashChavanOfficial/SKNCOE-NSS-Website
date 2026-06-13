@@ -59,6 +59,7 @@ const VOLUNTEERS_PER_PAGE = 10; // This might need adjustment based on card layo
 
 // ... (initialFormData, batchOptions, statusOptions, getStatusClass remain the same) ...
 const initialFormData = {
+  name: "",
   username: "",
   email: "",
   password: "",
@@ -105,6 +106,7 @@ const DashboardVolunteers = () => {
   const [isViewingOnly, setIsViewingOnly] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
   const [selectedVolunteerIds, setSelectedVolunteerIds] = useState([]);
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState("");
@@ -124,7 +126,7 @@ const DashboardVolunteers = () => {
     try {
       const startIndex = (currentPage - 1) * VOLUNTEERS_PER_PAGE;
       const res = await fetch(
-        `${API_URL}/api/user/getVolunteers?startIndex=${startIndex}&limit=${VOLUNTEERS_PER_PAGE}`,
+        `${API_URL}/api/user/get-volunteers?startIndex=${startIndex}&limit=${VOLUNTEERS_PER_PAGE}`,
         { credentials: "include" }
       );
       const data = await res.json();
@@ -167,68 +169,37 @@ const DashboardVolunteers = () => {
       return false;
     }
   };
-  const handleFileChangeAndUpload = async (e) => {
-    /* ... */
+  const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
 
     const maxSize = 250 * 1024; // 250 KB limit
     if (selectedFile.size > maxSize) {
-      return toast({
+      toast({
         title: "File too large",
         description: "Profile picture must be under 250 KB.",
         variant: "destructive",
       });
-    }
-    const isAdmin = await checkIsAdmin();
-    if (!isAdmin) {
-      return toast({
-        title: "Authorization Failed",
-        description: "You are not authorized to upload images.",
-        variant: "destructive",
-      });
-    }
-    let uploadedFileId = null;
-    try {
-      setUploading(true);
-      const uploadedFile = await uploadFile(selectedFile);
-      if (!uploadedFile) throw new Error("File upload failed!");
-      uploadedFileId = uploadedFile.$id;
-      const profilePictureUrl = await getFileUrl(uploadedFile.$id);
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        profilePicture: profilePictureUrl,
-        profilePictureId: uploadedFile.$id,
-      }));
-      toast({ title: "Image Uploaded Successfully!" });
-    } catch (error) {
-      console.error("Upload failed:", error);
-      toast({ title: "Image Upload Failed!", variant: "destructive" });
-      if (uploadedFileId) {
-        try {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-        } catch (delErr) {
-          console.error("Failed to delete orphan file:", delErr);
-        }
-      }
-    } finally {
-      setUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      setFile(null);
+      return;
     }
+    setFile(selectedFile);
   };
 
-  // --- Dialog and Save Logic (no changes needed) ---
+  // --- Dialog and Save Logic ---
   const openDialog = (volunteer = null, viewOnly = true) => {
-    /* ... */
     setEditingVolunteer(volunteer);
     setIsViewingOnly(viewOnly); // Set mode
+    setFile(null); // Reset local preview file state
     if (volunteer) {
       setFormData({
+        name: volunteer.name || "",
         username: volunteer.username || "",
         email: volunteer.email || "",
         password: "", // Always clear password field on open
@@ -250,17 +221,18 @@ const DashboardVolunteers = () => {
     setUploading(false); // Reset upload state
     setDialogOpen(true);
   };
+
   const handleSave = async () => {
-    /* ... */
     if (
-      !formData.username ||
+      !formData.name ||
+      (editingVolunteer && !formData.username) ||
       !formData.email ||
       !formData.nssID ||
       !formData.batch
     ) {
       return toast({
         title: "Missing Fields",
-        description: "Username, Email, NSS ID, and Batch are required.",
+        description: "Full Name, Username (for editing), Email, NSS ID, and Batch are required.",
         variant: "destructive",
       });
     }
@@ -272,18 +244,47 @@ const DashboardVolunteers = () => {
       });
     }
 
+    const isAdmin = await checkIsAdmin();
+    if (!isAdmin) {
+      return toast({
+        title: "Authorization Failed",
+        description: "You are not authorized to perform this action.",
+        variant: "destructive",
+      });
+    }
+
+    let uploadedFileId = null;
+    let profilePictureUrl = formData.profilePicture;
+    let profilePictureId = formData.profilePictureId;
+
     try {
+      setUploading(true);
+
+      // 1. Upload file if selected
+      if (file) {
+        const uploadedFile = await uploadFile(file);
+        if (!uploadedFile) throw new Error("File upload failed!");
+        uploadedFileId = uploadedFile.$id;
+        profilePictureUrl = await getFileUrl(uploadedFile.$id);
+        profilePictureId = uploadedFile.$id;
+      }
+
       let url;
       let method;
-      const body = { ...formData };
+      const body = {
+        ...formData,
+        profilePicture: profilePictureUrl,
+        profilePictureId: profilePictureId,
+      };
 
       if (editingVolunteer) {
-        url = `${API_URL}/api/user/update/${editingVolunteer._id}`;
+        url = `${API_URL}/api/user/update`;
         method = "PUT";
+        body.userId = editingVolunteer._id;
         if (!body.password) delete body.password;
         if (
           editingVolunteer.profilePictureId &&
-          formData.profilePictureId !== editingVolunteer.profilePictureId
+          profilePictureId !== editingVolunteer.profilePictureId
         ) {
           body.deleteOldPictureId = editingVolunteer.profilePictureId;
         }
@@ -308,8 +309,23 @@ const DashboardVolunteers = () => {
         });
         setDialogOpen(false);
         setEditingVolunteer(null);
+        setFile(null);
         fetchVolunteers();
       } else {
+        // Transaction failed! Delete R2 uploaded file immediately to prevent orphan
+        if (uploadedFileId) {
+          try {
+            await fetch(`${API_URL}/api/upload/delete`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ key: uploadedFileId }),
+              credentials: "include",
+            });
+            console.log("Orphan file deleted:", uploadedFileId);
+          } catch (delErr) {
+            console.error("Failed to delete orphan file:", delErr);
+          }
+        }
         toast({
           title: "Error",
           description: data.message,
@@ -318,11 +334,30 @@ const DashboardVolunteers = () => {
       }
     } catch (err) {
       console.error(err);
+      // Clean up on catch block too
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: uploadedFileId }),
+            credentials: "include",
+          });
+          console.log("Orphan file deleted on error:", uploadedFileId);
+        } catch (delErr) {
+          console.error("Failed to delete orphan file on error:", delErr);
+        }
+      }
       toast({
         title: "Error",
         description: "Operation failed.",
         variant: "destructive",
       });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -350,8 +385,10 @@ const DashboardVolunteers = () => {
     if (selectedVolunteerIds.length === 0) return;
     try {
       const deletePromises = selectedVolunteerIds.map((id) =>
-        fetch(`${API_URL}/api/user/delete/${id}`, {
+        fetch(`${API_URL}/api/user/delete`, {
           method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: id }),
           credentials: "include",
         })
       );
@@ -393,11 +430,11 @@ const DashboardVolunteers = () => {
     if (selectedVolunteerIds.length === 0 || !targetStatus) return;
     try {
       const updatePromises = selectedVolunteerIds.map((id) =>
-        fetch(`${API_URL}/api/user/update/${id}`, {
+        fetch(`${API_URL}/api/user/update`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ status: targetStatus }),
+          body: JSON.stringify({ userId: id, status: targetStatus }),
         })
       );
       const results = await Promise.all(updatePromises);
@@ -716,8 +753,9 @@ const DashboardVolunteers = () => {
                       ) : (
                         <img
                           src={
-                            formData.profilePicture ||
-                            "https://cdn-icons-png.flaticon.com/128/149/149071.png"
+                            file
+                              ? URL.createObjectURL(file)
+                              : (formData.profilePicture || "https://cdn-icons-png.flaticon.com/128/149/149071.png")
                           }
                           alt="Profile"
                           className="w-full h-full object-cover"
@@ -729,7 +767,7 @@ const DashboardVolunteers = () => {
                         type="file"
                         accept="image/*"
                         ref={fileInputRef}
-                        onChange={handleFileChangeAndUpload}
+                        onChange={handleFileChange}
                         className="file:text-xs"
                         disabled={uploading}
                       />
@@ -748,16 +786,29 @@ const DashboardVolunteers = () => {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="username">Username *</Label>
+                <Label htmlFor="name">Full Name *</Label>
                 <Input
-                  id="username"
-                  value={formData.username}
+                  id="name"
+                  value={formData.name || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
+                    setFormData({ ...formData, name: e.target.value })
                   }
                   disabled={isViewingOnly}
                 />
               </div>
+              {editingVolunteer && (
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username *</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) =>
+                      setFormData({ ...formData, username: e.target.value })
+                    }
+                    disabled={isViewingOnly}
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="nssID">NSS ID *</Label>
                 <Input
@@ -966,6 +1017,7 @@ const DashboardVolunteers = () => {
                   />
                 </TableHead>
                 <TableHead>Picture</TableHead>
+                <TableHead>Full Name</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>NSS ID</TableHead>
                 <TableHead>Batch</TableHead>
@@ -1007,8 +1059,9 @@ const DashboardVolunteers = () => {
                     className="font-medium cursor-pointer hover:underline"
                     onClick={() => openDialog(v, true)}
                   >
-                    {v.username}
+                    {v.name || v.username}
                   </TableCell>
+                  <TableCell>@{v.username}</TableCell>
                   <TableCell>{v.nssID || "N/A"}</TableCell>
                   <TableCell>{v.batch || "N/A"}</TableCell>
                   <TableCell>{v.email}</TableCell>
@@ -1062,9 +1115,9 @@ const DashboardVolunteers = () => {
                       <h3
                         className="text-lg font-bold cursor-pointer hover:underline truncate"
                         onClick={() => openDialog(v, true)}
-                        title={v.username}
+                        title={v.name || v.username}
                       >
-                        {v.username}
+                        {v.name || v.username}
                       </h3>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium capitalize self-start flex-shrink-0 ${getStatusClass(
@@ -1074,6 +1127,12 @@ const DashboardVolunteers = () => {
                         {v.status}
                       </span>
                     </div>
+                    <p
+                      className="text-sm text-gray-500 font-medium truncate"
+                      title={v.username}
+                    >
+                      @{v.username}
+                    </p>
                     <p
                       className="text-sm text-gray-600 truncate"
                       title={v.nssID}

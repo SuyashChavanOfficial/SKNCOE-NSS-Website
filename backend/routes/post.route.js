@@ -11,16 +11,23 @@ import {
   updatepost,
 } from "../controller/post.controller.js";
 
+import { validateSchema } from "../middleware/validate.js";
+import {
+  createPostSchema,
+  updatePostSchema,
+  deletePostSchema,
+  likePostSchema,
+} from "../validators/schemas.js";
+
 const router = express.Router();
 
-router.post("/create", verifyToken, create);
-router.get("/getposts", getPosts);
-router.get("/getpostbyid/:postId", getPostById);
-router.get("/getpost/:slug", getPostBySlug);
-router.delete("/deletepost/:postId/:userId", verifyToken, deletepost);
-router.put("/updatepost/:postId/:userId", verifyToken, updatepost);
-router.get("/getPostsInPeriod", verifyToken, getPostsInPeriod);
-router.put("/likePost/:postId", verifyToken, likePost);
-
+router.post("/create", verifyToken, validateSchema(createPostSchema), create);
+router.get("/get-posts", getPosts);
+router.get("/get-post-by-id/:postId", getPostById);
+router.get("/get-post/:slug", getPostBySlug);
+router.delete("/delete-post", verifyToken, validateSchema(deletePostSchema), deletepost);
+router.put("/update-post", verifyToken, validateSchema(updatePostSchema), updatepost);
+router.get("/get-posts-in-period", verifyToken, getPostsInPeriod);
+router.put("/like-post", verifyToken, validateSchema(likePostSchema), likePost);
 
 export default router;

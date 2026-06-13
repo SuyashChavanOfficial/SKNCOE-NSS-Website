@@ -76,7 +76,7 @@ const EditNews = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/post/getpostbyid/${postId}`);
+        const res = await fetch(`${API_URL}/api/post/get-post-by-id/${postId}`);
         const data = await res.json();
         if (!res.ok) {
           setUpdatePostError(data.message);
@@ -118,46 +118,19 @@ const EditNews = () => {
     }
   };
 
-  const handleImageUpload = async () => {
-    if (!file) return toast({ title: "Please select an image!" });
-    if (file.size > 1 * 1024 * 1024)
-      return toast({ title: "File size exceeds 1 MB!" });
-
-    const isAdmin = await checkIsAdmin();
-    if (!isAdmin) {
-      toast({
-        title: "You are not authorized to upload images.",
-        description: "Try signing in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    let uploadedFileId = null;
-    try {
-      setImageUploading(true);
-      const uploadedFile = await uploadFile(file);
-      uploadedFileId = uploadedFile.$id;
-      const postImageUrl = await getFileUrl(uploadedFile.$id);
-      setFormData({
-        ...formData,
-        image: postImageUrl,
-        imageId: uploadedFile.$id,
-        deleteOldImageId: formData.imageId || null,
-      });
-      toast({ title: "Image Uploaded Successfully!" });
-      setImageUploading(false);
-    } catch {
-      toast({ title: "Image Upload Failed!" });
-      setImageUploading(false);
-      if (uploadedFileId) {
-        try {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-        } catch {}
+  // Handle file selection and preview locally
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.size > 1 * 1024 * 1024) {
+        toast({ title: "File size exceeds 1 MB!" });
+        e.target.value = "";
+        setFile(null);
+        return;
       }
+      setFile(selectedFile);
+    } else {
+      setFile(null);
     }
   };
 
@@ -175,32 +148,79 @@ const EditNews = () => {
       return;
     }
 
-    const finalFormData = {
-      ...formData,
-      category: formData.category || "uncategorised",
-      newsDate: formData.date,
-    };
+    let uploadedFileId = null;
+    let postImageUrl = formData.image;
+    let postImageId = formData.imageId;
+    let deleteOldImageId = null;
 
     try {
+      setImageUploading(true);
+
+      // 1. Upload new file if selected
+      if (file) {
+        const uploadedFile = await uploadFile(file);
+        if (!uploadedFile) throw new Error("File upload failed!");
+        uploadedFileId = uploadedFile.$id;
+        postImageUrl = await getFileUrl(uploadedFile.$id);
+        postImageId = uploadedFile.$id;
+        deleteOldImageId = formData.imageId || null;
+      }
+
+      const finalFormData = {
+        ...formData,
+        image: postImageUrl,
+        imageId: postImageId,
+        deleteOldImageId,
+        category: formData.category || "uncategorised",
+        newsDate: formData.date,
+      };
+
+      // 2. Submit changes to the backend
       const res = await fetch(
-        `${API_URL}/api/post/updatepost/${formData._id}/${currentUser._id}`,
+        `${API_URL}/api/post/update-post`,
         {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(finalFormData),
+          body: JSON.stringify({
+            postId: formData._id,
+            userId: currentUser._id,
+            ...finalFormData,
+          }),
         }
       );
       const data = await res.json();
       if (!res.ok) {
+        // Transaction failed! Delete newly uploaded file to prevent orphan
+        if (uploadedFileId) {
+          await fetch(`${API_URL}/api/upload/delete`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: uploadedFileId }),
+            credentials: "include",
+          }).catch((delErr) => console.error("Clean up upload failed:", delErr));
+        }
         toast({ title: "Something went wrong!" });
         setUpdatePostError(data.message);
+        setImageUploading(false);
         return;
       }
       toast({ title: "News Updated Successfully!" });
+      setImageUploading(false);
       navigate(`/post/${data.slug}`);
-    } catch {
+    } catch (error) {
+      console.error("Error updating news:", error);
+      // Delete newly uploaded file on catch block too
+      if (uploadedFileId) {
+        await fetch(`${API_URL}/api/upload/delete`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: uploadedFileId }),
+          credentials: "include",
+        }).catch((delErr) => console.error("Clean up upload failed:", delErr));
+      }
       toast({ title: "Something went wrong!" });
+      setImageUploading(false);
     }
   };
 
@@ -307,22 +327,14 @@ const EditNews = () => {
             <Input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files[0])}
+              onChange={handleFileChange}
             />
-            <Button
-              type="button"
-              className="bg-slate-700"
-              onClick={handleImageUpload}
-              disabled={imageUploading}
-            >
-              {imageUploading ? "Uploading..." : "Upload Image"}
-            </Button>
           </div>
         </div>
 
-        {formData.image && (
+        {(file || formData.image) && (
           <img
-            src={formData.image}
+            src={file ? URL.createObjectURL(file) : formData.image}
             alt="upload"
             className="w-full h-72 object-cover"
           />
@@ -335,8 +347,8 @@ const EditNews = () => {
           onChange={(value) => setFormData({ ...formData, content: value })}
         />
 
-        <Button type="submit" className="h-12 bg-green-600 font-semibold">
-          Update News
+        <Button type="submit" disabled={imageUploading} className="h-12 bg-green-600 font-semibold">
+          {imageUploading ? "Updating..." : "Update News"}
         </Button>
         {updatePostError && (
           <p className="text-red-600 mt-5">{updatePostError}</p>

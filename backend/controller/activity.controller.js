@@ -1,7 +1,9 @@
 import Activity from "../models/activity.model.js";
+import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import { deleteFileFromR2 } from "../lib/r2.js";
 import { initializeAttendanceForActivity } from "./attendance.controller.js";
+import { MESSAGES } from "../constants/messages.js";
 
 // helper to decide if activity is completed
 const isCompleted = (activity) => {
@@ -12,8 +14,8 @@ const isCompleted = (activity) => {
   return Date.now() > end;
 };
 
-export const createActivity = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const createActivity = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.ACTIVITY.NOT_AUTHORIZED);
 
   const {
     title,
@@ -23,200 +25,195 @@ export const createActivity = async (req, res, next) => {
     expectedDurationHours,
     description,
   } = req.body;
-  if (!title || !poster || !startDate || expectedDurationHours == null)
-    return next(errorHandler(400, "All fields are required"));
 
-  try {
-    const newActivity = new Activity({
-      title: title.trim(),
-      poster,
-      posterId: posterId || null,
-      startDate: new Date(startDate),
-      expectedDurationHours,
-      description,
-      createdBy: req.user.id,
-    });
+  const user = await User.findById(req.user.id);
+  if (!user) throw errorHandler(404, MESSAGES.AUTH.USER_NOT_FOUND);
 
-    const saved = await newActivity.save();
+  const creatorName = user.name || user.username;
+  const creatorUsername = user.username;
 
-    // ✅ Create attendance records for all volunteers
-    await initializeAttendanceForActivity(saved._id);
+  const newActivity = new Activity({
+    title: title.trim(),
+    poster,
+    posterId: posterId || null,
+    startDate: new Date(startDate),
+    expectedDurationHours,
+    description,
+    createdBy: req.user.id,
+    createdByName: creatorName,
+    createdByUsername: creatorUsername,
+    updatedBy: req.user.id,
+    updatedByName: creatorName,
+    updatedByUsername: creatorUsername,
+    updateCount: 0,
+    updateHistory: [],
+  });
 
-    res.status(201).json(saved);
-  } catch (error) {
-    next(error);
-  }
+  const saved = await newActivity.save();
+
+  // ✅ Create attendance records for all volunteers
+  await initializeAttendanceForActivity(saved._id);
+
+  res.status(201).json(saved);
 };
 
-export const getActivities = async (req, res, next) => {
-  try {
-    // query params: upcoming=true/false or none => returns all grouped
-    const activities = await Activity.find()
-      .populate("createdBy", "username")
-      .populate("interestedUsers", "username")
-      .sort({ startDate: 1 });
+export const getActivities = async (req, res) => {
+  const activities = await Activity.find({ isDeleted: { $ne: true } })
+    .populate("createdBy", "username")
+    .populate("interestedUsers", "username")
+    .sort({ startDate: 1 });
 
-    // split into upcoming and completed
-    const upcoming = [];
-    const completed = [];
+  const upcoming = [];
+  const completed = [];
 
-    activities.forEach((a) => {
-      if (isCompleted(a)) completed.push(a);
-      else upcoming.push(a);
-    });
+  activities.forEach((a) => {
+    if (isCompleted(a)) completed.push(a);
+    else upcoming.push(a);
+  });
 
-    res.status(200).json({ upcoming, completed });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({ upcoming, completed });
 };
 
-export const getActivityById = async (req, res, next) => {
-  try {
-    const activity = await Activity.findById(req.params.activityId)
-      .populate("createdBy", "username")
-      .populate("interestedUsers", "username")
-      .populate("linkedPost");
+export const getActivityById = async (req, res) => {
+  const activity = await Activity.findOne({ _id: req.params.activityId, isDeleted: { $ne: true } })
+    .populate("createdBy", "username")
+    .populate("interestedUsers", "username")
+    .populate("linkedPost");
 
-    if (!activity) return next(errorHandler(404, "Activity not found"));
-    res.status(200).json({ activity });
-  } catch (error) {
-    next(error);
-  }
+  if (!activity) throw errorHandler(404, MESSAGES.ACTIVITY.NOT_FOUND);
+  res.status(200).json({ activity });
 };
 
-export const updateActivity = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const updateActivity = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.ACTIVITY.NOT_AUTHORIZED);
 
-  try {
-    const existing = await Activity.findById(req.params.activityId);
-    if (!existing) return next(errorHandler(404, "Activity not found"));
+  const { activityId } = req.body;
+  const existing = await Activity.findOne({ _id: activityId, isDeleted: { $ne: true } });
+  if (!existing) throw errorHandler(404, MESSAGES.ACTIVITY.NOT_FOUND);
 
-    const updateData = {
-      title: req.body.title,
-      poster: req.body.poster || existing.poster,
-      posterId: req.body.posterId || existing.posterId,
-      startDate: req.body.startDate
-        ? new Date(req.body.startDate)
-        : existing.startDate,
-      expectedDurationHours:
-        req.body.expectedDurationHours ?? existing.expectedDurationHours,
-      description: req.body.description ?? existing.description,
-      linkedPost: req.body.linkedPost || existing.linkedPost,
-    };
+  const user = await User.findById(req.user.id);
+  if (!user) throw errorHandler(404, MESSAGES.AUTH.USER_NOT_FOUND);
 
-    if (
-      req.body.posterId &&
-      existing.posterId &&
-      req.body.posterId !== existing.posterId
-    ) {
-      try {
-        await deleteFileFromR2(existing.posterId);
-      } catch (err) {
-        console.log("⚠️ Failed to delete old activity poster:", err.message);
-      }
+  const editorName = user.name || user.username;
+  const editorUsername = user.username;
+
+  const updateData = {
+    title: req.body.title,
+    poster: req.body.poster || existing.poster,
+    posterId: req.body.posterId || existing.posterId,
+    startDate: req.body.startDate
+      ? new Date(req.body.startDate)
+      : existing.startDate,
+    expectedDurationHours:
+      req.body.expectedDurationHours ?? existing.expectedDurationHours,
+    description: req.body.description ?? existing.description,
+    linkedPost: req.body.linkedPost || existing.linkedPost,
+    updatedBy: req.user.id,
+    updatedByName: editorName,
+    updatedByUsername: editorUsername,
+  };
+
+  if (
+    req.body.posterId &&
+    existing.posterId &&
+    req.body.posterId !== existing.posterId
+  ) {
+    try {
+      await deleteFileFromR2(existing.posterId);
+    } catch (err) {
+      console.log("⚠️ Failed to delete old activity poster:", err.message);
     }
-
-    const updated = await Activity.findByIdAndUpdate(
-      req.params.activityId,
-      { $set: updateData },
-      { new: true }
-    );
-
-    res.status(200).json(updated);
-  } catch (error) {
-    next(error);
   }
+
+  const updated = await Activity.findOneAndUpdate(
+    { _id: activityId, isDeleted: { $ne: true } },
+    {
+      $set: updateData,
+      $inc: { updateCount: 1 },
+      $push: {
+        updateHistory: {
+          updatedBy: req.user.id,
+          updatedByName: editorName,
+          updatedByUsername: editorUsername,
+          updatedAt: new Date(),
+        },
+      },
+    },
+    { new: true }
+  );
+
+  res.status(200).json(updated);
 };
 
-export const deleteActivity = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const deleteActivity = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.ACTIVITY.NOT_AUTHORIZED);
 
-  try {
-    const activity = await Activity.findById(req.params.activityId);
-    if (!activity) return next(errorHandler(404, "Activity not found"));
+  const { activityId } = req.body;
+  const activity = await Activity.findOne({ _id: activityId, isDeleted: { $ne: true } });
+  if (!activity) throw errorHandler(404, MESSAGES.ACTIVITY.NOT_FOUND);
 
-    // delete poster in storage if present
-    if (activity.posterId) {
-      try {
-        await deleteFileFromR2(activity.posterId);
-      } catch (err) {
-        console.log("Failed to delete activity poster:", err.message);
-      }
-    }
+  // Soft delete:
+  activity.isDeleted = true;
+  activity.deletedAt = new Date();
+  await activity.save();
 
-    await Activity.findByIdAndDelete(req.params.activityId);
-    res.status(200).json({ message: "Activity deleted" });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({ message: MESSAGES.ACTIVITY.DELETE_SUCCESS });
 };
 
 // toggle interest: user marks/unmarks interest
-export const toggleInterest = async (req, res, next) => {
-  try {
-    const activity = await Activity.findById(req.params.activityId);
-    if (!activity) return next(errorHandler(404, "Activity not found"));
+export const toggleInterest = async (req, res) => {
+  const { activityId } = req.body;
+  const activity = await Activity.findOne({ _id: activityId, isDeleted: { $ne: true } });
+  if (!activity) throw errorHandler(404, MESSAGES.ACTIVITY.NOT_FOUND);
 
-    const userId = req.user.id;
-    const idx = activity.interestedUsers.findIndex(
-      (id) => id.toString() === userId
-    );
+  const userId = req.user.id;
+  const idx = activity.interestedUsers.findIndex(
+    (id) => id.toString() === userId
+  );
 
-    if (idx === -1) {
-      activity.interestedUsers.push(userId);
-    } else {
-      activity.interestedUsers.splice(idx, 1);
-    }
-
-    await activity.save();
-    // return the updated count and whether current user is interested
-    const isInterested = activity.interestedUsers.some(
-      (id) => id.toString() === userId
-    );
-    res
-      .status(200)
-      .json({ interestedCount: activity.interestedUsers.length, isInterested });
-  } catch (error) {
-    next(error);
+  if (idx === -1) {
+    activity.interestedUsers.push(userId);
+  } else {
+    activity.interestedUsers.splice(idx, 1);
   }
+
+  await activity.save();
+  const isInterested = activity.interestedUsers.some(
+    (id) => id.toString() === userId
+  );
+  res
+    .status(200)
+    .json({ interestedCount: activity.interestedUsers.length, isInterested });
 };
 
 // endpoint to get interested users for admin view (paginated optional)
-export const getInterestedUsers = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
-  try {
-    const activity = await Activity.findById(req.params.activityId).populate(
-      "interestedUsers",
-      "username email"
-    );
-    if (!activity) return next(errorHandler(404, "Activity not found"));
-    res.status(200).json({ interestedUsers: activity.interestedUsers });
-  } catch (error) {
-    next(error);
-  }
+export const getInterestedUsers = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.ACTIVITY.NOT_AUTHORIZED);
+
+  const activity = await Activity.findOne({ _id: req.params.activityId, isDeleted: { $ne: true } }).populate(
+    "interestedUsers",
+    "username email"
+  );
+  if (!activity) throw errorHandler(404, MESSAGES.ACTIVITY.NOT_FOUND);
+  res.status(200).json({ interestedUsers: activity.interestedUsers });
 };
 
-export const linkNewsToActivity = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const linkNewsToActivity = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.ACTIVITY.NOT_AUTHORIZED);
 
-  try {
-    const { postId } = req.body;
-    const activity = await Activity.findById(req.params.activityId);
-    if (!activity) return next(errorHandler(404, "Activity not found"));
+  const { activityId, newsId } = req.body;
+  const activity = await Activity.findOne({ _id: activityId, isDeleted: { $ne: true } });
+  if (!activity) throw errorHandler(404, MESSAGES.ACTIVITY.NOT_FOUND);
 
-    activity.linkedPost = postId;
-    await activity.save();
+  activity.linkedPost = newsId;
+  await activity.save();
 
-    const updatedActivity = await Activity.findById(activity._id)
-      .populate("linkedPost")
-      .populate("createdBy", "username")
-      .populate("interestedUsers", "username");
+  const updatedActivity = await Activity.findById(activity._id)
+    .populate("linkedPost")
+    .populate("createdBy", "username")
+    .populate("interestedUsers", "username");
 
-    res
-      .status(200)
-      .json({ message: "News linked to activity", activity: updatedActivity });
-  } catch (error) {
-    next(error);
-  }
+  res
+    .status(200)
+    .json({ message: MESSAGES.ACTIVITY.LINK_SUCCESS, activity: updatedActivity });
 };

@@ -77,54 +77,19 @@ const CreateNews = () => {
     }
   };
 
-  // Image Upload with admin verification and orphan cleanup
-  const handleImageUpload = async () => {
-    if (!file) return toast({ title: "Please select an image!" });
-    if (file.size > 1 * 1024 * 1024)
-      return toast({ title: "File size exceeds 1 MB" });
-
-    // Check authorization before uploading
-    const isAdmin = await checkIsAdmin();
-    if (!isAdmin) {
-      toast({
-        title: "You are not authorized to upload images.",
-        description: "Try signing in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    let uploadedFileId = null;
-    try {
-      setImageUploading(true);
-      const uploadedFile = await uploadFile(file);
-      if (!uploadedFile) throw new Error("File upload failed!");
-      uploadedFileId = uploadedFile.$id;
-
-      const postImageUrl = await getFileUrl(uploadedFile.$id);
-      setFormData({
-        ...formData,
-        image: postImageUrl,
-        imageId: uploadedFile.$id,
-      });
-      toast({ title: "Image Uploaded Successfully!" });
-      setImageUploading(false);
-    } catch (error) {
-      console.error("Upload failed:", error);
-      setImageUploading(false);
-      toast({ title: "Image Upload Failed!" });
-
-      // Delete orphan file if created
-      if (uploadedFileId) {
-        try {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-        } catch (delErr) {
-          console.error("Failed to delete orphan file:", delErr);
-        }
+  // Handle file selection and preview locally
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.size > 1 * 1024 * 1024) {
+        toast({ title: "File size exceeds 1 MB" });
+        e.target.value = "";
+        setFile(null);
+        return;
       }
+      setFile(selectedFile);
+    } else {
+      setFile(null);
     }
   };
 
@@ -132,31 +97,87 @@ const CreateNews = () => {
     e.preventDefault();
     if (!formData.date) return toast({ title: "Please select a date" });
 
-    const finalFormData = {
-      ...formData,
-      category: formData.category || "uncategorised",
-      newsDate: formData.date,
-      academicYear: formData.academicYear || "2025-26",
-    };
+    // Check authorization before uploading/submitting
+    const isAdmin = await checkIsAdmin();
+    if (!isAdmin) {
+      toast({
+        title: "You are not authorized to perform this action.",
+        description: "Try signing in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let uploadedFileId = null;
+    let postImageUrl = formData.image;
+    let postImageId = formData.imageId;
 
     try {
-      const res = await fetch(`${API_URL}/api/post/create`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalFormData),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({ title: data.message || "Something went wrong!" });
-        setCreatePostError(data.message);
+      setImageUploading(true);
+
+      // 1. Upload file if selected
+      if (file) {
+        const uploadedFile = await uploadFile(file);
+        if (!uploadedFile) throw new Error("File upload failed!");
+        uploadedFileId = uploadedFile.$id;
+        postImageUrl = await getFileUrl(uploadedFile.$id);
+        postImageId = uploadedFile.$id;
+      } else {
+        toast({ title: "An image is required to publish news!" });
+        setImageUploading(false);
         return;
       }
+
+      const finalFormData = {
+        ...formData,
+        image: postImageUrl,
+        imageId: postImageId,
+        category: formData.category || "uncategorised",
+        newsDate: formData.date,
+        academicYear: formData.academicYear || "2025-26",
+      };
+
+      // 2. Submit data to backend
+      const res = await fetch(`${API_URL}/api/post/create`, {
+         method: "POST",
+         credentials: "include",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify(finalFormData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        // Transaction failed! Delete R2 uploaded file immediately to prevent orphan
+        if (uploadedFileId) {
+          await fetch(`${API_URL}/api/upload/delete`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: uploadedFileId }),
+            credentials: "include",
+          }).catch((delErr) => console.error("Clean up upload failed:", delErr));
+        }
+        toast({ title: data.message || "Something went wrong!" });
+        setCreatePostError(data.message);
+        setImageUploading(false);
+        return;
+      }
+
       toast({ title: "News Published Successfully!" });
+      setImageUploading(false);
       navigate(`/post/${data.slug}`);
     } catch (error) {
       console.error("Error creating news:", error);
+      // Delete R2 uploaded file on catch block too
+      if (uploadedFileId) {
+        await fetch(`${API_URL}/api/upload/delete`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: uploadedFileId }),
+          credentials: "include",
+        }).catch((delErr) => console.error("Clean up upload failed:", delErr));
+      }
       toast({ title: "Something went wrong!" });
+      setImageUploading(false);
     }
   };
 
@@ -261,29 +282,21 @@ const CreateNews = () => {
           </div>
         </div>
 
-        {/* Image Upload */}
+        {/* Image Upload Input (No Button) */}
         <div className="border-4 border-slate-600 border-dotted p-3">
           <div className="flex gap-4 items-center">
             <Input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files[0])}
+              onChange={handleFileChange}
             />
-            <Button
-              type="button"
-              className="bg-slate-700"
-              onClick={handleImageUpload}
-              disabled={imageUploading}
-            >
-              {imageUploading ? "Uploading..." : "Upload Image"}
-            </Button>
           </div>
           <p className="text-gray-500 text-xs mt-1">Max image size 1 MB</p>
         </div>
 
-        {formData.image && (
+        {(file || formData.image) && (
           <img
-            src={formData.image}
+            src={file ? URL.createObjectURL(file) : formData.image}
             alt="upload"
             className="w-full h-72 object-cover"
           />
@@ -296,8 +309,8 @@ const CreateNews = () => {
           onChange={(value) => setFormData({ ...formData, content: value })}
         />
 
-        <Button type="submit" className="h-12 bg-green-600 font-semibold">
-          Publish News
+        <Button type="submit" disabled={imageUploading} className="h-12 bg-green-600 font-semibold">
+          {imageUploading ? "Publishing..." : "Publish News"}
         </Button>
         {createPostError && (
           <p className="text-red-600 mt-5">{createPostError}</p>

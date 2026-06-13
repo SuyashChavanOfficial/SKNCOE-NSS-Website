@@ -24,7 +24,7 @@ const DashboardAdmins = () => {
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/user/getusers`, {
+        const res = await fetch(`${API_URL}/api/user/get-users`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -61,7 +61,7 @@ const DashboardAdmins = () => {
         isAdmin: u.isAdmin,
       }));
 
-      const res = await fetch(`${API_URL}/api/user/updateAdmins`, {
+      const res = await fetch(`${API_URL}/api/user/update-admins`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -30,6 +30,44 @@ const activitySchema = new mongoose.Schema(
       ref: "Post",
       default: null,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    createdByName: {
+      type: String,
+      required: true,
+    },
+    createdByUsername: {
+      type: String,
+      required: true,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedByName: {
+      type: String,
+    },
+    updatedByUsername: {
+      type: String,
+    },
+    updateCount: {
+      type: Number,
+      default: 0,
+    },
+    updateHistory: [
+      {
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        updatedByName: { type: String },
+        updatedByUsername: { type: String },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

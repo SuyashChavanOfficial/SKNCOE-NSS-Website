@@ -50,13 +50,14 @@ const Comment = ({ comment, onLike, onEdit, onDelete }) => {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/comment/editComment/${comment._id}`, {
+      const res = await fetch(`${API_URL}/api/comment/edit-comment`, {
         method: "PUT",
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          commentId: comment._id,
           content: editedContent,
         }),
       });

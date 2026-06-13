@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -32,8 +48,10 @@ const DashboardActivities = () => {
   const handleDelete = async (id) => {
     if (!confirm("Delete this activity?")) return;
     try {
-      const res = await fetch(`${API_URL}/api/activity/delete/${id}`, {
+      const res = await fetch(`${API_URL}/api/activity/delete`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activityId: id }),
         credentials: "include",
       });
       const data = await res.json();
@@ -107,6 +125,61 @@ const DashboardActivities = () => {
               >
                 Delete
               </button>
+
+              {currentUser?.isSuperAdmin && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="text-teal-600 hover:underline">
+                      Logs
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Editorial Logs: {a.title}</DialogTitle>
+                      <DialogDescription>
+                        Detailed creation and modification history.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 my-2 text-sm text-slate-700">
+                      <div>
+                        <p><strong>Created By:</strong> {a.createdByName || "Unknown"} (@{a.createdByUsername || "unknown"})</p>
+                        <p><strong>Created At:</strong> {new Date(a.createdAt).toLocaleString("en-GB")}</p>
+                        <p><strong>Total Updates:</strong> {a.updateCount || 0}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2 text-slate-800">Update History</h4>
+                        {a.updateHistory && a.updateHistory.length > 0 ? (
+                          <div className="border rounded overflow-hidden">
+                            <Table>
+                              <TableHeader className="bg-slate-50">
+                                <TableRow>
+                                  <TableHead className="py-2">Editor Name</TableHead>
+                                  <TableHead className="py-2">Username</TableHead>
+                                  <TableHead className="py-2">Date Updated</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {a.updateHistory.map((historyItem, idx) => (
+                                  <TableRow key={idx}>
+                                    <TableCell className="py-2">{historyItem.updatedByName || "Unknown"}</TableCell>
+                                    <TableCell className="py-2">@{historyItem.updatedByUsername || "unknown"}</TableCell>
+                                    <TableCell className="py-2">
+                                      {new Date(historyItem.updatedAt).toLocaleString("en-GB")}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 italic">No update history recorded.</p>
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           ))
         )}

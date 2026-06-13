@@ -42,7 +42,7 @@ const ActivityDetails = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/post/getposts?limit=100`);
+        const res = await fetch(`${API_URL}/api/post/get-posts?limit=100`);
         const data = await res.json();
         if (res.ok) setPosts(data.posts);
       } catch (err) {
@@ -56,12 +56,12 @@ const ActivityDetails = () => {
     if (!selectedPost) return;
     try {
       const res = await fetch(
-        `${API_URL}/api/activity/linkNews/${activityId}`,
+        `${API_URL}/api/activity/link-news`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ postId: selectedPost }),
+          body: JSON.stringify({ activityId, newsId: selectedPost }),
         }
       );
       if (res.ok) {

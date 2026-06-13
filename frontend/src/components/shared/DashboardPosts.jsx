@@ -22,6 +22,14 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import Pagination from "../shared/Pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -45,7 +53,7 @@ const DashboardPosts = () => {
     try {
       const startIndex = (page - 1) * postsPerPage;
       const res = await fetch(
-        `${API_URL}/api/post/getposts?startIndex=${startIndex}&limit=${postsPerPage}&sort=desc`
+        `${API_URL}/api/post/get-posts?startIndex=${startIndex}&limit=${postsPerPage}&sort=desc`
       );
       const data = await res.json();
       if (res.ok) {
@@ -71,8 +79,16 @@ const DashboardPosts = () => {
   const handleDeletePost = async () => {
     try {
       const res = await fetch(
-        `${API_URL}/api/post/deletepost/${postIdToDelete}/${currentUser._id}`,
-        { method: "DELETE", credentials: "include" }
+        `${API_URL}/api/post/delete-post`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            postId: postIdToDelete,
+            userId: currentUser._id,
+          }),
+        }
       );
       const data = await res.json();
       if (res.ok) fetchPosts(currentPage);
@@ -108,6 +124,7 @@ const DashboardPosts = () => {
                 <TableHead>Author</TableHead>
                 <TableHead className="text-center">Delete</TableHead>
                 <TableHead className="text-center">Edit</TableHead>
+                {currentUser?.isSuperAdmin && <TableHead className="text-center">Logs</TableHead>}
               </TableRow>
             </TableHeader>
 
@@ -134,7 +151,7 @@ const DashboardPosts = () => {
                   </TableCell>
                   <TableCell>{post.numberOfLikes || 0}</TableCell>
                   <TableCell className="text-slate-600">
-                    {post.userId.username}
+                    {post.authorName || (post.userId && post.userId.username) || "Unknown"}
                   </TableCell>
                   <TableCell className="text-center">
                     <AlertDialog>
@@ -173,6 +190,62 @@ const DashboardPosts = () => {
                       Edit
                     </Link>
                   </TableCell>
+                  {currentUser?.isSuperAdmin && (
+                    <TableCell className="text-center">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <span className="text-teal-600 hover:underline cursor-pointer">
+                            Logs
+                          </span>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Editorial Logs: {post.title}</DialogTitle>
+                            <DialogDescription>
+                              Detailed creation and modification history.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 my-2 text-sm text-slate-700">
+                            <div>
+                              <p><strong>Created By:</strong> {post.createdByName || "Unknown"} (@{post.createdByUsername || "unknown"})</p>
+                              <p><strong>Created At:</strong> {new Date(post.createdAt).toLocaleString("en-GB")}</p>
+                              <p><strong>Total Updates:</strong> {post.updateCount || 0}</p>
+                            </div>
+                            
+                            <div>
+                              <h4 className="font-semibold mb-2 text-slate-800">Update History</h4>
+                              {post.updateHistory && post.updateHistory.length > 0 ? (
+                                <div className="border rounded overflow-hidden">
+                                  <Table>
+                                    <TableHeader className="bg-slate-50">
+                                      <TableRow>
+                                        <TableHead className="py-2">Editor Name</TableHead>
+                                        <TableHead className="py-2">Username</TableHead>
+                                        <TableHead className="py-2">Date Updated</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {post.updateHistory.map((historyItem, idx) => (
+                                        <TableRow key={idx}>
+                                          <TableCell className="py-2">{historyItem.updatedByName || "Unknown"}</TableCell>
+                                          <TableCell className="py-2">@{historyItem.updatedByUsername || "unknown"}</TableCell>
+                                          <TableCell className="py-2">
+                                            {new Date(historyItem.updatedAt).toLocaleString("en-GB")}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              ) : (
+                                <p className="text-slate-500 italic">No update history recorded.</p>
+                              )}
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

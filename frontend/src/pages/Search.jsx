@@ -101,7 +101,7 @@ const Search = () => {
       urlParams.set("limit", postsPerPage);
 
       const searchQuery = urlParams.toString();
-      const res = await fetch(`${API_URL}/api/post/getposts?${searchQuery}`);
+      const res = await fetch(`${API_URL}/api/post/get-posts?${searchQuery}`);
       if (!res.ok) {
         setLoading(false);
         return;

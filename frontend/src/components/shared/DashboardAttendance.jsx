@@ -34,7 +34,7 @@ const DashboardAttendance = () => {
         setLoading(true);
         const [aRes, vRes] = await Promise.all([
           fetch(`${API_URL}/api/activity/get`, { credentials: "include" }),
-          fetch(`${API_URL}/api/user/getVolunteers?limit=1000`, {
+          fetch(`${API_URL}/api/user/get-volunteers?limit=1000`, {
             credentials: "include",
           }),
         ]);

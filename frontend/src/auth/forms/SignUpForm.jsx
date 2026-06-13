@@ -26,14 +26,18 @@ import {
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const formSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: "Full Name must be at least 2 characters" })
+    .max(50),
   username: z
     .string()
-    .min(3, { message: "Username should be atleast of 3 characters" })
+    .min(3, { message: "Username should be at least 3 characters" })
     .max(50),
   email: z.string().email({ message: "Invalid Email Address" }),
   password: z
     .string()
-    .min(8, { message: "Password should be atleast of 8 characters" }),
+    .min(8, { message: "Password should be at least 8 characters" }),
 });
 
 const SignUpForm = () => {
@@ -47,6 +51,7 @@ const SignUpForm = () => {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       username: "",
       email: "",
       password: "",
@@ -108,6 +113,21 @@ const SignUpForm = () => {
         <div className="flex-1">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+
+                    <FormControl>
+                      <Input type="text" placeholder="Full Name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="username"

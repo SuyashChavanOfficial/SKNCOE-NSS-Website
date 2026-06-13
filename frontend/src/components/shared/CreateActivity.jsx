@@ -42,55 +42,18 @@ const CreateActivity = () => {
     }
   };
 
-  const handleUploadPoster = async () => {
-    if (!file) {
-      toast({ title: "Please select an image first" });
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ title: "Poster must be less than 500 KB" });
-      return;
-    }
-
-    // Check authorization before uploading
-    const user = await checkIsAdmin();
-    if (!user) {
-      toast({
-        title: "You are not authorized to perform this action.",
-        description: "Try signing in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    let uploadedFileId = null;
-
-    try {
-      setUploading(true);
-      const uploadedFile = await uploadFile(file);
-      if (!uploadedFile) throw new Error("File upload failed!");
-
-      uploadedFileId = uploadedFile.$id;
-      const url = await getFileUrl(uploadedFile.$id);
-      setFormData({ ...formData, poster: url, posterId: uploadedFile.$id });
-      toast({ title: "Poster uploaded successfully!" });
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Poster upload failed" });
-
-      if (uploadedFileId) {
-        try {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-        } catch (delErr) {
-          console.error("Failed to delete orphan uploaded file:", delErr);
-        }
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        toast({ title: "Poster must be less than 500 KB" });
+        e.target.value = "";
+        setFile(null);
+        return;
       }
-    } finally {
-      setUploading(false);
+      setFile(selectedFile);
+    } else {
+      setFile(null);
     }
   };
 
@@ -107,28 +70,71 @@ const CreateActivity = () => {
       return;
     }
 
+    let uploadedFileId = null;
+    let posterUrl = formData.poster;
+    let posterId = formData.posterId;
+
     try {
+      setUploading(true);
+
+      // 1. Upload file if selected
+      if (file) {
+        const uploadedFile = await uploadFile(file);
+        if (!uploadedFile) throw new Error("File upload failed!");
+        uploadedFileId = uploadedFile.$id;
+        posterUrl = await getFileUrl(uploadedFile.$id);
+        posterId = uploadedFile.$id;
+      } else {
+        toast({ title: "A poster is required to create an activity!" });
+        setUploading(false);
+        return;
+      }
+
+      // 2. Submit data to backend
       const res = await fetch(`${API_URL}/api/activity/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           ...formData,
+          poster: posterUrl,
+          posterId: posterId,
           expectedDurationHours: Number(formData.expectedDurationHours),
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
+        // Transaction failed! Delete newly uploaded file to prevent orphan
+        if (uploadedFileId) {
+          await fetch(`${API_URL}/api/upload/delete`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: uploadedFileId }),
+            credentials: "include",
+          }).catch((delErr) => console.error("Clean up upload failed:", delErr));
+        }
         toast({ title: data.message || "Failed to create activity" });
+        setUploading(false);
         return;
       }
 
       toast({ title: "Activity created successfully!" });
+      setUploading(false);
       navigate("/dashboard?tab=activities");
     } catch (err) {
       console.error(err);
+      // Delete newly uploaded file on catch block too
+      if (uploadedFileId) {
+        await fetch(`${API_URL}/api/upload/delete`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: uploadedFileId }),
+          credentials: "include",
+        }).catch((delErr) => console.error("Clean up upload failed:", delErr));
+      }
       toast({ title: "Something went wrong!" });
+      setUploading(false);
     }
   };
 
@@ -192,21 +198,13 @@ const CreateActivity = () => {
             type="file"
             accept="image/*"
             className="w-full h-12 text-lg"
-            onChange={(e) => setFile(e.target.files[0])}
+            onChange={handleFileChange}
           />
-          <Button
-            type="button"
-            className="bg-slate-700 text-white h-12 px-6"
-            onClick={handleUploadPoster}
-            disabled={uploading}
-          >
-            {uploading ? "Uploading..." : "Upload Poster"}
-          </Button>
         </div>
 
-        {formData.poster && (
+        {(file || formData.poster) && (
           <img
-            src={formData.poster}
+            src={file ? URL.createObjectURL(file) : formData.poster}
             alt="Poster Preview"
             className="w-full h-72 object-cover mt-2 rounded"
           />
@@ -214,9 +212,10 @@ const CreateActivity = () => {
 
         <Button
           type="submit"
+          disabled={uploading}
           className="bg-blue-600 text-white h-12 w-full text-sm"
         >
-          Create Activity
+          {uploading ? "Creating Activity..." : "Create Activity"}
         </Button>
       </form>
     </div>

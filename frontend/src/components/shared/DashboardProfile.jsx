@@ -38,6 +38,7 @@ const DashboardProfile = () => {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
+    name: currentUser?.name || "",
     username: currentUser?.username || "",
     email: currentUser?.email || "",
     password: "",
@@ -52,10 +53,12 @@ const DashboardProfile = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     setFormData((prevData) => ({
       ...prevData,
+      name: currentUser?.name || "",
       username: currentUser?.username || "",
       email: currentUser?.email || "",
       dob: currentUser?.dob ? currentUser.dob.split("T")[0] : "",
@@ -69,31 +72,7 @@ const DashboardProfile = () => {
 
   const handleChange = (e) => {
     if (!isEditing) return;
-
-    if (currentUser?.isVolunteer) {
-      const allowedFields = [
-        "dob",
-        "prnNumber",
-        "eligibilityNumber",
-        "rollNumber",
-      ];
-      if (!allowedFields.includes(e.target.id)) {
-        return;
-      }
-    } else {
-      const volunteerFields = [
-        "nssID",
-        "batch",
-        "dob",
-        "prnNumber",
-        "eligibilityNumber",
-        "rollNumber",
-      ];
-      if (volunteerFields.includes(e.target.id)) {
-        return;
-      }
-    }
-
+    if (currentUser?.isVolunteer) return; // Volunteers cannot edit their profiles!
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
@@ -111,18 +90,32 @@ const DashboardProfile = () => {
     }
   };
 
-  const handleImageChange = async (e) => {
+  const handleFileChange = (e) => {
     if (currentUser?.isVolunteer) return;
-    const file = e.target.files[0];
-    if (!file) return;
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
     const maxSize = 250 * 1024;
-    if (file.size > maxSize) {
+    if (selectedFile.size > maxSize) {
       toast({
         title: "File size exceeds 250 KB.",
         description: "Please select a smaller image.",
         variant: "destructive",
       });
       if (profilePicRef.current) profilePicRef.current.value = "";
+      setFile(null);
+      return;
+    }
+    setFile(selectedFile);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (currentUser?.isVolunteer) return;
+    if (!isEditing) {
+      setIsEditing(true);
       return;
     }
     const isAuthorized = await checkIsAuthorized();
@@ -132,94 +125,10 @@ const DashboardProfile = () => {
         description: "Your session may have expired. Please sign in again.",
         variant: "destructive",
       });
-      if (profilePicRef.current) profilePicRef.current.value = "";
       return;
     }
-    let uploadedFileId = null;
-    try {
-      dispatch(updateStart());
-      setUploading(true);
-      const uploadedFile = await uploadFile(file);
-      if (!uploadedFile) throw new Error("File upload failed!");
-      uploadedFileId = uploadedFile.$id;
-      const profilePictureUrl = await getFileUrl(uploadedFile.$id);
-      const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profilePicture: profilePictureUrl,
-          profilePictureId: uploadedFile.$id,
-          deleteOldPictureId: currentUser.profilePictureId || null,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({
-          title: "Profile photo update failed!",
-          description: data.message || "Please try again.",
-          variant: "destructive",
-        });
-        dispatch(updateFailure(data.message));
-        if (uploadedFileId) {
-          try {
-            await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-              method: "DELETE",
-              credentials: "include",
-            });
-            console.log("Orphan file deleted:", uploadedFileId);
-          } catch (delErr) {
-            console.error("Failed to delete orphan file:", delErr);
-          }
-        }
-      } else {
-        dispatch(updateSuccess(data));
-        setUploading(false);
-        toast({ title: "Profile photo updated successfully." });
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Profile photo update failed!",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-      dispatch(updateFailure(error.message));
-      setUploading(false);
-      if (uploadedFileId) {
-        try {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-          console.log("Orphan file deleted on error:", uploadedFileId);
-        } catch (delErr) {
-          console.error("Failed to delete orphan file on error:", delErr);
-        }
-      }
-    } finally {
-      if (profilePicRef.current) profilePicRef.current.value = "";
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!isEditing) {
-      setIsEditing(true);
-      return;
-    }
-    let dataToSend = {};
-    if (currentUser?.isVolunteer) {
-      dataToSend = {
-        dob: formData.dob || null,
-        prnNumber: formData.prnNumber || null,
-        eligibilityNumber: formData.eligibilityNumber || null,
-        rollNumber: formData.rollNumber || null,
-      };
-    } else {
-      dataToSend = { username: formData.username, email: formData.email };
-      if (formData.password) dataToSend.password = formData.password;
-    }
+    let dataToSend = { name: formData.name, username: formData.username, email: formData.email };
+    if (formData.password) dataToSend.password = formData.password;
     const changesMade = Object.keys(dataToSend).some((key) => {
       if (key === "dob") {
         const currentDob = currentUser?.dob
@@ -231,19 +140,34 @@ const DashboardProfile = () => {
       const currentValue = currentUser?.[key] || "";
       const formValue = dataToSend[key] || "";
       return formValue !== currentValue;
-    });
+    }) || !!file;
+
     if (!changesMade && !dataToSend.password) {
       toast({ title: "No changes detected to save." });
       setIsEditing(false);
       return;
     }
+
+    let uploadedFileId = null;
     try {
       dispatch(updateStart());
-      const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
+      setUploading(true);
+
+      if (file && !currentUser?.isVolunteer) {
+        const uploadedFile = await uploadFile(file);
+        if (!uploadedFile) throw new Error("File upload failed!");
+        uploadedFileId = uploadedFile.$id;
+        const profilePictureUrl = await getFileUrl(uploadedFile.$id);
+        dataToSend.profilePicture = profilePictureUrl;
+        dataToSend.profilePictureId = uploadedFile.$id;
+        dataToSend.deleteOldPictureId = currentUser.profilePictureId || null;
+      }
+
+      const res = await fetch(`${API_URL}/api/user/update`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify({ userId: currentUser._id, ...dataToSend }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -253,19 +177,52 @@ const DashboardProfile = () => {
           variant: "destructive",
         });
         dispatch(updateFailure(data.message));
+        if (uploadedFileId) {
+          try {
+            await fetch(`${API_URL}/api/upload/delete`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ key: uploadedFileId }),
+              credentials: "include",
+            });
+            console.log("Orphan file deleted:", uploadedFileId);
+          } catch (delErr) {
+            console.error("Failed to delete orphan file:", delErr);
+          }
+        }
+        setUploading(false);
       } else {
         toast({ title: "User Updated Successfully." });
         dispatch(updateSuccess(data));
         setFormData((prevData) => ({ ...prevData, password: "" }));
+        setFile(null);
         setIsEditing(false);
+        setUploading(false);
       }
     } catch (error) {
+      console.error(error);
       toast({
         title: "User Update Failure!",
         description: error.message || "Please try again!",
         variant: "destructive",
       });
       dispatch(updateFailure(error.message));
+      setUploading(false);
+      if (uploadedFileId) {
+        try {
+          await fetch(`${API_URL}/api/upload/delete`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: uploadedFileId }),
+            credentials: "include",
+          });
+          console.log("Orphan file deleted on error:", uploadedFileId);
+        } catch (delErr) {
+          console.error("Failed to delete orphan file on error:", delErr);
+        }
+      }
+    } finally {
+      if (profilePicRef.current) profilePicRef.current.value = "";
     }
   };
 
@@ -280,8 +237,10 @@ const DashboardProfile = () => {
     }
     try {
       dispatch(deleteUserStart());
-      const res = await fetch(`${API_URL}/api/user/delete/${currentUser._id}`, {
+      const res = await fetch(`${API_URL}/api/user/delete`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser._id }),
         credentials: "include",
       });
       const data = await res.json();
@@ -335,8 +294,7 @@ const DashboardProfile = () => {
   const getDisabledState = (fieldId) => {
     if (!isEditing) return true;
     if (currentUser?.isVolunteer) {
-      const nonAllowedFields = ["username", "email", "nssID", "batch"];
-      return nonAllowedFields.includes(fieldId);
+      return true;
     }
     return false;
   };
@@ -380,8 +338,9 @@ const DashboardProfile = () => {
               />
               <img
                 src={
-                  currentUser?.profilePicture ||
-                  "https://cdn-icons-png.flaticon.com/128/149/149071.png"
+                  file
+                    ? URL.createObjectURL(file)
+                    : (currentUser?.profilePicture || "https://cdn-icons-png.flaticon.com/128/149/149071.png")
                 }
                 alt="Profile Picture"
                 className="absolute top-1/2 left-1/2 w-24 h-24 rounded-full object-cover -translate-x-1/2 -translate-y-1/2 z-10 border-2 border-white shadow-md"
@@ -402,7 +361,7 @@ const DashboardProfile = () => {
               accept="image/*"
               id="profilePictureInput"
               ref={profilePicRef}
-              onChange={handleImageChange}
+              onChange={handleFileChange}
               disabled={uploading}
               className="h-10 border-slate-400 focus-visible:ring-0 file:text-sm file:font-medium file:text-blue-700 hover:file:text-blue-500"
             />
@@ -412,10 +371,27 @@ const DashboardProfile = () => {
         {/* --- Always Visible & Non-Editable Fields for Volunteers --- */}
         <div className="space-y-1">
           <Label
+            htmlFor="name"
+            className="text-sm font-medium text-gray-700"
+          >
+            Full Name
+          </Label>
+          <Input
+            type="text"
+            id="name"
+            placeholder="Full Name"
+            value={formData.name}
+            disabled={getDisabledState("name")} 
+            className={getInputClasses("name")}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label
             htmlFor="username"
             className="text-sm font-medium text-gray-700"
           >
-            {currentUser?.isVolunteer ? "Volunteer Name" : "Username"}
+            Username
           </Label>
           <Input
             type="text"
@@ -583,17 +559,19 @@ const DashboardProfile = () => {
           </div>
         )}
 
-        <Button
-          type="submit"
-          className="h-12 bg-green-600 hover:bg-green-700 mt-4"
-          disabled={loading || uploading}
-        >
-          {isEditing
-            ? loading
-              ? "Saving..."
-              : "Save Changes"
-            : "Edit Profile"}
-        </Button>
+        {!currentUser?.isVolunteer && (
+          <Button
+            type="submit"
+            className="h-12 bg-green-600 hover:bg-green-700 mt-4"
+            disabled={loading || uploading}
+          >
+            {isEditing
+              ? loading
+                ? "Saving..."
+                : "Save Changes"
+              : "Edit Profile"}
+          </Button>
+        )}
       </form>
 
       <div

@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { MESSAGES } from "./constants/messages.js";
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -14,14 +15,24 @@ import uploadRoutes from "./routes/upload.route.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { healDatabase } from "./utils/healDatabase.js";
+import { runR2CleanupJob } from "./utils/cleanupJob.js";
 
 dotenv.config();
 const app = express();
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("Database is Connected");
+    
+    // Run DB self-healing / migrations
+    await healDatabase();
+
+    // Schedule R2 background cleanup job (once on startup, then every 24 hours)
+    setTimeout(runR2CleanupJob, 5000);
+    setInterval(runR2CleanupJob, 24 * 60 * 60 * 1000);
+
     app.listen(3000, () => {
       console.log("Server is running on Port 3000");
     });
@@ -55,9 +66,20 @@ app.use("/api/upload", uploadRoutes);
 
 // To handle errors
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "Internal Server Error";
 
-  const message = err.message || "Internal Server Error";
+  // Handle Mongoose duplicate key errors
+  if (err.code === 11000) {
+    statusCode = 400;
+    if (err.keyPattern?.email) {
+      message = MESSAGES.AUTH.EMAIL_EXISTS;
+    } else if (err.keyPattern?.nssID) {
+      message = MESSAGES.AUTH.NSS_ID_EXISTS;
+    } else {
+      message = MESSAGES.AUTH.CONFLICT;
+    }
+  }
 
   res.status(statusCode).json({
     success: false,

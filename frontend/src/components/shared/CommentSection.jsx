@@ -55,7 +55,7 @@ const CommentSection = ({ postId }) => {
     const getComments = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/comment/getPostComments/${postId}`
+          `${API_URL}/api/comment/get-post-comments/${postId}`
         );
         if (res.ok) {
           const data = await res.json();
@@ -86,9 +86,11 @@ const CommentSection = ({ postId }) => {
       }
 
       const res = await fetch(
-        `${API_URL}/api/comment/likeComment/${commentId}`,
+        `${API_URL}/api/comment/like-comment`,
         {
           method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ commentId }),
           credentials: "include",
         }
       );
@@ -120,9 +122,11 @@ const CommentSection = ({ postId }) => {
       }
 
       const res = await fetch(
-        `${API_URL}/api/comment/deleteComment/${commentId}`,
+        `${API_URL}/api/comment/delete-comment`,
         {
           method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ commentId }),
           credentials: "include",
         }
       );

@@ -95,8 +95,12 @@ const DashboardCategory = () => {
 
     try {
       const res = await fetch(
-        `${API_URL}/api/category/${categoryToDelete.id}`,
-        { method: "DELETE" }
+        `${API_URL}/api/category/delete`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: categoryToDelete.id }),
+        }
       );
       const data = await res.json();
 

@@ -71,8 +71,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    name: {
+      type: String,
+      default: "",
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
+);
+
+userSchema.index(
+  { username: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: { $ne: true } } }
 );
 
 const User = mongoose.model("User", userSchema);

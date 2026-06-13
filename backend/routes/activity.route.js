@@ -11,17 +11,26 @@ import {
 } from "../controller/activity.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
+import { validateSchema } from "../middleware/validate.js";
+import {
+  createActivitySchema,
+  updateActivitySchema,
+  deleteActivitySchema,
+  toggleInterestSchema,
+  linkNewsSchema,
+} from "../validators/schemas.js";
+
 const router = express.Router();
 
-router.post("/create", verifyToken, createActivity);
+router.post("/create", verifyToken, validateSchema(createActivitySchema), createActivity);
 router.get("/get", getActivities);
 router.get("/get/:activityId", getActivityById);
-router.put("/update/:activityId", verifyToken, updateActivity);
-router.delete("/delete/:activityId", verifyToken, deleteActivity);
+router.put("/update", verifyToken, validateSchema(updateActivitySchema), updateActivity);
+router.delete("/delete", verifyToken, validateSchema(deleteActivitySchema), deleteActivity);
 
-router.put("/toggleInterest/:activityId", verifyToken, toggleInterest);
-router.get("/interestedUsers/:activityId", verifyToken, getInterestedUsers);
+router.put("/toggle-interest", verifyToken, validateSchema(toggleInterestSchema), toggleInterest);
+router.get("/interested-users/:activityId", verifyToken, getInterestedUsers);
 
-router.put("/linkNews/:activityId", verifyToken, linkNewsToActivity);
+router.put("/link-news", verifyToken, validateSchema(linkNewsSchema), linkNewsToActivity);
 
 export default router;

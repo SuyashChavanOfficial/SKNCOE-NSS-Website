@@ -81,36 +81,36 @@ const MainDashboard = () => {
         recentPostsRes,
       ] = await Promise.all([
         fetch(
-          `${API_URL}/api/user/getUsersInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
+          `${API_URL}/api/user/get-users-in-period?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
           { credentials: "include" }
         ),
         fetch(
-          `${API_URL}/api/user/getUsersInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
+          `${API_URL}/api/user/get-users-in-period?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
           { credentials: "include" }
         ),
         fetch(
-          `${API_URL}/api/post/getPostsInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
+          `${API_URL}/api/post/get-posts-in-period?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
           { credentials: "include" }
         ),
         fetch(
-          `${API_URL}/api/post/getPostsInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
+          `${API_URL}/api/post/get-posts-in-period?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
           { credentials: "include" }
         ),
         fetch(
-          `${API_URL}/api/comment/getCommentsInPeriod?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
+          `${API_URL}/api/comment/get-comments-in-period?startDate=${oneMonthAgo.toISOString()}&endDate=${now.toISOString()}`,
           { credentials: "include" }
         ),
         fetch(
-          `${API_URL}/api/comment/getCommentsInPeriod?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
+          `${API_URL}/api/comment/get-comments-in-period?startDate=${twoMonthsAgo.toISOString()}&endDate=${prevMonthEnd.toISOString()}`,
           { credentials: "include" }
         ),
-        fetch(`${API_URL}/api/user/getusers?limit=5&sort=desc`, {
+        fetch(`${API_URL}/api/user/get-users?limit=5&sort=desc`, {
           credentials: "include",
         }),
-        fetch(`${API_URL}/api/comment/getComments?limit=5&sort=desc`, {
+        fetch(`${API_URL}/api/comment/get-comments?limit=5&sort=desc`, {
           credentials: "include",
         }),
-        fetch(`${API_URL}/api/post/getposts?limit=5&sort=desc`),
+        fetch(`${API_URL}/api/post/get-posts?limit=5&sort=desc`),
       ]);
 
       const [

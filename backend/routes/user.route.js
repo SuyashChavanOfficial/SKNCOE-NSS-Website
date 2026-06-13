@@ -12,20 +12,27 @@ import {
 } from "../controller/user.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
+import { validateSchema } from "../middleware/validate.js";
+import {
+  createVolunteerSchema,
+  updateVolunteerSchema,
+  deleteUserSchema,
+} from "../validators/schemas.js";
+
 const router = express.Router();
 
-router.put("/update/:userId", verifyToken, updateUser);
-router.delete("/delete/:userId", verifyToken, deleteUser);
+router.put("/update", verifyToken, validateSchema(updateVolunteerSchema), updateUser);
+router.delete("/delete", verifyToken, validateSchema(deleteUserSchema), deleteUser);
 router.post("/signout", signout);
-router.post("/create", verifyToken, createVolunteer);
-router.get("/getVolunteers", verifyToken, getVolunteers);
+router.post("/create", verifyToken, validateSchema(createVolunteerSchema), createVolunteer);
+router.get("/get-volunteers", verifyToken, getVolunteers);
 
 // (Admin only)
-router.get("/getusers", verifyToken, getUsers);
-router.get("/getUsersInPeriod", verifyToken, getUsersInPeriod);
+router.get("/get-users", verifyToken, getUsers);
+router.get("/get-users-in-period", verifyToken, getUsersInPeriod);
 
 // (Super admin only)
-router.put("/updateAdmins", verifyToken, updateAdmins);
+router.put("/update-admins", verifyToken, updateAdmins);
 
 router.get("/:userId", verifyToken, getUserById);
 

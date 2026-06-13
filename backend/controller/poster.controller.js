@@ -1,93 +1,74 @@
 import Poster from "../models/poster.model.js";
 import { deleteFileFromR2 } from "../lib/r2.js";
 import { errorHandler } from "../utils/error.js";
+import { MESSAGES } from "../constants/messages.js";
 
 // Get all posters (sorted by date, newest first)
-export const getAllPosters = async (req, res, next) => {
-  try {
-    const posters = await Poster.find().sort({ date: -1 });
-    res.status(200).json({ posters });
-  } catch (error) {
-    next(error);
-  }
+export const getAllPosters = async (req, res) => {
+  const posters = await Poster.find({ isDeleted: { $ne: true } }).sort({ date: -1 });
+  res.status(200).json({ posters });
 };
 
 // Create poster (Admin only)
-export const createPoster = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const createPoster = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.POSTER.NOT_AUTHORIZED);
 
-  try {
-    const { media, mediaId, mediaType, caption, date } = req.body;
+  const { media, mediaId, mediaType, caption, date } = req.body;
 
-    if (!media || !caption)
-      return next(errorHandler(400, "Media and caption are required"));
+  if (!media || !caption)
+    throw errorHandler(400, MESSAGES.POSTER.FIELDS_REQUIRED);
 
-    const newPoster = new Poster({
-      media,
-      mediaId,
-      mediaType,
-      caption,
-      date: date ? new Date(date) : new Date(),
-    });
+  const newPoster = new Poster({
+    media,
+    mediaId,
+    mediaType,
+    caption,
+    date: date ? new Date(date) : new Date(),
+  });
 
-    const savedPoster = await newPoster.save();
-    res.status(201).json(savedPoster);
-  } catch (error) {
-    next(error);
-  }
+  const savedPoster = await newPoster.save();
+  res.status(201).json(savedPoster);
 };
 
 // Update poster by ID (Admin only)
-export const updatePoster = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const updatePoster = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.POSTER.NOT_AUTHORIZED);
 
-  try {
-    const { media, mediaId, mediaType, caption, date } = req.body;
-    const poster = await Poster.findById(req.params.posterId);
-    if (!poster) return next(errorHandler(404, "Poster not found"));
+  const { posterId, media, mediaId, mediaType, caption, date } = req.body;
+  const poster = await Poster.findOne({ _id: posterId, isDeleted: { $ne: true } });
+  if (!poster) throw errorHandler(404, MESSAGES.POSTER.NOT_FOUND);
 
-    // Delete old media if new one uploaded
-    if (mediaId && poster.mediaId && mediaId !== poster.mediaId) {
-      try {
-        await deleteFileFromR2(poster.mediaId);
-      } catch (err) {
-        console.log("Failed to delete old media:", err.message);
-      }
+  // Delete old media if new one uploaded
+  if (mediaId && poster.mediaId && mediaId !== poster.mediaId) {
+    try {
+      await deleteFileFromR2(poster.mediaId);
+    } catch (err) {
+      console.log("Failed to delete old media:", err.message);
     }
-
-    poster.media = media || poster.media;
-    poster.mediaId = mediaId || poster.mediaId;
-    poster.mediaType = mediaType || poster.mediaType;
-    poster.caption = caption || poster.caption;
-    poster.date = date ? new Date(date) : poster.date;
-
-    const updatedPoster = await poster.save();
-    res.status(200).json(updatedPoster);
-  } catch (error) {
-    next(error);
   }
+
+  poster.media = media || poster.media;
+  poster.mediaId = mediaId || poster.mediaId;
+  poster.mediaType = mediaType || poster.mediaType;
+  poster.caption = caption || poster.caption;
+  poster.date = date ? new Date(date) : poster.date;
+
+  const updatedPoster = await poster.save();
+  res.status(200).json(updatedPoster);
 };
 
 // Delete poster by ID (Admin only)
-export const deletePoster = async (req, res, next) => {
-  if (!req.user.isAdmin) return next(errorHandler(403, "Not authorized"));
+export const deletePoster = async (req, res) => {
+  if (!req.user.isAdmin) throw errorHandler(403, MESSAGES.POSTER.NOT_AUTHORIZED);
 
-  try {
-    const poster = await Poster.findById(req.params.posterId);
-    if (!poster) return next(errorHandler(404, "Poster not found"));
+  const { posterId } = req.body;
+  const poster = await Poster.findOne({ _id: posterId, isDeleted: { $ne: true } });
+  if (!poster) throw errorHandler(404, MESSAGES.POSTER.NOT_FOUND);
 
-    // Delete media from Cloudflare R2 storage
-    if (poster.mediaId) {
-      try {
-        await deleteFileFromR2(poster.mediaId);
-      } catch (err) {
-        console.log("Failed to delete poster media:", err.message);
-      }
-    }
+  // Soft delete:
+  poster.isDeleted = true;
+  poster.deletedAt = new Date();
+  await poster.save();
 
-    await Poster.findByIdAndDelete(req.params.posterId);
-    res.status(200).json({ message: "Poster deleted successfully" });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({ message: MESSAGES.POSTER.DELETE_SUCCESS });
 };

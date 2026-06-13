@@ -7,14 +7,21 @@ import {
 } from "../controller/poster.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
+import { validateSchema } from "../middleware/validate.js";
+import {
+  posterSchema,
+  updatePosterSchema,
+  deletePosterSchema,
+} from "../validators/schemas.js";
+
 const router = express.Router();
 
 // Public routes
 router.get("/all", getAllPosters);
 
 // Admin routes
-router.post("/create", verifyToken, createPoster);
-router.put("/update/:posterId", verifyToken, updatePoster);
-router.delete("/delete/:posterId", verifyToken, deletePoster);
+router.post("/create", verifyToken, validateSchema(posterSchema), createPoster);
+router.put("/update", verifyToken, validateSchema(updatePosterSchema), updatePoster);
+router.delete("/delete", verifyToken, validateSchema(deletePosterSchema), deletePoster);
 
 export default router;

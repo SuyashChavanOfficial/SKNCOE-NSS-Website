@@ -28,7 +28,7 @@ const NewsDetails = () => {
       try {
         setLoading(true);
 
-        const res = await fetch(`${API_URL}/api/post/getpost/${postSlug}`);
+        const res = await fetch(`${API_URL}/api/post/get-post/${postSlug}`);
         const data = await res.json();
 
         if (!res.ok) {
@@ -57,7 +57,7 @@ const NewsDetails = () => {
 
       try {
         const res = await fetch(
-          `${API_URL}/api/post/getposts?limit=3&excludeId=${post._id}`
+          `${API_URL}/api/post/get-posts?limit=3&excludeId=${post._id}`
         );
         const data = await res.json();
 
@@ -91,8 +91,10 @@ const NewsDetails = () => {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/post/likePost/${post._id}`, {
+      const res = await fetch(`${API_URL}/api/post/like-post`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: post._id }),
         credentials: "include",
       });
       const data = await res.json();

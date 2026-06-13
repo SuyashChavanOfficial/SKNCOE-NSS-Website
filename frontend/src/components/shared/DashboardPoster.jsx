@@ -133,11 +133,11 @@ const DashboardPoster = () => {
 
       let res;
       if (editingPoster) {
-        res = await fetch(`${API_URL}/api/poster/update/${editingPoster._id}`, {
+        res = await fetch(`${API_URL}/api/poster/update`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(posterData),
+          body: JSON.stringify({ posterId: editingPoster._id, ...posterData }),
         });
       } else {
         res = await fetch(`${API_URL}/api/poster/create`, {
@@ -152,8 +152,10 @@ const DashboardPoster = () => {
       if (!res.ok) {
         if (uploadedFileId) {
           try {
-            await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+            await fetch(`${API_URL}/api/upload/delete`, {
               method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ key: uploadedFileId }),
               credentials: "include",
             });
           } catch (delErr) {
@@ -175,8 +177,10 @@ const DashboardPoster = () => {
 
       if (uploadedFileId) {
         try {
-          await fetch(`${API_URL}/api/upload/delete/${uploadedFileId}`, {
+          await fetch(`${API_URL}/api/upload/delete`, {
             method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: uploadedFileId }),
             credentials: "include",
           });
         } catch (delErr) {
@@ -191,8 +195,10 @@ const DashboardPoster = () => {
 
   const handleDelete = async (posterId) => {
     try {
-      const res = await fetch(`${API_URL}/api/poster/delete/${posterId}`, {
+      const res = await fetch(`${API_URL}/api/poster/delete`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posterId }),
         credentials: "include",
       });
       const data = await res.json();

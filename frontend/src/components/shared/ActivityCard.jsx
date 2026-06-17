@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, BookOpen, Clock } from "lucide-react";
 
-// Helper function to format date and time (kept local to the card)
+// Helper function to format date and time
 const formatDateTime = (dateString) => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString("en-IN", {
@@ -16,7 +16,7 @@ const formatDateTime = (dateString) => {
   });
 };
 
-// Helper function to calculate end time (kept local)
+// Helper function to calculate end time
 const getEndTime = (startDateStr, durationHours) => {
   if (!startDateStr || durationHours == null) return null;
   const start = new Date(startDateStr);
@@ -46,11 +46,9 @@ const ActivityCard = ({
   );
 
   return (
-    <div
-      className="flex flex-col md:flex-row bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 transition-shadow hover:shadow-lg w-full"
-    >
+    <div className="flex flex-col md:flex-row bg-white dark:bg-[#1e293b] rounded-lg shadow-md dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden border border-gray-200 dark:border-[#334155] transition-all duration-300 hover:shadow-lg dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] w-full">
       {/* Left Side: Image */}
-      <div className="w-full md:w-[160px] flex-shrink-0 p-2 md:p-3 bg-gray-50">
+      <div className="w-full md:w-[160px] flex-shrink-0 p-2 md:p-3 bg-gray-50 dark:bg-[#111827]">
         <img
           src={activity.poster || "https://via.placeholder.com/400x500"}
           alt={activity.title}
@@ -61,10 +59,10 @@ const ActivityCard = ({
       {/* Right Side: Details and Buttons */}
       <div className="flex flex-col justify-between p-4 w-full">
         <div className="text-center md:text-left">
-          <h3 className="text-lg md:text-xl font-semibold text-slate-800 mb-2 line-clamp-2">
+          <h3 className="text-lg md:text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2 line-clamp-2">
             {activity.title}
           </h3>
-          <div className="text-xs text-gray-500 mb-4 space-y-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-4 space-y-1">
             <p>
               <strong>Starts:</strong> {formatDateTime(activity.startDate)}
             </p>
@@ -84,7 +82,7 @@ const ActivityCard = ({
             <Button
               variant={userIsInterested ? "destructive" : "outline"}
               size="sm"
-              className="flex items-center justify-center gap-2 w-full sm:w-auto text-xs px-3 py-1.5"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto text-xs px-3 py-1.5 dark:border-slate-600 dark:text-slate-300"
               onClick={(e) => onToggleInterest(activity._id, e)}
             >
               <Heart

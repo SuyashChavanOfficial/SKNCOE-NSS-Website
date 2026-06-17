@@ -34,7 +34,7 @@ const PostCard = ({ post }) => {
   };
 
   return (
-    <div className="bg-white hover:shadow-lg  rounded-lg overflow-hidden w-full sm:w-[330px] border border-gray-400 transition-transform duration-300 hover:scale-110">
+    <div className="bg-white dark:bg-[#1e293b] hover:shadow-lg dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden w-full sm:w-[330px] border border-gray-400 dark:border-[#334155] transition-all duration-300 hover:scale-105">
       <Link
         to={`/post/${post.slug}`}
         className="block h-[250px] w-full overflow-hidden"
@@ -42,27 +42,27 @@ const PostCard = ({ post }) => {
         <img
           src={post.image}
           alt={post.title + "cover"}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105 bg-gray-200"
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105 bg-gray-200 dark:bg-[#1e293b]"
         />
       </Link>
 
       <div className="p-3 flex flex-col gap-2">
-        <p className="text-lg font-semibold line-clamp-1 text-slate-900">
+        <p className="text-lg font-semibold line-clamp-1 text-slate-900 dark:text-slate-100">
           {post.title}
         </p>
 
-        <span className="italic text-[16px] text-slate-600">
+        <span className="italic text-[16px] text-slate-600 dark:text-slate-400">
           {post.category}
         </span>
 
-        <span className="text-[14px] text-slate-500">
+        <span className="text-[14px] text-slate-500 dark:text-slate-500">
           {post.newsDate ? formatDate(post.newsDate) : "No date"}
         </span>
 
         <Link to={`/post/${post.slug}`}>
           <Button
             variant="outline"
-            className="w-full border-slate-500 text-slate-700 hover:bg-blue-500 hover:text-white "
+            className="w-full border-slate-500 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-blue-500 dark:hover:bg-blue-700 hover:text-white dark:hover:text-white transition-colors duration-200"
           >
             Read Article
           </Button>

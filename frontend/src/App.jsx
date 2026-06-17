@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { signInSuccess } from "./redux/user/userSlice";
 import { Toaster } from "./components/ui/toaster";
 import { useToast } from "./hooks/use-toast";
+import ThemeProvider from "./components/shared/ThemeProvider";
 
 import SignInForm from "./auth/forms/SignInForm";
 import SignUpForm from "./auth/forms/SignUpForm";
@@ -67,49 +68,52 @@ const App = () => {
   }, [dispatch, toast]);
 
   return (
-    <BrowserRouter>
-      <Header />
-      <ScrollToTop />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Header />
+        <ScrollToTop />
 
-      <Routes>
-        <Route path="/sign-in" element={<SignInForm />} />
-        <Route path="/sign-up" element={<SignUpForm />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/news" element={<Search />} />
-        <Route path="/activities" element={<Activities />} />
-        <Route path="/post/:postSlug" element={<NewsDetails />} />
-        <Route
-          path="/dashboard/activity/:activityId"
-          element={<ActivityDetails />}
-        />
-
-        {/* Private Routes */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-
-        {/* Admin-only Routes */}
-        <Route element={<AdminPrivateRoute />}>
-          <Route path="/create-post" element={<CreateNews />} />
-          <Route path="/update-post/:postId" element={<EditNews />} />
+        <Routes>
+          <Route path="/sign-in" element={<SignInForm />} />
+          <Route path="/sign-up" element={<SignUpForm />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/news" element={<Search />} />
+          <Route path="/activities" element={<Activities />} />
+          <Route path="/post/:postSlug" element={<NewsDetails />} />
           <Route
-            path="/dashboard/create-activity"
-            element={<CreateActivity />}
+            path="/dashboard/activity/:activityId"
+            element={<ActivityDetails />}
           />
-          <Route
-            path="/dashboard/activity/edit/:activityId"
-            element={<EditActivity />}
-          />
-          <Route path="/category-manager" element={<CategoryManager />} />
-        </Route>
-      </Routes>
 
-      <Footer />
-      <Toaster />
-    </BrowserRouter>
+          {/* Private Routes */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
+
+          {/* Admin-only Routes */}
+          <Route element={<AdminPrivateRoute />}>
+            <Route path="/create-post" element={<CreateNews />} />
+            <Route path="/update-post/:postId" element={<EditNews />} />
+            <Route
+              path="/dashboard/create-activity"
+              element={<CreateActivity />}
+            />
+            <Route
+              path="/dashboard/activity/edit/:activityId"
+              element={<EditActivity />}
+            />
+            <Route path="/category-manager" element={<CategoryManager />} />
+          </Route>
+        </Routes>
+
+        <Footer />
+        <Toaster />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 };
 
 export default App;
+

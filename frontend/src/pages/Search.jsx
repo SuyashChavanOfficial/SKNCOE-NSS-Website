@@ -146,8 +146,8 @@ const Search = () => {
   return (
     <div className="flex flex-col md:flex-row">
       {/* ✅ Mobile top bar with hamburger */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 bg-white sticky top-0 z-40">
-        <h1 className="text-lg font-semibold text-slate-700">News Articles</h1>
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-300 dark:border-[#1e3a5f] bg-white dark:bg-[#0f1729] sticky top-0 z-40 transition-colors duration-300">
+        <h1 className="text-lg font-semibold text-slate-700 dark:text-slate-200">News Articles</h1>
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
           {isSidebarOpen ? (
             <X className="w-6 h-6 text-slate-700" />
@@ -161,7 +161,7 @@ const Search = () => {
       <aside
         className={`
         fixed md:static top-0 left-0 h-full md:h-auto w-3/4 md:w-1/4 
-        bg-white shadow-md border-r border-gray-300 
+        bg-white dark:bg-[#0f1729] shadow-md border-r border-gray-300 dark:border-[#1e3a5f]
         transform transition-transform duration-300 z-50
         ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -170,23 +170,24 @@ const Search = () => {
       >
         <div className="p-6 md:p-4">
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-            <h2 className="text-2xl font-semibold text-gray-600 ">Filters</h2>
+            <h2 className="text-2xl font-semibold text-gray-600 dark:text-gray-300">Filters</h2>
 
             {/* Search Input */}
             <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-600">Search Term:</label>
+              <label className="font-medium text-gray-600 dark:text-gray-400">Search Term:</label>
               <Input
                 placeholder="Search..."
                 id="searchTerm"
                 type="text"
                 value={sidebarData.searchTerm}
                 onChange={handleChange}
+                className="dark:bg-[#1e293b] dark:border-[#334155] dark:text-gray-200 dark:placeholder:text-gray-500"
               />
             </div>
 
             {/* Sort */}
             <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-600">Sort By:</label>
+              <label className="font-medium text-gray-600 dark:text-gray-400">Sort By:</label>
               <Select
                 onValueChange={(value) =>
                   setSidebarData({ ...sidebarData, sort: value })
@@ -208,7 +209,7 @@ const Search = () => {
 
             {/* Category */}
             <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-600">Category:</label>
+              <label className="font-medium text-gray-600 dark:text-gray-400">Category:</label>
               <Select
                 onValueChange={(value) =>
                   setSidebarData({ ...sidebarData, category: value })
@@ -233,7 +234,7 @@ const Search = () => {
 
             {/* Academic Year */}
             <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-600">
+              <label className="font-medium text-gray-600 dark:text-gray-400">
                 Academic Year:
               </label>
               <Select
@@ -299,10 +300,10 @@ const Search = () => {
 
       {/* Main content */}
       <div className="w-full">
-        <h1 className="hidden md:block text-2xl font-semibold text-slate-700 mt-5 p-3">
+        <h1 className="hidden md:block text-2xl font-semibold text-slate-700 dark:text-slate-200 mt-5 p-3">
           News Articles
         </h1>
-        <Separator className="bg-slate-300" />
+        <Separator className="bg-slate-300 dark:bg-slate-700" />
 
         <div className="p-7 flex flex-wrap gap-8 justify-items-start">
           {loading && (

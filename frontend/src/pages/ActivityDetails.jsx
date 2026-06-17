@@ -67,7 +67,7 @@ const ActivityDetails = () => {
       if (res.ok) {
         const data = await res.json();
         setActivity(data.activity);
-        setShowDropdown(false); // hide dropdown after linking
+        setShowDropdown(false);
         toast({
           title: "News linked successfully!",
         });
@@ -104,7 +104,7 @@ const ActivityDetails = () => {
   return (
     <main className="p-3 flex flex-col max-w-4xl mx-auto min-h-screen">
       {/* Title */}
-      <h1 className="text-3xl mt-10 p-3 text-center font-bold lg:text-4xl text-slate-700 underline">
+      <h1 className="text-3xl mt-10 p-3 text-center font-bold lg:text-4xl text-slate-700 dark:text-slate-200 underline">
         {activity.title}
       </h1>
 
@@ -116,24 +116,24 @@ const ActivityDetails = () => {
       />
 
       {/* Date and Time */}
-      <div className="flex justify-between p-3 mx-auto w-full max-w-2xl text-sm text-gray-600">
+      <div className="flex justify-between p-3 mx-auto w-full max-w-2xl text-sm text-gray-600 dark:text-gray-400">
         <span>Start: {start.toLocaleString()}</span>
         <span>End: {end.toLocaleString()}</span>
       </div>
 
-      <Separator className="bg-slate-300" />
+      <Separator className="bg-slate-300 dark:bg-slate-700" />
 
       {/* Description */}
-      <div className="p-3 max-w-3xl mx-auto w-full text-gray-800 text-lg">
+      <div className="p-3 max-w-3xl mx-auto w-full text-gray-800 dark:text-gray-300 text-lg">
         {activity.description || "No description provided."}
       </div>
 
       {/* Linked News */}
       {activity.linkedPost && (
         <Link to={`/post/${activity.linkedPost.slug}`}>
-          <div className="mt-6 p-3 border rounded shadow-md cursor-pointer hover:shadow-lg transition">
-            <h2 className="text-xl font-semibold mb-2">News Highlight</h2>
-            <p className="text-lg font-medium">{activity.linkedPost.title}</p>
+          <div className="mt-6 p-3 border border-gray-200 dark:border-[#1e3a5f] rounded shadow-md dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] cursor-pointer hover:shadow-lg transition dark:bg-[#1e293b]">
+            <h2 className="text-xl font-semibold mb-2 dark:text-gray-100">News Highlight</h2>
+            <p className="text-lg font-medium dark:text-gray-300">{activity.linkedPost.title}</p>
             <img
               src={activity.linkedPost.image}
               alt={activity.linkedPost.title}
@@ -146,13 +146,12 @@ const ActivityDetails = () => {
       {/* Admin controls */}
       {currentUser?.isAdmin && (
         <div className="mt-4 flex flex-col gap-2">
-          {/* Show dropdown only when requested */}
           {showDropdown && (
             <>
               <select
                 value={selectedPost}
                 onChange={(e) => setSelectedPost(e.target.value)}
-                className="p-2 border rounded"
+                className="p-2 border border-gray-300 dark:border-[#1e3a5f] rounded bg-white dark:bg-[#1e293b] text-gray-800 dark:text-gray-200"
               >
                 <option value="">
                   {activity.linkedPost
@@ -174,7 +173,6 @@ const ActivityDetails = () => {
             </>
           )}
 
-          {/* Button to trigger dropdown */}
           {!showDropdown && (
             <Button
               className={`${
